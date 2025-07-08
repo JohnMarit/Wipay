@@ -1,0 +1,100 @@
+Internet Billing System for Small ISP in South SudanCreate a comprehensive web-based internet billing system designed specifically for a small Internet Service Provider (ISP) operating in South Sudan. The system should be cost-effective, user-friendly, and adapted to local infrastructure and business conditions.Core Requirements:Customer Management:
+Customer registration and profile management
+Service plan assignment and modification
+Contact information and billing address tracking
+Customer status management (active, suspended, terminated)
+Multi-language support (English and Arabic)
+Billing & Invoicing:
+Automated monthly billing cycles
+Flexible pricing plans (prepaid and postpaid options)
+Invoice generation with local tax considerations
+Payment due date tracking and automated reminders
+Support for South Sudanese Pound (SSP) currency
+Manual billing adjustments and credit management
+Payment Processing:
+Integration with local mobile money services (Orange Money, MTN Mobile Money)
+Cash payment recording for walk-in customers
+Bank transfer payment tracking
+Payment history and receipt generation
+Partial payment handling and payment plans
+Service Management:
+Bandwidth allocation and speed tier management
+Service activation and suspension workflows
+Equipment tracking (modems, routers)
+Installation scheduling and technician assignment
+Service upgrade/downgrade handling
+Usage Monitoring:
+Data usage tracking and reporting
+Fair Usage Policy (FUP) implementation
+Real-time bandwidth monitoring
+Usage alerts and notifications
+Overage billing for unlimited plans
+Reporting & Analytics:
+Revenue reports and financial dashboards
+Customer acquisition and churn analysis
+Payment collection reports
+Service performance metrics
+Accounts receivable aging reports
+Technical Specifications:
+Responsive web design for mobile and desktop access
+Offline capability for areas with intermittent internet
+Low bandwidth optimization for local network conditions
+SMS integration for customer notifications
+Basic API for integration with network equipment
+Role-based access control for staff
+Local Considerations:
+Accommodate irregular power supply with data persistence
+Simple interface suitable for users with varying technical literacy
+Support for common local payment methods and schedules
+Integration with local telecom infrastructure standards
+Compliance with South Sudan telecommunications regulations
+User Roles:
+Administrator (full system access)
+Billing Manager (billing and payments)
+Customer Service Representative (customer support)
+Technician (service installation and maintenance)
+Customer (self-service portal)
+Additional Features:
+Customer self-service portal for bill viewing and payments
+Automated service suspension for overdue accounts
+Bulk SMS notifications for bill reminders and service updates
+Basic CRM functionality for customer relationship management
+Backup and data export capabilities
+Simple inventory management for equipment
+The system should prioritize reliability, ease of use, and cost-effectiveness while being scalable for future growth. Consider the challenges of operating in a developing market with limited infrastructure and ensure the solution is robust enough to handle power outages, network interruptions, and varying levels of user technical expertise.
+
+
+
+App Functionality Prompt (Improved):
+
+The app should allow users to register and manage their access to a WiFi network. Upon downloading the app, a user should:
+
+Log in or sign up for an account.
+
+Enter their MTN MoMo number, WiFi name (SSID), and the admin WiFi password to complete setup.
+
+Once registered, the app should support the following core features:
+
+WiFi Token Giveaway System:
+Users can generate and give away WiFi access tokens.
+
+Tokens grant access to the WiFi network for a specific time duration (e.g., 1 hour).
+
+Login details provided to token recipients should be auto-generated credentials, not the admin WiFi password.
+
+Token Purchase and Distribution:
+Users can obtain tokens via two payment methods:
+
+Cash
+
+MTN MoMo (Mobile Money)
+
+The token generation form should include:
+
+Payment method selection (Cash or MoMo)
+
+Phone number of the recipient
+
+Desired access duration (e.g., 1 hour, 3 hours, etc.)
+
+Upon successful submission, the recipient should receive an SMS containing the auto-generated WiFi login credentials and instructions.
