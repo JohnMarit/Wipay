@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User } from "lucide-react";
+import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface WiFiTokenSystemProps {
@@ -40,6 +40,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     isConfigured: false
   });
   
+  const [showWifiSetup, setShowWifiSetup] = useState(false);
+  
   const [tokenForm, setTokenForm] = useState({
     recipientPhone: "",
     duration: "",
@@ -59,6 +61,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       adminPassword: "Admin WiFi Password",
       momoNumber: "Your MTN MoMo Number",
       saveConfig: "Save Configuration",
+      setupWifi: "Setup WiFi Network",
       generateToken: "Generate WiFi Token",
       tokenManagement: "Token Management",
       activeTokens: "Active Tokens",
@@ -97,13 +100,16 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       enterRecipientPhone: "Enter recipient's phone",
       selectDuration: "Select access duration",
       selectPayment: "Select payment method",
-      setupRequired: "Please complete WiFi setup first",
+      setupRequired: "Please setup your WiFi network first",
       totalRevenue: "Total Revenue",
       activeUsers: "Active Users",
       tokensToday: "Tokens Today",
       logout: "Logout",
       welcomeBack: "Welcome back",
-      userProfile: "User Profile"
+      userProfile: "User Profile",
+      wifiNotConfigured: "WiFi Network Not Configured",
+      wifiNotConfiguredDesc: "Set up your WiFi network to start generating tokens",
+      configureNow: "Configure WiFi Network"
     },
     ar: {
       title: "نظام توزيع رموز الواي فاي",
@@ -114,6 +120,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       adminPassword: "كلمة مرور المدير",
       momoNumber: "رقم إم تي إن موبايل موني",
       saveConfig: "حفظ التكوين",
+      setupWifi: "إعداد شبكة الواي فاي",
       generateToken: "إنشاء رمز واي فاي",
       tokenManagement: "إدارة الرموز",
       activeTokens: "الرموز النشطة",
@@ -152,13 +159,16 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       enterRecipientPhone: "أدخل رقم هاتف المستلم",
       selectDuration: "اختر مدة الوصول",
       selectPayment: "اختر طريقة الدفع",
-      setupRequired: "يرجى إكمال إعداد الواي فاي أولاً",
+      setupRequired: "يرجى إعداد شبكة الواي فاي أولاً",
       totalRevenue: "إجمالي الإيرادات",
       activeUsers: "المستخدمون النشطون",
       tokensToday: "الرموز اليوم",
       logout: "تسجيل الخروج",
       welcomeBack: "أهلاً بعودتك",
-      userProfile: "الملف الشخصي"
+      userProfile: "الملف الشخصي",
+      wifiNotConfigured: "شبكة الواي فاي غير مكونة",
+      wifiNotConfiguredDesc: "قم بإعداد شبكة الواي فاي لبدء إنشاء الرموز",
+      configureNow: "تكوين شبكة الواي فاي"
     }
   };
 
@@ -206,6 +216,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       };
       localStorage.setItem('wifiConfig', JSON.stringify(config));
       setWifiConfig({ ...config, isConfigured: true });
+      setShowWifiSetup(false);
       toast({
         title: t.configSaved,
         description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
@@ -288,72 +299,6 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  if (!wifiConfig.isConfigured) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex-1" />
-              <div className="p-3 bg-blue-600 rounded-full">
-                <Wifi className="h-8 w-8 text-white" />
-              </div>
-              {currentUser && onLogout && (
-                <div className="flex-1 flex justify-end">
-                  <Button variant="outline" size="sm" onClick={onLogout}>
-                    <LogOut className="h-4 w-4 mr-1" />
-                    {t.logout}
-                  </Button>
-                </div>
-              )}
-            </div>
-            <CardTitle>{t.title}</CardTitle>
-            <CardDescription>{t.wifiSetup}</CardDescription>
-            {currentUser && (
-              <div className="text-sm text-gray-600 mt-2">
-                {t.welcomeBack}, {currentUser.name}
-              </div>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="ssid">{t.ssid}</Label>
-              <Input
-                id="ssid"
-                value={wifiConfig.ssid}
-                onChange={(e) => setWifiConfig(prev => ({ ...prev, ssid: e.target.value }))}
-                placeholder={t.enterSSID}
-              />
-            </div>
-            <div>
-              <Label htmlFor="adminPassword">{t.adminPassword}</Label>
-              <Input
-                id="adminPassword"
-                type="password"
-                value={wifiConfig.adminPassword}
-                onChange={(e) => setWifiConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
-                placeholder={t.enterAdminPassword}
-              />
-            </div>
-            <div>
-              <Label htmlFor="momoNumber">{t.momoNumber}</Label>
-              <Input
-                id="momoNumber"
-                value={wifiConfig.momoNumber}
-                onChange={(e) => setWifiConfig(prev => ({ ...prev, momoNumber: e.target.value }))}
-                placeholder={t.enterMomoNumber}
-              />
-            </div>
-            <Button onClick={handleSaveConfig} className="w-full">
-              <Settings className="h-4 w-4 mr-2" />
-              {t.saveConfig}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="container mx-auto space-y-6">
@@ -367,7 +312,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 </div>
                 <div>
                   <CardTitle>{t.title}</CardTitle>
-                  <CardDescription>Network: {wifiConfig.ssid}</CardDescription>
+                  <CardDescription>
+                    {wifiConfig.isConfigured ? `Network: ${wifiConfig.ssid}` : t.description}
+                  </CardDescription>
                 </div>
               </div>
               
@@ -381,10 +328,65 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   </div>
                 )}
                 
+                {/* WiFi Setup Button */}
+                <Dialog open={showWifiSetup} onOpenChange={setShowWifiSetup}>
+                  <DialogTrigger asChild>
+                    <Button variant={wifiConfig.isConfigured ? "outline" : "default"}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      {wifiConfig.isConfigured ? "WiFi Settings" : t.setupWifi}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{t.wifiSetup}</DialogTitle>
+                      <DialogDescription>{t.description}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="ssid">{t.ssid}</Label>
+                        <Input
+                          id="ssid"
+                          value={wifiConfig.ssid}
+                          onChange={(e) => setWifiConfig(prev => ({ ...prev, ssid: e.target.value }))}
+                          placeholder={t.enterSSID}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="adminPassword">{t.adminPassword}</Label>
+                        <Input
+                          id="adminPassword"
+                          type="password"
+                          value={wifiConfig.adminPassword}
+                          onChange={(e) => setWifiConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
+                          placeholder={t.enterAdminPassword}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="momoNumber">{t.momoNumber}</Label>
+                        <Input
+                          id="momoNumber"
+                          value={wifiConfig.momoNumber}
+                          onChange={(e) => setWifiConfig(prev => ({ ...prev, momoNumber: e.target.value }))}
+                          placeholder={t.enterMomoNumber}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowWifiSetup(false)}>
+                          {t.cancel}
+                        </Button>
+                        <Button onClick={handleSaveConfig}>
+                          <Settings className="h-4 w-4 mr-2" />
+                          {t.saveConfig}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 {/* Generate Token Button */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button disabled={!wifiConfig.isConfigured}>
                       <Plus className="h-4 w-4 mr-2" />
                       {t.generateToken}
                     </Button>
@@ -471,6 +473,28 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
             </div>
           </CardHeader>
         </Card>
+
+        {/* WiFi Not Configured Alert */}
+        {!wifiConfig.isConfigured && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-yellow-800">{t.wifiNotConfigured}</h4>
+                  <p className="text-sm text-yellow-700">{t.wifiNotConfiguredDesc}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                  onClick={() => setShowWifiSetup(true)}
+                >
+                  {t.configureNow}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
