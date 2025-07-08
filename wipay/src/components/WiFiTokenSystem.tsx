@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign } from "lucide-react";
+import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign, FileText, Calendar, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PDFReportGenerator, generateReportData } from "@/lib/pdfGenerator";
 
 interface WiFiTokenSystemProps {
   language: string;
@@ -61,6 +62,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   
   const [showWifiSetup, setShowWifiSetup] = useState(false);
   const [setupTab, setSetupTab] = useState("network");
+  const [showReportPreview, setShowReportPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewType, setPreviewType] = useState<'week' | 'month' | 'year'>('week');
   
   const [tokenForm, setTokenForm] = useState({
     recipientPhone: "",
@@ -71,10 +75,28 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   const [tokens, setTokens] = useState<WiFiToken[]>([]);
 
+  // Load tokens from localStorage
+  useEffect(() => {
+    const savedTokens = localStorage.getItem('wifiTokens');
+    if (savedTokens) {
+      try {
+        const parsedTokens = JSON.parse(savedTokens);
+        setTokens(parsedTokens);
+      } catch (error) {
+        console.error('Error loading saved tokens:', error);
+      }
+    }
+  }, []);
+
+  // Save tokens to localStorage whenever tokens change
+  useEffect(() => {
+    localStorage.setItem('wifiTokens', JSON.stringify(tokens));
+  }, [tokens]);
+
   const translations = {
     en: {
-      title: "WiFi Token Distribution System",
-      description: "Generate and distribute WiFi access tokens",
+      title: "Wipay",
+      description: "WiFi Token Distribution System",
       setup: "Network Setup",
       wifiSetup: "WiFi Network Configuration",
       networkConfig: "Network Settings",
@@ -143,11 +165,24 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       wifiNotConfiguredDesc: "Set up your WiFi network to start generating tokens",
       configureNow: "Configure WiFi Network",
       customPricing: "Custom Pricing Enabled",
-      yourPricing: "Your Custom Pricing"
+      yourPricing: "Your Custom Pricing",
+      generateReports: "Generate Reports",
+      weeklyReport: "Weekly Report",
+      monthlyReport: "Monthly Report",
+      yearlyReport: "Yearly Report",
+      previewWeekly: "Preview Weekly",
+      previewMonthly: "Preview Monthly",
+      previewYearly: "Preview Yearly",
+      downloadPDF: "Download PDF",
+      reportPreview: "Report Preview",
+      reportGenerated: "PDF report generated successfully",
+      reportError: "Error generating PDF report",
+      close: "Close",
+      totalUsers: "Total Users"
     },
     ar: {
-      title: "نظام توزيع رموز الواي فاي",
-      description: "إنشاء وتوزيع رموز الوصول للواي فاي",
+      title: "Wipay",
+      description: "نظام توزيع رموز الواي فاي",
       setup: "إعداد الشبكة",
       wifiSetup: "تكوين شبكة الواي فاي",
       networkConfig: "إعدادات الشبكة",
@@ -216,11 +251,91 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       wifiNotConfiguredDesc: "قم بإعداد شبكة الواي فاي لبدء إنشاء الرموز",
       configureNow: "تكوين شبكة الواي فاي",
       customPricing: "التسعير المخصص مفعل",
-      yourPricing: "التسعير المخصص الخاص بك"
+      yourPricing: "التسعير المخصص الخاص بك",
+      generateReports: "إنشاء التقارير",
+      weeklyReport: "التقرير الأسبوعي",
+      monthlyReport: "التقرير الشهري",
+      yearlyReport: "التقرير السنوي",
+      previewWeekly: "معاينة أسبوعي",
+      previewMonthly: "معاينة شهري",
+      previewYearly: "معاينة سنوي",
+      downloadPDF: "تحميل PDF",
+      reportPreview: "معاينة التقرير",
+      reportGenerated: "تم إنشاء تقرير PDF بنجاح",
+      reportError: "خطأ في إنشاء تقرير PDF",
+      close: "إغلاق",
+      totalUsers: "المستخدمون"
     }
   };
 
   const t = translations[language as keyof typeof translations];
+
+  // Function to preview report data
+  const previewReport = async (period: 'week' | 'month' | 'year') => {
+    try {
+      const reportData = generateReportData(period, language);
+      
+      // Create simplified report data with only total revenue and users
+      const simplifiedData = {
+        ...reportData,
+        totalUsers: new Set(tokens.map(token => token.recipientPhone)).size
+      };
+      
+      setPreviewData(simplifiedData);
+      setPreviewType(period);
+      setShowReportPreview(true);
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      toast({
+        title: t.reportError,
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Function to generate and download PDF reports
+  const generatePDFReport = async () => {
+    if (!previewData) return;
+    
+    try {
+      const generator = new PDFReportGenerator(t);
+      
+      let pdf;
+      let filename;
+      
+      switch (previewType) {
+        case 'week':
+          pdf = generator.generateSimpleReport(previewData, 'weekly');
+          filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+          break;
+        case 'month':
+          pdf = generator.generateSimpleReport(previewData, 'monthly');
+          filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
+          break;
+        case 'year':
+          pdf = generator.generateSimpleReport(previewData, 'yearly');
+          filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
+          break;
+      }
+      
+      pdf.save(filename);
+      
+      toast({
+        title: t.reportGenerated,
+        description: `${previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport} downloaded successfully`,
+      });
+      
+      setShowReportPreview(false);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: t.reportError,
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Duration options with custom pricing
   const getDurationOptions = () => [
@@ -356,7 +471,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     tokensToday: tokens.filter(token => {
       const today = new Date().toDateString();
       return new Date(token.createdAt).toDateString() === today;
-    }).length
+    }).length,
+    totalUsers: new Set(tokens.map(token => token.recipientPhone)).size
   };
 
   const getStatusBadge = (status: string) => {
@@ -672,7 +788,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         )}
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
@@ -680,6 +796,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} {pricingConfig.currency}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalUsers}</div>
             </CardContent>
           </Card>
           <Card>
@@ -701,6 +826,53 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
             </CardContent>
           </Card>
         </div>
+
+        {/* PDF Report Generation Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {t.generateReports}
+            </CardTitle>
+            <CardDescription>Generate PDF reports showing total revenue and total users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button 
+                onClick={() => previewReport('week')}
+                variant="outline"
+                className="flex items-center gap-2 h-12"
+              >
+                <Clock className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">{t.previewWeekly}</div>
+                </div>
+              </Button>
+              
+              <Button 
+                onClick={() => previewReport('month')}
+                variant="outline"
+                className="flex items-center gap-2 h-12"
+              >
+                <Calendar className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">{t.previewMonthly}</div>
+                </div>
+              </Button>
+              
+              <Button 
+                onClick={() => previewReport('year')}
+                variant="outline"
+                className="flex items-center gap-2 h-12"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">{t.previewYearly}</div>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Token Management */}
         <Card>
@@ -804,6 +976,86 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Report Preview Modal */}
+        <Dialog open={showReportPreview} onOpenChange={setShowReportPreview}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {t.reportPreview}
+              </DialogTitle>
+              <DialogDescription>
+                {previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport}
+                {previewData && ` - ${previewData.period}`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {previewData && (
+              <div className="space-y-6">
+                {/* Report Header */}
+                <div className="text-center border-b pb-4">
+                  <h2 className="text-xl font-bold text-blue-600">Wipay</h2>
+                  <p className="text-sm text-gray-600">WiFi Token Distribution System</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                  </p>
+                </div>
+
+                {/* Summary Section */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Executive Summary</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-gray-600">Total Revenue</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-green-600">
+                          {previewData.revenue.toLocaleString()} SSP
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-gray-600">Total Users</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {previewData.totalUsers}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Period Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Report Period</h4>
+                  <p className="text-sm text-gray-600">{previewData.period}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    This report includes data from {previewData.transactions} transactions
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowReportPreview(false)}>
+                    {t.close}
+                  </Button>
+                  <Button onClick={generatePDFReport} className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    {t.downloadPDF}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

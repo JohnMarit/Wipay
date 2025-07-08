@@ -96,7 +96,7 @@ const App = () => {
 
   const translations = {
     en: {
-      title: "WiFi Token Management System",
+      title: "Wipay",
       loginSubtitle: "Login to your account",
       signupSubtitle: "Create a new account",
       username: "Username",
@@ -133,7 +133,7 @@ const App = () => {
       loginToAccount: "Login to Account"
     },
     ar: {
-      title: "نظام إدارة رموز الواي فاي",
+      title: "Wipay",
       loginSubtitle: "تسجيل الدخول إلى حسابك",
       signupSubtitle: "إنشاء حساب جديد",
       username: "اسم المستخدم",
@@ -348,7 +348,7 @@ const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading WiFi Token System...</p>
+          <p className="text-gray-600">Loading Wipay...</p>
         </div>
       </div>
     );
