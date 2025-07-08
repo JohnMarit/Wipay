@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle } from "lucide-react";
+import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface WiFiTokenSystemProps {
@@ -22,6 +22,7 @@ interface WiFiToken {
   recipientPhone: string;
   duration: number;
   price: number;
+  currency: string;
   paymentMethod: string;
   status: string;
   createdAt: string;
@@ -29,6 +30,13 @@ interface WiFiToken {
   username: string;
   password: string;
   isActive: boolean;
+}
+
+interface PricingConfig {
+  currency: string;
+  prices: {
+    [key: string]: number;
+  };
 }
 
 const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemProps) => {
@@ -39,8 +47,20 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     momoNumber: "",
     isConfigured: false
   });
+
+  const [pricingConfig, setPricingConfig] = useState<PricingConfig>({
+    currency: "SSP",
+    prices: {
+      "1": 50,
+      "3": 120,
+      "6": 200,
+      "12": 350,
+      "24": 500
+    }
+  });
   
   const [showWifiSetup, setShowWifiSetup] = useState(false);
+  const [setupTab, setSetupTab] = useState("network");
   
   const [tokenForm, setTokenForm] = useState({
     recipientPhone: "",
@@ -57,9 +77,18 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       description: "Generate and distribute WiFi access tokens",
       setup: "Network Setup",
       wifiSetup: "WiFi Network Configuration",
+      networkConfig: "Network Settings",
+      pricingConfig: "Token Pricing",
       ssid: "WiFi Network Name (SSID)",
       adminPassword: "Admin WiFi Password",
       momoNumber: "Your MTN MoMo Number",
+      currency: "Currency",
+      tokenPricing: "Set Token Prices",
+      oneHourPrice: "1 Hour Price",
+      threeHourPrice: "3 Hours Price",
+      sixHourPrice: "6 Hours Price",
+      twelveHourPrice: "12 Hours Price",
+      oneDayPrice: "24 Hours Price",
       saveConfig: "Save Configuration",
       setupWifi: "Setup WiFi Network",
       generateToken: "Generate WiFi Token",
@@ -76,7 +105,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       sixHours: "6 Hours",
       twelveHours: "12 Hours",
       oneDay: "24 Hours",
-      price: "Price (SSP)",
+      price: "Price",
       generate: "Generate & Send Token",
       cancel: "Cancel",
       status: "Status",
@@ -94,12 +123,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       tokenGenerated: "WiFi token generated successfully",
       smsSent: "SMS sent to recipient",
       configSaved: "WiFi configuration saved",
+      pricingSaved: "Pricing configuration saved",
       enterSSID: "Enter WiFi network name",
       enterAdminPassword: "Enter admin password",
       enterMomoNumber: "Enter MTN MoMo number",
       enterRecipientPhone: "Enter recipient's phone",
+      enterPrice: "Enter price",
       selectDuration: "Select access duration",
       selectPayment: "Select payment method",
+      selectCurrency: "Select currency",
       setupRequired: "Please setup your WiFi network first",
       totalRevenue: "Total Revenue",
       activeUsers: "Active Users",
@@ -109,16 +141,27 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       userProfile: "User Profile",
       wifiNotConfigured: "WiFi Network Not Configured",
       wifiNotConfiguredDesc: "Set up your WiFi network to start generating tokens",
-      configureNow: "Configure WiFi Network"
+      configureNow: "Configure WiFi Network",
+      customPricing: "Custom Pricing Enabled",
+      yourPricing: "Your Custom Pricing"
     },
     ar: {
       title: "نظام توزيع رموز الواي فاي",
       description: "إنشاء وتوزيع رموز الوصول للواي فاي",
       setup: "إعداد الشبكة",
       wifiSetup: "تكوين شبكة الواي فاي",
+      networkConfig: "إعدادات الشبكة",
+      pricingConfig: "تسعير الرموز",
       ssid: "اسم شبكة الواي فاي",
       adminPassword: "كلمة مرور المدير",
       momoNumber: "رقم إم تي إن موبايل موني",
+      currency: "العملة",
+      tokenPricing: "تحديد أسعار الرموز",
+      oneHourPrice: "سعر الساعة الواحدة",
+      threeHourPrice: "سعر 3 ساعات",
+      sixHourPrice: "سعر 6 ساعات",
+      twelveHourPrice: "سعر 12 ساعة",
+      oneDayPrice: "سعر 24 ساعة",
       saveConfig: "حفظ التكوين",
       setupWifi: "إعداد شبكة الواي فاي",
       generateToken: "إنشاء رمز واي فاي",
@@ -135,7 +178,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       sixHours: "6 ساعات",
       twelveHours: "12 ساعة",
       oneDay: "24 ساعة",
-      price: "السعر (جنيه جنوب سوداني)",
+      price: "السعر",
       generate: "إنشاء وإرسال الرمز",
       cancel: "إلغاء",
       status: "الحالة",
@@ -153,12 +196,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       tokenGenerated: "تم إنشاء رمز الواي فاي بنجاح",
       smsSent: "تم إرسال الرسالة للمستلم",
       configSaved: "تم حفظ تكوين الواي فاي",
+      pricingSaved: "تم حفظ تكوين التسعير",
       enterSSID: "أدخل اسم شبكة الواي فاي",
       enterAdminPassword: "أدخل كلمة مرور المدير",
       enterMomoNumber: "أدخل رقم موبايل موني",
       enterRecipientPhone: "أدخل رقم هاتف المستلم",
+      enterPrice: "أدخل السعر",
       selectDuration: "اختر مدة الوصول",
       selectPayment: "اختر طريقة الدفع",
+      selectCurrency: "اختر العملة",
       setupRequired: "يرجى إعداد شبكة الواي فاي أولاً",
       totalRevenue: "إجمالي الإيرادات",
       activeUsers: "المستخدمون النشطون",
@@ -168,19 +214,21 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       userProfile: "الملف الشخصي",
       wifiNotConfigured: "شبكة الواي فاي غير مكونة",
       wifiNotConfiguredDesc: "قم بإعداد شبكة الواي فاي لبدء إنشاء الرموز",
-      configureNow: "تكوين شبكة الواي فاي"
+      configureNow: "تكوين شبكة الواي فاي",
+      customPricing: "التسعير المخصص مفعل",
+      yourPricing: "التسعير المخصص الخاص بك"
     }
   };
 
   const t = translations[language as keyof typeof translations];
 
-  // Duration and pricing configuration
-  const durationOptions = [
-    { value: "1", label: t.oneHour, price: 50 },
-    { value: "3", label: t.threeHours, price: 120 },
-    { value: "6", label: t.sixHours, price: 200 },
-    { value: "12", label: t.twelveHours, price: 350 },
-    { value: "24", label: t.oneDay, price: 500 }
+  // Duration options with custom pricing
+  const getDurationOptions = () => [
+    { value: "1", label: t.oneHour, price: pricingConfig.prices["1"] },
+    { value: "3", label: t.threeHours, price: pricingConfig.prices["3"] },
+    { value: "6", label: t.sixHours, price: pricingConfig.prices["6"] },
+    { value: "12", label: t.twelveHours, price: pricingConfig.prices["12"] },
+    { value: "24", label: t.oneDay, price: pricingConfig.prices["24"] }
   ];
 
   // Load configuration from localStorage
@@ -189,6 +237,12 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     if (savedConfig) {
       const config = JSON.parse(savedConfig);
       setWifiConfig({ ...config, isConfigured: true });
+    }
+
+    const savedPricing = localStorage.getItem('pricingConfig');
+    if (savedPricing) {
+      const pricing = JSON.parse(savedPricing);
+      setPricingConfig(pricing);
     }
   }, []);
 
@@ -215,6 +269,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         momoNumber: wifiConfig.momoNumber
       };
       localStorage.setItem('wifiConfig', JSON.stringify(config));
+      
+      // Also save pricing config
+      localStorage.setItem('pricingConfig', JSON.stringify(pricingConfig));
+      
       setWifiConfig({ ...config, isConfigured: true });
       setShowWifiSetup(false);
       toast({
@@ -222,6 +280,18 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
       });
     }
+  };
+
+  // Handle pricing update
+  const handlePricingUpdate = (duration: string, price: string) => {
+    const numPrice = parseFloat(price) || 0;
+    setPricingConfig(prev => ({
+      ...prev,
+      prices: {
+        ...prev.prices,
+        [duration]: numPrice
+      }
+    }));
   };
 
   // Handle token generation
@@ -236,7 +306,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     }
 
     if (tokenForm.recipientPhone && tokenForm.duration && tokenForm.paymentMethod) {
-      const selectedDuration = durationOptions.find(d => d.value === tokenForm.duration);
+      const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
       const credentials = generateCredentials();
       const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
       
@@ -245,6 +315,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         recipientPhone: tokenForm.recipientPhone,
         duration: parseInt(tokenForm.duration),
         price: selectedDuration?.price || 0,
+        currency: pricingConfig.currency,
         paymentMethod: tokenForm.paymentMethod,
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -258,7 +329,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
 
       // Simulate SMS sending
-      const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
+      const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
       
       toast({
         title: t.tokenGenerated,
@@ -272,11 +343,11 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   // Update price when duration changes
   useEffect(() => {
-    const selectedDuration = durationOptions.find(d => d.value === tokenForm.duration);
+    const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
     if (selectedDuration) {
       setTokenForm(prev => ({ ...prev, price: selectedDuration.price }));
     }
-  }, [tokenForm.duration]);
+  }, [tokenForm.duration, pricingConfig]);
 
   // Calculate statistics
   const stats = {
@@ -328,6 +399,14 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   </div>
                 )}
                 
+                {/* Custom Pricing Indicator */}
+                {wifiConfig.isConfigured && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    {pricingConfig.currency}
+                  </Badge>
+                )}
+                
                 {/* WiFi Setup Button */}
                 <Dialog open={showWifiSetup} onOpenChange={setShowWifiSetup}>
                   <DialogTrigger asChild>
@@ -336,49 +415,145 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       {wifiConfig.isConfigured ? "WiFi Settings" : t.setupWifi}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{t.wifiSetup}</DialogTitle>
                       <DialogDescription>{t.description}</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="ssid">{t.ssid}</Label>
-                        <Input
-                          id="ssid"
-                          value={wifiConfig.ssid}
-                          onChange={(e) => setWifiConfig(prev => ({ ...prev, ssid: e.target.value }))}
-                          placeholder={t.enterSSID}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="adminPassword">{t.adminPassword}</Label>
-                        <Input
-                          id="adminPassword"
-                          type="password"
-                          value={wifiConfig.adminPassword}
-                          onChange={(e) => setWifiConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
-                          placeholder={t.enterAdminPassword}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="momoNumber">{t.momoNumber}</Label>
-                        <Input
-                          id="momoNumber"
-                          value={wifiConfig.momoNumber}
-                          onChange={(e) => setWifiConfig(prev => ({ ...prev, momoNumber: e.target.value }))}
-                          placeholder={t.enterMomoNumber}
-                        />
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setShowWifiSetup(false)}>
-                          {t.cancel}
-                        </Button>
-                        <Button onClick={handleSaveConfig}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          {t.saveConfig}
-                        </Button>
-                      </div>
+                    
+                    <Tabs value={setupTab} onValueChange={setSetupTab} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="network">{t.networkConfig}</TabsTrigger>
+                        <TabsTrigger value="pricing">{t.pricingConfig}</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="network" className="space-y-4">
+                        <div>
+                          <Label htmlFor="ssid">{t.ssid}</Label>
+                          <Input
+                            id="ssid"
+                            value={wifiConfig.ssid}
+                            onChange={(e) => setWifiConfig(prev => ({ ...prev, ssid: e.target.value }))}
+                            placeholder={t.enterSSID}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="adminPassword">{t.adminPassword}</Label>
+                          <Input
+                            id="adminPassword"
+                            type="password"
+                            value={wifiConfig.adminPassword}
+                            onChange={(e) => setWifiConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
+                            placeholder={t.enterAdminPassword}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="momoNumber">{t.momoNumber}</Label>
+                          <Input
+                            id="momoNumber"
+                            value={wifiConfig.momoNumber}
+                            onChange={(e) => setWifiConfig(prev => ({ ...prev, momoNumber: e.target.value }))}
+                            placeholder={t.enterMomoNumber}
+                          />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="pricing" className="space-y-4">
+                        <div>
+                          <Label htmlFor="currency">{t.currency}</Label>
+                          <Select value={pricingConfig.currency} onValueChange={(value) => setPricingConfig(prev => ({ ...prev, currency: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t.selectCurrency} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SSP">South Sudanese Pound (SSP)</SelectItem>
+                              <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                              <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                              <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="font-medium">{t.tokenPricing}</h4>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="price1">{t.oneHourPrice}</Label>
+                              <Input
+                                id="price1"
+                                type="number"
+                                value={pricingConfig.prices["1"]}
+                                onChange={(e) => handlePricingUpdate("1", e.target.value)}
+                                placeholder={t.enterPrice}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="price3">{t.threeHourPrice}</Label>
+                              <Input
+                                id="price3"
+                                type="number"
+                                value={pricingConfig.prices["3"]}
+                                onChange={(e) => handlePricingUpdate("3", e.target.value)}
+                                placeholder={t.enterPrice}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="price6">{t.sixHourPrice}</Label>
+                              <Input
+                                id="price6"
+                                type="number"
+                                value={pricingConfig.prices["6"]}
+                                onChange={(e) => handlePricingUpdate("6", e.target.value)}
+                                placeholder={t.enterPrice}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="price12">{t.twelveHourPrice}</Label>
+                              <Input
+                                id="price12"
+                                type="number"
+                                value={pricingConfig.prices["12"]}
+                                onChange={(e) => handlePricingUpdate("12", e.target.value)}
+                                placeholder={t.enterPrice}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Label htmlFor="price24">{t.oneDayPrice}</Label>
+                              <Input
+                                id="price24"
+                                type="number"
+                                value={pricingConfig.prices["24"]}
+                                onChange={(e) => handlePricingUpdate("24", e.target.value)}
+                                placeholder={t.enterPrice}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Pricing Preview */}
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h5 className="font-medium mb-2">{t.yourPricing}</h5>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {getDurationOptions().map((option) => (
+                                <div key={option.value} className="flex justify-between">
+                                  <span>{option.label}:</span>
+                                  <span className="font-medium">{option.price} {pricingConfig.currency}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button variant="outline" onClick={() => setShowWifiSetup(false)}>
+                        {t.cancel}
+                      </Button>
+                      <Button onClick={handleSaveConfig}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        {t.saveConfig}
+                      </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -413,9 +588,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                             <SelectValue placeholder={t.selectDuration} />
                           </SelectTrigger>
                           <SelectContent>
-                            {durationOptions.map((option) => (
+                            {getDurationOptions().map((option) => (
                               <SelectItem key={option.value} value={option.value}>
-                                {option.label} - {option.price} SSP
+                                {option.label} - {option.price} {pricingConfig.currency}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -447,7 +622,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         <div className="p-3 bg-gray-50 rounded-lg">
                           <div className="flex justify-between items-center">
                             <span className="font-medium">{t.price}:</span>
-                            <span className="text-lg font-bold">{tokenForm.price} SSP</span>
+                            <span className="text-lg font-bold">{tokenForm.price} {pricingConfig.currency}</span>
                           </div>
                         </div>
                       )}
@@ -504,7 +679,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} SSP</div>
+              <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} {pricingConfig.currency}</div>
             </CardContent>
           </Card>
           <Card>
@@ -607,7 +782,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                           <TableCell className="font-mono text-sm">{token.id}</TableCell>
                           <TableCell>{token.recipientPhone}</TableCell>
                           <TableCell>{token.duration}h</TableCell>
-                          <TableCell>{token.price} SSP</TableCell>
+                          <TableCell>{token.price} {token.currency}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {token.paymentMethod === 'cash' ? (
