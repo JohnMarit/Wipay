@@ -11,7 +11,7 @@
   ],
   "headers": [
     {
-      "source": "/favicon.ico",
+      "source": "/favicon.(ico|png)",
       "headers": [
         {
           "key": "Cache-Control",
