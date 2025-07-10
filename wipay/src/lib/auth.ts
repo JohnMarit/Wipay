@@ -1,60 +1,137 @@
+import { authService, userService, UserProfile } from './firebase';
+
+// User interface
 export interface User {
   id: string;
   username: string;
-  email: string;
-  role: 'admin' | 'billing_manager' | 'customer_service' | 'technician' | 'customer';
   name: string;
-  permissions: string[];
-  isActive: boolean;
+  phone: string;
+  email: string;
+  role: string;
 }
 
-const ROLE_PERMISSIONS = {
-  admin: ['all'],
-  billing_manager: ['billing', 'payments', 'customers'],
-  customer_service: ['customers', 'support', 'payments'],
-  technician: ['equipment', 'installations', 'maintenance'],
-  customer: ['self_service']
+// Authentication functions using Firebase
+export const authenticateUser = async (usernameOrEmail: string, password: string): Promise<User | null> => {
+  try {
+    // Use email for Firebase authentication
+    const isEmail = usernameOrEmail.includes('@');
+    const email = isEmail ? usernameOrEmail : `${usernameOrEmail}@wipay.local`; // Fallback for username
+
+    const firebaseUser = await authService.signIn(email, password);
+    
+    if (firebaseUser) {
+      // Get user profile from Firestore
+      const userProfile = await userService.getUserProfile(firebaseUser.uid);
+      
+      if (userProfile) {
+        return {
+          id: firebaseUser.uid,
+          username: userProfile.name.toLowerCase().replace(/\s+/g, ''),
+          name: userProfile.name,
+          phone: userProfile.phone,
+          email: userProfile.email,
+          role: 'user'
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return null;
+  }
 };
 
-export class AuthService {
-  private static instance: AuthService;
-  private currentUser: User | null = null;
-
-  static getInstance(): AuthService {
-    if (!AuthService.instance) {
-      AuthService.instance = new AuthService();
-    }
-    return AuthService.instance;
-  }
-
-  async login(username: string, password: string): Promise<User> {
-    const mockUsers: { [key: string]: User } = {
-      'admin': {
-        id: '1', username: 'admin', email: 'admin@ispbilling.ss',
-        role: 'admin', name: 'System Administrator',
-        permissions: ROLE_PERMISSIONS.admin, isActive: true
-      }
+// Register new user
+export const registerUser = async (
+  name: string, 
+  phone: string, 
+  email: string, 
+  password: string
+): Promise<User | null> => {
+  try {
+    const userProfile = await authService.signUp(email, password, name, phone);
+    
+    return {
+      id: userProfile.uid,
+      username: name.toLowerCase().replace(/\s+/g, ''),
+      name: userProfile.name,
+      phone: userProfile.phone,
+      email: userProfile.email,
+      role: 'user'
     };
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
+};
 
-    const user = mockUsers[username];
-    if (user && password === 'password') {
-      this.currentUser = user;
-      localStorage.setItem('authUser', JSON.stringify(user));
-      return user;
+// Sign out user
+export const signOutUser = async (): Promise<void> => {
+  try {
+    await authService.signOut();
+  } catch (error) {
+    console.error('Sign out error:', error);
+    throw error;
+  }
+};
+
+// Get current authenticated user
+export const getCurrentUser = (): Promise<User | null> => {
+  return new Promise((resolve) => {
+    const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
+      unsubscribe(); // Stop listening after first result
+      
+      if (firebaseUser) {
+        try {
+          const userProfile = await userService.getUserProfile(firebaseUser.uid);
+          if (userProfile) {
+            resolve({
+              id: firebaseUser.uid,
+              username: userProfile.name.toLowerCase().replace(/\s+/g, ''),
+              name: userProfile.name,
+              phone: userProfile.phone,
+              email: userProfile.email,
+              role: 'user'
+            });
+          } else {
+            resolve(null);
+          }
+        } catch (error) {
+          console.error('Error getting user profile:', error);
+          resolve(null);
+        }
+      } else {
+        resolve(null);
+      }
+    });
+  });
+};
+
+// Listen to authentication state changes
+export const onAuthStateChange = (callback: (user: User | null) => void) => {
+  return authService.onAuthStateChanged(async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        const userProfile = await userService.getUserProfile(firebaseUser.uid);
+        if (userProfile) {
+          callback({
+            id: firebaseUser.uid,
+            username: userProfile.name.toLowerCase().replace(/\s+/g, ''),
+            name: userProfile.name,
+            phone: userProfile.phone,
+            email: userProfile.email,
+            role: 'user'
+          });
+        } else {
+          callback(null);
+        }
+      } catch (error) {
+        console.error('Error getting user profile:', error);
+        callback(null);
+      }
+    } else {
+      callback(null);
     }
-    throw new Error('Invalid credentials');
-  }
-
-  getCurrentUser(): User | null {
-    if (!this.currentUser) {
-      const stored = localStorage.getItem('authUser');
-      if (stored) this.currentUser = JSON.parse(stored);
-    }
-    return this.currentUser;
-  }
-
-  hasPermission(permission: string): boolean {
-    const user = this.getCurrentUser();
-    return user?.permissions.includes('all') || user?.permissions.includes(permission) || false;
-  }
-} 
+  });
+}; 

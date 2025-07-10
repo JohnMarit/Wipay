@@ -1,0 +1,143 @@
+# Cursor Rules for Wipay Project
+
+## UI/UX Guidelines
+
+### Color Scheme & Design System
+- **Primary Color**: Use blue as the primary brand color across all components
+- **Blue Palette**: 
+  - Primary: `blue-600` (#2563eb)
+  - Hover: `blue-700` (#1d4ed8)
+  - Light: `blue-50` (#eff6ff)
+  - Dark: `blue-900` (#1e3a8a)
+- Use shadcn/ui components consistently across the application
+- Follow Tailwind CSS utility-first approach for styling
+- Maintain consistent spacing using Tailwind's spacing scale (4, 8, 12, 16, etc.)
+- Use proper contrast ratios for accessibility (minimum 4.5:1 for normal text)
+
+### Component Standards
+- All components must be typed with TypeScript interfaces
+- Use proper semantic HTML elements for accessibility
+- Implement proper ARIA labels and roles
+- Components should be responsive by default (mobile-first approach)
+- Use consistent naming conventions: PascalCase for components, camelCase for props
+- Prefer composition over inheritance for component design
+
+### Layout & Spacing
+- Use consistent grid systems and flexbox layouts
+- Maintain proper visual hierarchy with typography scales
+- Implement proper loading states and error handling UI
+- Use consistent button styles and interactive states
+- Follow 8px grid system for spacing and alignment
+
+## Security Rules
+
+### Authentication & Authorization
+- Never store sensitive data in localStorage or sessionStorage
+- Implement proper JWT token handling with secure httpOnly cookies
+- Use secure session management with proper timeout mechanisms
+- Implement role-based access control (RBAC) for different user types
+- Always validate user permissions on both client and server side
+
+### Data Protection
+- Sanitize all user inputs to prevent XSS attacks
+- Use parameterized queries to prevent SQL injection
+- Implement proper CORS configuration
+- Never expose sensitive information in error messages
+- Use HTTPS for all API communications
+- Implement proper data encryption for sensitive information
+
+### API Security
+- Implement rate limiting for all API endpoints
+- Use proper API versioning and endpoint security
+- Validate all incoming requests with proper schema validation
+- Implement proper error handling without information leakage
+- Use secure headers (CSP, HSTS, X-Frame-Options, etc.)
+
+### Environment & Configuration
+- Never commit secrets, API keys, or passwords to version control
+- Use environment variables for all configuration
+- Implement proper secret management for production environments
+- Regular security audits and dependency updates
+- Use secure coding practices and static analysis tools
+
+## Software Development Rules
+
+### Code Quality & Standards
+- Use TypeScript strict mode for type safety
+- Implement comprehensive error handling with try-catch blocks
+- Write unit tests for all business logic components
+- Use ESLint and Prettier for code formatting and linting
+- Follow SOLID principles in component and service design
+- Maintain code coverage above 80% for critical paths
+
+### Architecture & Structure
+- Follow feature-based folder structure for scalability
+- Implement proper separation of concerns (UI, business logic, data)
+- Use custom hooks for reusable stateful logic
+- Implement proper state management (Context API, Zustand, or Redux)
+- Follow single responsibility principle for components and functions
+
+### Performance Optimization
+- Implement lazy loading for routes and heavy components
+- Use React.memo, useMemo, and useCallback appropriately
+- Optimize bundle size with proper code splitting
+- Implement proper caching strategies for API calls
+- Use proper image optimization and loading strategies
+
+### Git & Version Control
+- Use conventional commit messages (feat:, fix:, docs:, etc.)
+- Create feature branches for all new development
+- Require code reviews for all pull requests
+- Maintain clean commit history with meaningful messages
+- Use semantic versioning for releases
+
+### Testing Standards
+- Write unit tests for all utility functions and hooks
+- Implement integration tests for critical user flows
+- Use React Testing Library for component testing
+- Mock external dependencies and API calls in tests
+- Maintain test documentation and coverage reports
+
+### Documentation
+- Document all public APIs and component interfaces
+- Maintain README files for setup and development
+- Use JSDoc comments for complex functions and components
+- Keep architectural decision records (ADRs) for major decisions
+- Document deployment and configuration procedures
+
+## Project-Specific Rules
+
+### Wipay Domain
+- Follow financial industry best practices for payment processing
+- Implement proper audit logging for all financial transactions
+- Use decimal.js or similar for precise financial calculations
+- Implement proper data validation for financial data
+- Follow PCI DSS compliance guidelines for payment data
+
+### Module Standards
+- BillingModule: Ensure all billing calculations are accurate and auditable
+- CustomerManagement: Implement proper data privacy and GDPR compliance
+- PaymentTracking: Use secure payment processing with proper error handling
+- ReportsAnalytics: Implement proper data aggregation and visualization
+- ServiceManagement: Follow service-oriented architecture principles
+
+### Localization & Accessibility
+- Implement proper internationalization (i18n) support
+- Use LanguageSelector component consistently
+- Ensure all text is translatable and culturally appropriate
+- Follow WCAG 2.1 AA accessibility guidelines
+- Test with screen readers and keyboard navigation
+
+### Performance & Monitoring
+- Implement proper error tracking and monitoring
+- Use performance monitoring for critical user journeys
+- Implement proper logging for debugging and troubleshooting
+- Monitor and optimize Core Web Vitals
+- Use proper caching strategies for improved performance
+
+## Enforcement
+- All code must pass linting and type checking before commit
+- Security vulnerabilities must be addressed within 24 hours
+- Performance regressions require immediate investigation
+- UI/UX changes must be reviewed by design team
+- All new features require proper documentation and testing 

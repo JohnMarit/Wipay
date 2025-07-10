@@ -281,14 +281,14 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
   return (
     <div className="space-y-6">
       {/* Enhanced Payment Stats Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t.totalPayments}</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{paymentStats.totalPayments.toLocaleString()} SSP</div>
+            <div className="text-xl sm:text-2xl font-bold">{paymentStats.totalPayments.toLocaleString()} SSP</div>
             <p className="text-xs text-muted-foreground">{paymentStats.thisMonthCount} {t.thisMonth}</p>
           </CardContent>
         </Card>
@@ -299,7 +299,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
             <Smartphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{paymentStats.mobileMoneyVolume.toLocaleString()} SSP</div>
+            <div className="text-xl sm:text-2xl font-bold">{paymentStats.mobileMoneyVolume.toLocaleString()} SSP</div>
             <p className="text-xs text-muted-foreground">68% of total payments</p>
           </CardContent>
         </Card>
@@ -310,7 +310,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{paymentStats.pendingPayments.toLocaleString()} SSP</div>
+            <div className="text-xl sm:text-2xl font-bold">{paymentStats.pendingPayments.toLocaleString()} SSP</div>
             <p className="text-xs text-muted-foreground">{paymentStats.verificationRequired} {t.verificationRequired}</p>
           </CardContent>
         </Card>
@@ -323,19 +323,20 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
           <CardContent>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="w-full">
+                <Button className="w-full text-xs">
                   <Plus className="h-4 w-4 mr-2" />
-                  {t.addPayment}
+                  <span className="hidden sm:inline">{t.addPayment}</span>
+                  <span className="sm:hidden">Payment</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md w-[95vw] sm:w-full">
                 <DialogHeader>
-                  <DialogTitle>{t.addPayment}</DialogTitle>
-                  <DialogDescription>Record a new customer payment with verification</DialogDescription>
+                  <DialogTitle className="text-sm sm:text-base">{t.addPayment}</DialogTitle>
+                  <DialogDescription className="text-xs sm:text-sm">Record a new customer payment with verification</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="customer">{t.customer}</Label>
+                    <Label htmlFor="customer" className="text-sm">{t.customer}</Label>
                     <Select value={newPayment.customer} onValueChange={(value) => setNewPayment({...newPayment, customer: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder={t.selectCustomer} />
@@ -343,7 +344,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                       <SelectContent>
                         {customers.map((customer) => (
                           <SelectItem key={customer} value={customer}>
-                            {customer}
+                            <span className="text-sm">{customer}</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -351,7 +352,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="amount">{t.amount}</Label>
+                    <Label htmlFor="amount" className="text-sm">{t.amount}</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -362,7 +363,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="method">{t.method}</Label>
+                    <Label htmlFor="method" className="text-sm">{t.method}</Label>
                     <Select value={newPayment.method} onValueChange={(value) => setNewPayment({...newPayment, method: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder={t.selectMethod} />
@@ -372,7 +373,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                           <SelectItem key={method.value} value={method.value}>
                             <div className="flex items-center gap-2">
                               <method.icon className="h-4 w-4" />
-                              {method.label}
+                              <span className="text-sm">{method.label}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -382,7 +383,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                   
                   {(newPayment.method === 'orange_money' || newPayment.method === 'mtn_money' || newPayment.method === 'airtel_money') && (
                     <div>
-                      <Label htmlFor="phone">{t.phoneNumber}</Label>
+                      <Label htmlFor="phone" className="text-sm">{t.phoneNumber}</Label>
                       <Input
                         id="phone"
                         value={newPayment.phoneNumber}
@@ -393,7 +394,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                   )}
                   
                   <div>
-                    <Label htmlFor="reference">{t.reference}</Label>
+                    <Label htmlFor="reference" className="text-sm">{t.reference}</Label>
                     <Input
                       id="reference"
                       value={newPayment.reference}
@@ -402,9 +403,9 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                     />
                   </div>
                   
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline">{t.cancel}</Button>
-                    <Button onClick={handleAddPayment}>{t.recordPayment}</Button>
+                  <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    <Button variant="outline" className="w-full sm:w-auto">{t.cancel}</Button>
+                    <Button onClick={handleAddPayment} className="w-full sm:w-auto">{t.recordPayment}</Button>
                   </div>
                 </div>
               </DialogContent>
@@ -449,7 +450,66 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                 )}
               </div>
 
-              <div className="rounded-md border">
+              {/* Mobile Card Layout */}
+              <div className="block lg:hidden space-y-4">
+                {filteredPayments.map((payment) => (
+                  <Card key={payment.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-sm">{payment.customer}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{payment.id}</p>
+                          {payment.phoneNumber && (
+                            <p className="text-xs text-muted-foreground">{payment.phoneNumber}</p>
+                          )}
+                        </div>
+                        {getStatusBadge(payment.status)}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="font-medium">Amount:</span> {payment.amount.toLocaleString()} SSP
+                        </div>
+                        <div>
+                          <span className="font-medium">Date:</span> {payment.date}
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-2">
+                            {getMethodIcon(payment.method)}
+                            <span className="font-medium">Method:</span>
+                            <span className="text-sm">{payment.method}</span>
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="font-medium">Reference:</span> 
+                          <span className="font-mono text-xs ml-1">{payment.reference}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <Button variant="outline" size="sm" className="w-full">
+                          {t.viewReceipt}
+                        </Button>
+                        <div className="flex gap-2">
+                          {payment.status === 'pending' && (
+                            <Button variant="outline" size="sm" className="flex-1">
+                              {t.verify}
+                            </Button>
+                          )}
+                          {payment.status === 'completed' && (
+                            <Button variant="outline" size="sm" className="flex-1">
+                              SMS
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table Layout */}
+              <div className="hidden lg:block rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -510,13 +570,13 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
             </TabsContent>
 
             <TabsContent value="methods" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {paymentMethods.map((method) => (
                   <Card key={method.value} className="border-2 hover:border-blue-200 transition-colors">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <method.icon className={`h-5 w-5 text-${method.color}-600`} />
-                        {method.label}
+                        <span className="text-sm sm:text-base">{method.label}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -538,13 +598,13 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
             </TabsContent>
 
             <TabsContent value="reconciliation" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm">Today's Transactions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">47</div>
+                    <div className="text-xl sm:text-2xl font-bold">47</div>
                     <div className="text-sm text-gray-600">Total: 8,540 SSP</div>
                   </CardContent>
                 </Card>
@@ -553,7 +613,7 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                     <CardTitle className="text-sm">Pending Verification</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-yellow-600">8</div>
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">8</div>
                     <div className="text-sm text-gray-600">Amount: 1,200 SSP</div>
                   </CardContent>
                 </Card>
@@ -562,16 +622,16 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
                     <CardTitle className="text-sm">Failed Transactions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-red-600">2</div>
+                    <div className="text-xl sm:text-2xl font-bold text-red-600">2</div>
                     <div className="text-sm text-gray-600">Amount: 300 SSP</div>
                   </CardContent>
                 </Card>
               </div>
               
-              <div className="flex gap-2">
-                <Button>Generate Daily Report</Button>
-                <Button variant="outline">Export to CSV</Button>
-                <Button variant="outline">Send to Accounting</Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button className="w-full sm:w-auto">Generate Daily Report</Button>
+                <Button variant="outline" className="w-full sm:w-auto">Export to CSV</Button>
+                <Button variant="outline" className="w-full sm:w-auto">Send to Accounting</Button>
               </div>
             </TabsContent>
           </Tabs>

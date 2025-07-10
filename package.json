@@ -1,0 +1,8 @@
+{
+  "name": "wipay-root",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Root setup for Wipay project cursor rules enforcement",
+  "main": "setup-cursor-rules.js"
+} 

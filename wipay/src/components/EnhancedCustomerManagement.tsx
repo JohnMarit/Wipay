@@ -452,7 +452,7 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                     </TableCell>
                     <TableCell>{getStatusBadge(customer.status)}</TableCell>
                     <TableCell>
-                      <div className={`font-medium ${customer.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      <div className={`font-medium ${customer.balance < 0 ? 'text-red-600' : 'text-blue-600'}`}>
                         {customer.balance > 0 ? '+' : ''}{customer.balance} SSP
                       </div>
                     </TableCell>

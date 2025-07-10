@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { TrendingUp, TrendingDown, Users, DollarSign, Download, Calendar, BarChart3, FileText, Clock, Database, AlertTriangle } from "lucide-react";
-import { PDFReportGenerator, generateReportData } from "@/lib/pdfGenerator";
+import { TrendingUp, TrendingDown, Users, DollarSign, Download, Calendar, BarChart3, FileText, Clock, Database, AlertTriangle, CalendarDays } from "lucide-react";
+import { PDFReportGenerator } from "@/lib/pdfGenerator";
 import { WiFiDataCollector } from "@/lib/dataCollector";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +18,14 @@ interface ReportsAnalyticsProps {
 
 const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
   const { toast } = useToast();
+  
+  // State for custom date range selection
+  const [showCustomReportDialog, setShowCustomReportDialog] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: "",
+    endDate: "",
+    reportType: "custom" as "custom" | "weekly" | "monthly" | "yearly"
+  });
   
   // Check if we have real data available
   const dataCollector = new WiFiDataCollector();
@@ -60,10 +72,17 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
       weeklyReport: "Weekly Report",
       monthlyReport: "Monthly Report",
       yearlyReport: "Yearly Report",
+      customReport: "Custom Report",
       generatePDFReports: "Generate PDF Reports",
       downloadWeekly: "Download Weekly",
       downloadMonthly: "Download Monthly",
       downloadYearly: "Download Yearly",
+      customDateRange: "Custom Date Range",
+      selectDateRange: "Select Date Range",
+      startDate: "Start Date",
+      endDate: "End Date",
+      reportType: "Report Type",
+      generateCustomReport: "Generate Custom Report",
       summary: "Executive Summary",
       totalTransactions: "Total Transactions",
       uniqueCustomers: "Unique Customers",
@@ -88,7 +107,15 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
       sampleDataIndicator: "Using Sample Data",
       realDataDesc: "Reports generated from actual WiFi token transactions",
       sampleDataDesc: "Generate some WiFi tokens to see real data in reports",
-      dataSource: "Data Source"
+      dataSource: "Data Source",
+      cancel: "Cancel",
+      generate: "Generate Report",
+      invalidDateRange: "Invalid date range",
+      startDateRequired: "Start date is required",
+      endDateRequired: "End date is required",
+      endDateAfterStart: "End date must be after start date",
+      quickReports: "Quick Reports",
+      customReports: "Custom Reports"
     },
     ar: {
       title: "التقارير والتحليلات",
@@ -129,10 +156,17 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
       weeklyReport: "التقرير الأسبوعي",
       monthlyReport: "التقرير الشهري",
       yearlyReport: "التقرير السنوي",
+      customReport: "تقرير مخصص",
       generatePDFReports: "إنشاء تقارير PDF",
       downloadWeekly: "تحميل أسبوعي",
       downloadMonthly: "تحميل شهري",
       downloadYearly: "تحميل سنوي",
+      customDateRange: "نطاق التاريخ المخصص",
+      selectDateRange: "اختر نطاق التاريخ",
+      startDate: "تاريخ البداية",
+      endDate: "تاريخ النهاية",
+      reportType: "نوع التقرير",
+      generateCustomReport: "إنشاء تقرير مخصص",
       summary: "الملخص التنفيذي",
       totalTransactions: "إجمالي المعاملات",
       uniqueCustomers: "العملاء الفريدون",
@@ -157,41 +191,83 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
       sampleDataIndicator: "استخدام البيانات النموذجية",
       realDataDesc: "التقارير المُنشأة من معاملات رموز الواي فاي الفعلية",
       sampleDataDesc: "قم بإنشاء بعض رموز الواي فاي لرؤية البيانات الحقيقية في التقارير",
-      dataSource: "مصدر البيانات"
+      dataSource: "مصدر البيانات",
+      cancel: "إلغاء",
+      generate: "إنشاء التقرير",
+      invalidDateRange: "نطاق تاريخ غير صالح",
+      startDateRequired: "تاريخ البداية مطلوب",
+      endDateRequired: "تاريخ النهاية مطلوب",
+      endDateAfterStart: "يجب أن يكون تاريخ النهاية بعد تاريخ البداية",
+      quickReports: "التقارير السريعة",
+      customReports: "التقارير المخصصة"
     }
   };
 
   const t = translations[language as keyof typeof translations];
 
   // Function to generate and download PDF reports
-  const generatePDFReport = async (period: 'week' | 'month' | 'year') => {
+  const generatePDFReport = async (period: 'week' | 'month' | 'year' | 'custom', startDate?: string, endDate?: string) => {
     try {
-      const reportData = generateReportData(period, language);
-      const generator = new PDFReportGenerator(t);
-      
-      let pdf;
+      let reportData;
       let filename;
       
-      switch (period) {
-        case 'week':
-          pdf = generator.generateWeeklyReport(reportData);
-          filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
-          break;
-        case 'month':
-          pdf = generator.generateMonthlyReport(reportData);
-          filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
-          break;
-        case 'year':
-          pdf = generator.generateYearlyReport(reportData);
-          filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
-          break;
+      // Only use real data from WiFiDataCollector
+      const dataCollector = new WiFiDataCollector();
+      
+      if (!dataCollector.hasData()) {
+        toast({
+          title: "No Data Available",
+          description: "Please generate some WiFi tokens first to create reports.",
+          variant: "destructive"
+        });
+        return;
       }
+      
+      if (period === 'custom' && startDate && endDate) {
+        // For custom reports, create custom data with the date range
+        reportData = dataCollector.collectDataForDateRange(startDate, endDate);
+        if (!reportData || reportData.transactions === 0) {
+          toast({
+            title: "No Data Found",
+            description: "No WiFi tokens found for the selected date range.",
+            variant: "destructive"
+          });
+          return;
+        }
+        filename = `wipay-custom-report-${startDate}-to-${endDate}.pdf`;
+      } else {
+        // For predefined periods, use real data from WiFi token system
+        reportData = dataCollector.collectDataForPeriod(period);
+        if (!reportData || reportData.transactions === 0) {
+          toast({
+            title: "No Data Found", 
+            description: `No WiFi tokens found for the selected ${period} period.`,
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        switch (period) {
+          case 'week':
+            filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+            break;
+          case 'month':
+            filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
+            break;
+          case 'year':
+            filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
+            break;
+        }
+      }
+      
+      const generator = new PDFReportGenerator(t);
+      const pdf = generator.generateSimpleReport(reportData, 'monthly');
       
       pdf.save(filename);
       
       toast({
         title: t.reportGenerated,
-        description: `${period === 'week' ? t.weeklyReport : period === 'month' ? t.monthlyReport : t.yearlyReport} downloaded successfully`,
+        description: `${period === 'custom' ? t.customReport : period === 'week' ? t.weeklyReport : period === 'month' ? t.monthlyReport : t.yearlyReport} downloaded successfully`,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -201,6 +277,45 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
         variant: "destructive"
       });
     }
+  };
+
+  // Function to handle custom report generation
+  const handleCustomReportGeneration = () => {
+    // Validate date inputs
+    if (!customDateRange.startDate) {
+      toast({
+        title: t.invalidDateRange,
+        description: t.startDateRequired,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!customDateRange.endDate) {
+      toast({
+        title: t.invalidDateRange,
+        description: t.endDateRequired,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const startDate = new Date(customDateRange.startDate);
+    const endDate = new Date(customDateRange.endDate);
+
+    if (endDate <= startDate) {
+      toast({
+        title: t.invalidDateRange,
+        description: t.endDateAfterStart,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate the report
+    generatePDFReport('custom', customDateRange.startDate, customDateRange.endDate);
+    setShowCustomReportDialog(false);
+    setCustomDateRange({ startDate: "", endDate: "", reportType: "custom" });
   };
 
   // Sample data for charts
@@ -260,14 +375,14 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
   return (
     <div className="space-y-6">
       {/* Header with controls */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold">{t.title}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">{t.title}</h2>
           <p className="text-muted-foreground">{t.description}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:gap-2">
           <Select defaultValue="30days">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -276,36 +391,32 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
               <SelectItem value="year">{t.thisYear}</SelectItem>
             </SelectContent>
           </Select>
-          <Button>
-            <Download className="h-4 w-4 mr-2" />
-            {t.downloadReport}
-          </Button>
         </div>
       </div>
 
       {/* Data Source Indicator */}
-      <Card className={hasRealData ? "border-green-200 bg-green-50" : "border-orange-200 bg-orange-50"}>
+      <Card className={hasRealData ? "border-blue-200 bg-blue-50" : "border-orange-200 bg-orange-50"}>
         <CardContent className="pt-4">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:gap-3">
             {hasRealData ? (
-              <Database className="h-5 w-5 text-green-600" />
+              <Database className="h-5 w-5 text-blue-600" />
             ) : (
               <AlertTriangle className="h-5 w-5 text-orange-600" />
             )}
             <div className="flex-1">
-              <h4 className={`font-medium ${hasRealData ? "text-green-800" : "text-orange-800"}`}>
+              <h4 className={`font-medium ${hasRealData ? "text-blue-800" : "text-orange-800"}`}>
                 {hasRealData ? t.realDataIndicator : t.sampleDataIndicator}
               </h4>
-              <p className={`text-sm ${hasRealData ? "text-green-700" : "text-orange-700"}`}>
+              <p className={`text-sm ${hasRealData ? "text-blue-700" : "text-orange-700"}`}>
                 {hasRealData ? t.realDataDesc : t.sampleDataDesc}
               </p>
               {hasRealData && dataSummary && (
-                <div className="text-xs text-green-600 mt-1">
+                <div className="text-xs text-blue-600 mt-1">
                   {dataSummary.totalTokens} tokens • {dataSummary.totalRevenue.toLocaleString()} SSP total revenue
                 </div>
               )}
             </div>
-            <Badge variant={hasRealData ? "default" : "secondary"} className="flex items-center gap-1">
+            <Badge variant={hasRealData ? "default" : "secondary"} className="flex items-center gap-1 self-start sm:self-center">
               {hasRealData ? (
                 <Database className="h-3 w-3" />
               ) : (
@@ -317,58 +428,250 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
         </CardContent>
       </Card>
 
-      {/* PDF Report Generation Section */}
+      {/* Report Generation Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             {t.generatePDFReports}
           </CardTitle>
-          <CardDescription>Generate comprehensive PDF reports for different time periods</CardDescription>
+          <CardDescription>Select date range and generate comprehensive PDF reports</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
-              onClick={() => generatePDFReport('week')}
-              variant="outline"
-              className="flex items-center gap-2 h-12"
-            >
-              <Clock className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">{t.downloadWeekly}</div>
-                <div className="text-xs text-muted-foreground">Last 7 days</div>
-              </div>
-            </Button>
+        <CardContent className="space-y-6">
+          {/* Custom Date Range Selection */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Select Custom Date Range:</h4>
             
-            <Button 
-              onClick={() => generatePDFReport('month')}
-              variant="outline"
-              className="flex items-center gap-2 h-12"
-            >
-              <Calendar className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">{t.downloadMonthly}</div>
-                <div className="text-xs text-muted-foreground">Current month</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="reportStartDate" className="text-sm font-medium flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  {t.startDate}
+                </Label>
+                <Input
+                  id="reportStartDate"
+                  type="date"
+                  value={customDateRange.startDate}
+                  onChange={(e) => {
+                    console.log('Start date changed:', e.target.value);
+                    setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }));
+                  }}
+                  max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                  className="mt-1 cursor-pointer"
+                  placeholder="Select start date"
+                />
+                <p className="text-xs text-gray-500">Click to select start date</p>
               </div>
-            </Button>
-            
-            <Button 
-              onClick={() => generatePDFReport('year')}
-              variant="outline"
-              className="flex items-center gap-2 h-12"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">{t.downloadYearly}</div>
-                <div className="text-xs text-muted-foreground">Current year</div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="reportEndDate" className="text-sm font-medium flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  {t.endDate}
+                </Label>
+                <Input
+                  id="reportEndDate"
+                  type="date"
+                  value={customDateRange.endDate}
+                  onChange={(e) => {
+                    console.log('End date changed:', e.target.value);
+                    setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }));
+                  }}
+                  min={customDateRange.startDate}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="mt-1 cursor-pointer"
+                  placeholder="Select end date"
+                />
+                <p className="text-xs text-gray-500">Click to select end date</p>
               </div>
-            </Button>
+            </div>
+
+            {/* Alternative: Text inputs for manual date entry */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <h5 className="text-sm font-medium text-gray-700 mb-2">Alternative: Manual Date Entry</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="manualStartDate" className="text-xs text-gray-600">Start Date (YYYY-MM-DD)</Label>
+                  <Input
+                    id="manualStartDate"
+                    type="text"
+                    placeholder="2024-01-01"
+                    value={customDateRange.startDate}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Basic date format validation
+                      if (/^\d{4}-\d{2}-\d{2}$/.test(value) || value === '') {
+                        setCustomDateRange(prev => ({ ...prev, startDate: value }));
+                      }
+                    }}
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="manualEndDate" className="text-xs text-gray-600">End Date (YYYY-MM-DD)</Label>
+                  <Input
+                    id="manualEndDate"
+                    type="text"
+                    placeholder="2024-12-31"
+                    value={customDateRange.endDate}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Basic date format validation
+                      if (/^\d{4}-\d{2}-\d{2}$/.test(value) || value === '') {
+                        setCustomDateRange(prev => ({ ...prev, endDate: value }));
+                      }
+                    }}
+                    className="mt-1 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Current Values Display */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h5 className="text-sm font-medium text-blue-800 mb-2">Current Selection:</h5>
+              <div className="text-sm text-blue-700">
+                <p><strong>Start Date:</strong> {customDateRange.startDate || 'Not selected'}</p>
+                <p><strong>End Date:</strong> {customDateRange.endDate || 'Not selected'}</p>
+              </div>
+            </div>
+
+            {/* Date Range Preview */}
+            {customDateRange.startDate && customDateRange.endDate && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h4 className="text-sm font-medium text-green-800 mb-1">✅ Selected Report Period</h4>
+                    <p className="text-sm text-green-700">
+                      {new Date(customDateRange.startDate).toLocaleDateString()} - {new Date(customDateRange.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="mt-2 sm:mt-0 text-sm text-green-600">
+                    <strong>{Math.ceil((new Date(customDateRange.endDate).getTime() - new Date(customDateRange.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1}</strong> days
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Generate Report Button */}
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleCustomReportGeneration}
+                disabled={!customDateRange.startDate || !customDateRange.endDate}
+                className="px-8 py-2 text-base"
+                size="lg"
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                {t.generate}
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick Date Range Shortcuts */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Date Ranges:</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const today = new Date();
+                  const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  setCustomDateRange({
+                    startDate: lastWeek.toISOString().split('T')[0],
+                    endDate: today.toISOString().split('T')[0],
+                    reportType: "custom"
+                  });
+                }}
+              >
+                Last 7 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const today = new Date();
+                  const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  setCustomDateRange({
+                    startDate: lastMonth.toISOString().split('T')[0],
+                    endDate: today.toISOString().split('T')[0],
+                    reportType: "custom"
+                  });
+                }}
+              >
+                Last 30 Days
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const today = new Date();
+                  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                  setCustomDateRange({
+                    startDate: firstDayOfMonth.toISOString().split('T')[0],
+                    endDate: today.toISOString().split('T')[0],
+                    reportType: "custom"
+                  });
+                }}
+              >
+                This Month
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const today = new Date();
+                  const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+                  setCustomDateRange({
+                    startDate: firstDayOfYear.toISOString().split('T')[0],
+                    endDate: today.toISOString().split('T')[0],
+                    reportType: "custom"
+                  });
+                }}
+              >
+                This Year
+              </Button>
+            </div>
+          </div>
+
+          {/* Month Range Selection */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Monthly Reports:</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { label: "January 2025", start: "2025-01-01", end: "2025-01-31" },
+                { label: "December 2024", start: "2024-12-01", end: "2024-12-31" },
+                { label: "November 2024", start: "2024-11-01", end: "2024-11-30" },
+                { label: "October 2024", start: "2024-10-01", end: "2024-10-31" },
+                { label: "September 2024", start: "2024-09-01", end: "2024-09-30" },
+                { label: "August 2024", start: "2024-08-01", end: "2024-08-31" }
+              ].map((month) => (
+                <Button
+                  key={month.label}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    setCustomDateRange({
+                      startDate: month.start,
+                      endDate: month.end,
+                      reportType: "custom"
+                    });
+                  }}
+                >
+                  {month.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((kpi, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -376,7 +679,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
               <kpi.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
+              <div className="text-xl sm:text-2xl font-bold">{kpi.value}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {kpi.isIncrease ? (
                   <TrendingUp className="h-3 w-3 text-green-600" />
@@ -386,7 +689,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
                 <span className={kpi.isIncrease ? "text-green-600" : "text-red-600"}>
                   {kpi.change}
                 </span>
-                <span>{t.previousPeriod}</span>
+                <span className="hidden sm:inline">{t.previousPeriod}</span>
               </div>
             </CardContent>
           </Card>
@@ -394,7 +697,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Revenue Chart */}
         <Card>
           <CardHeader>
@@ -405,7 +708,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
             <CardDescription>Revenue trends over the past 6 months</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <BarChart data={monthlyRevenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
@@ -427,7 +730,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
             <CardDescription>Customer acquisition over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <LineChart data={monthlyRevenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
@@ -446,7 +749,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
             <CardDescription>Active customers by service plan</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <PieChart>
                 <Pie
                   data={serviceDistributionData}
@@ -475,7 +778,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
             <CardDescription>Payment method distribution</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <PieChart>
                 <Pie
                   data={paymentMethodsData}

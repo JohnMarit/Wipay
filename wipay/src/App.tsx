@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Wifi, Eye, EyeOff, UserPlus, LogIn, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { authService, userService } from "@/lib/firebase";
+import { onAuthStateChange, signOutUser } from "@/lib/auth";
 
 const queryClient = new QueryClient();
 
@@ -22,10 +24,6 @@ interface User {
   name: string;
   phone: string;
   email: string;
-}
-
-interface StoredUser extends User {
-  password: string;
 }
 
 const App = () => {
@@ -59,47 +57,12 @@ const App = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Demo users database (in production, this would be from a real database/API)
-  const defaultUsers = [
-    {
-      id: "1",
-      username: "admin",
-      password: "admin123",
-      name: "WiFi Administrator",
-      phone: "+211912345678",
-      email: "admin@wifi.ss"
-    },
-    {
-      id: "2", 
-      username: "cafe_owner",
-      password: "cafe123",
-      name: "Cafe Owner",
-      phone: "+211923456789",
-      email: "cafe@wifi.ss"
-    },
-    {
-      id: "3",
-      username: "hotel_manager", 
-      password: "hotel123",
-      name: "Hotel Manager",
-      phone: "+211934567890",
-      email: "hotel@wifi.ss"
-    }
-  ];
-
-  // Get all users (default + created accounts)
-  const getAllUsers = (): StoredUser[] => {
-    const storedUsers = localStorage.getItem('registeredUsers');
-    const createdUsers = storedUsers ? JSON.parse(storedUsers) : [];
-    return [...defaultUsers, ...createdUsers];
-  };
-
   const translations = {
     en: {
       title: "Wipay",
       loginSubtitle: "Login to your account",
       signupSubtitle: "Create a new account",
-      username: "Username",
+      username: "Username or Email",
       password: "Password",
       confirmPassword: "Confirm Password",
       fullName: "Full Name",
@@ -109,18 +72,14 @@ const App = () => {
       signup: "Sign Up",
       signingIn: "Signing in...",
       signingUp: "Creating account...",
-      loginError: "Invalid username or password",
+      loginError: "Invalid credentials or user not found",
       signupError: "Failed to create account",
       passwordMismatch: "Passwords do not match",
-      usernameExists: "Username already exists",
+      usernameExists: "Email already exists",
       invalidPhone: "Please enter a valid phone number",
       invalidEmail: "Please enter a valid email address",
       accountCreated: "Account created successfully!",
-      demoAccounts: "Demo Accounts",
-      adminAccount: "admin / admin123",
-      cafeAccount: "cafe_owner / cafe123", 
-      hotelAccount: "hotel_manager / hotel123",
-      enterUsername: "Enter your username",
+      enterUsername: "Enter your email address",
       enterPassword: "Enter your password",
       enterConfirmPassword: "Confirm your password",
       enterFullName: "Enter your full name",
@@ -130,13 +89,16 @@ const App = () => {
       switchToSignup: "Don't have an account? Sign up",
       switchToLogin: "Already have an account? Login",
       createAccount: "Create Account",
-      loginToAccount: "Login to Account"
+      loginToAccount: "Login to Account",
+      passwordLength: "Password must be at least 6 characters",
+      networkError: "Network error. Please check your connection.",
+      unknownError: "An unknown error occurred. Please try again."
     },
     ar: {
       title: "Wipay",
       loginSubtitle: "تسجيل الدخول إلى حسابك",
       signupSubtitle: "إنشاء حساب جديد",
-      username: "اسم المستخدم",
+      username: "اسم المستخدم أو البريد الإلكتروني",
       password: "كلمة المرور",
       confirmPassword: "تأكيد كلمة المرور",
       fullName: "الاسم الكامل",
@@ -146,18 +108,14 @@ const App = () => {
       signup: "إنشاء حساب",
       signingIn: "جاري تسجيل الدخول...",
       signingUp: "جاري إنشاء الحساب...",
-      loginError: "اسم المستخدم أو كلمة المرور غير صحيحة",
+      loginError: "بيانات الاعتماد غير صحيحة أو المستخدم غير موجود",
       signupError: "فشل في إنشاء الحساب",
       passwordMismatch: "كلمات المرور غير متطابقة",
-      usernameExists: "اسم المستخدم موجود بالفعل",
+      usernameExists: "البريد الإلكتروني موجود بالفعل",
       invalidPhone: "يرجى إدخال رقم هاتف صحيح",
       invalidEmail: "يرجى إدخال عنوان بريد إلكتروني صحيح",
       accountCreated: "تم إنشاء الحساب بنجاح!",
-      demoAccounts: "حسابات تجريبية",
-      adminAccount: "admin / admin123",
-      cafeAccount: "cafe_owner / cafe123",
-      hotelAccount: "hotel_manager / hotel123", 
-      enterUsername: "أدخل اسم المستخدم",
+      enterUsername: "أدخل عنوان بريدك الإلكتروني",
       enterPassword: "أدخل كلمة المرور",
       enterConfirmPassword: "أكد كلمة المرور",
       enterFullName: "أدخل اسمك الكامل",
@@ -167,25 +125,24 @@ const App = () => {
       switchToSignup: "ليس لديك حساب؟ أنشئ حساباً",
       switchToLogin: "لديك حساب بالفعل؟ سجل دخولك",
       createAccount: "إنشاء حساب",
-      loginToAccount: "تسجيل الدخول"
+      loginToAccount: "تسجيل الدخول",
+      passwordLength: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      networkError: "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+      unknownError: "حدث خطأ غير معروف. يرجى المحاولة مرة أخرى."
     }
   };
 
   const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
-    // Check for existing authentication
-    const storedUser = localStorage.getItem('wifiTokenUser');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-      } catch (error) {
-        localStorage.removeItem('wifiTokenUser');
-      }
-    }
-    setIsLoading(false);
+    // Listen to Firebase authentication state changes
+    const unsubscribe = onAuthStateChange((user) => {
+      setCurrentUser(user);
+      setIsAuthenticated(!!user);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   // Validation functions
@@ -201,33 +158,33 @@ const App = () => {
     e.preventDefault();
     setLoginForm(prev => ({ ...prev, isLoading: true, error: "" }));
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Use email for Firebase authentication
+      const email = loginForm.username.includes('@') 
+        ? loginForm.username 
+        : `${loginForm.username}@wipay.local`; // Fallback for username
 
-    // Find user in all users (default + created)
-    const allUsers = getAllUsers();
-    const user = allUsers.find(u => 
-      u.username === loginForm.username && u.password === loginForm.password
-    );
-
-    if (user) {
-      const userData: User = {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        phone: user.phone,
-        email: user.email
-      };
+      await authService.signIn(email, loginForm.password);
       
-      setCurrentUser(userData);
-      setIsAuthenticated(true);
-      localStorage.setItem('wifiTokenUser', JSON.stringify(userData));
       setLoginForm({ username: "", password: "", isLoading: false, error: "" });
-    } else {
+    } catch (error: unknown) {
+      let errorMessage = t.loginError;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMsg.includes('user-not-found')) {
+        errorMessage = t.loginError;
+      } else if (errorMsg.includes('wrong-password')) {
+        errorMessage = t.loginError;
+      } else if (errorMsg.includes('network')) {
+        errorMessage = t.networkError;
+      } else if (errorMsg.includes('too-many-requests')) {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      }
+
       setLoginForm(prev => ({
         ...prev,
         isLoading: false,
-        error: t.loginError
+        error: errorMessage
       }));
     }
   };
@@ -236,116 +193,112 @@ const App = () => {
     e.preventDefault();
     setSignupForm(prev => ({ ...prev, isLoading: true, error: "" }));
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Validation
+      if (signupForm.password !== signupForm.confirmPassword) {
+        setSignupForm(prev => ({
+          ...prev,
+          isLoading: false,
+          error: t.passwordMismatch
+        }));
+        return;
+      }
 
-    // Validation
-    if (signupForm.password !== signupForm.confirmPassword) {
+      if (signupForm.password.length < 6) {
+        setSignupForm(prev => ({
+          ...prev,
+          isLoading: false,
+          error: t.passwordLength
+        }));
+        return;
+      }
+
+      if (!validateEmail(signupForm.email)) {
+        setSignupForm(prev => ({
+          ...prev,
+          isLoading: false,
+          error: t.invalidEmail
+        }));
+        return;
+      }
+
+      if (!validatePhone(signupForm.phone)) {
+        setSignupForm(prev => ({
+          ...prev,
+          isLoading: false,
+          error: t.invalidPhone
+        }));
+        return;
+      }
+
+      // Create new user with Firebase
+      await authService.signUp(
+        signupForm.email,
+        signupForm.password,
+        signupForm.name,
+        signupForm.phone
+      );
+      
+      setSignupForm({
+        username: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        phone: "",
+        email: "",
+        isLoading: false,
+        error: ""
+      });
+
+      toast({
+        title: t.accountCreated,
+        description: `Welcome ${signupForm.name}! You can now set up your WiFi network.`,
+      });
+    } catch (error: unknown) {
+      let errorMessage = t.signupError;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMsg.includes('email-already-in-use')) {
+        errorMessage = t.usernameExists;
+      } else if (errorMsg.includes('weak-password')) {
+        errorMessage = t.passwordLength;
+      } else if (errorMsg.includes('network')) {
+        errorMessage = t.networkError;
+      }
+
       setSignupForm(prev => ({
         ...prev,
         isLoading: false,
-        error: t.passwordMismatch
+        error: errorMessage
       }));
-      return;
     }
-
-    if (!validateEmail(signupForm.email)) {
-      setSignupForm(prev => ({
-        ...prev,
-        isLoading: false,
-        error: t.invalidEmail
-      }));
-      return;
-    }
-
-    if (!validatePhone(signupForm.phone)) {
-      setSignupForm(prev => ({
-        ...prev,
-        isLoading: false,
-        error: t.invalidPhone
-      }));
-      return;
-    }
-
-    // Check if username already exists
-    const allUsers = getAllUsers();
-    if (allUsers.some(u => u.username === signupForm.username)) {
-      setSignupForm(prev => ({
-        ...prev,
-        isLoading: false,
-        error: t.usernameExists
-      }));
-      return;
-    }
-
-    // Create new user
-    const newUser: StoredUser = {
-      id: Date.now().toString(),
-      username: signupForm.username,
-      password: signupForm.password,
-      name: signupForm.name,
-      phone: signupForm.phone,
-      email: signupForm.email
-    };
-
-    // Save to localStorage
-    const storedUsers = localStorage.getItem('registeredUsers');
-    const existingUsers = storedUsers ? JSON.parse(storedUsers) : [];
-    const updatedUsers = [...existingUsers, newUser];
-    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-
-    // Auto-login after successful signup
-    const userData: User = {
-      id: newUser.id,
-      username: newUser.username,
-      name: newUser.name,
-      phone: newUser.phone,
-      email: newUser.email
-    };
-
-    setCurrentUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem('wifiTokenUser', JSON.stringify(userData));
-    
-    setSignupForm({
-      username: "",
-      password: "",
-      confirmPassword: "",
-      name: "",
-      phone: "",
-      email: "",
-      isLoading: false,
-      error: ""
-    });
-
-    toast({
-      title: t.accountCreated,
-      description: `Welcome ${newUser.name}! You can now set up your WiFi network.`,
-    });
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('wifiTokenUser');
-    localStorage.removeItem('wifiConfig');
-    setLoginForm({ username: "", password: "", isLoading: false, error: "" });
-    setSignupForm({
-      username: "",
-      password: "",
-      confirmPassword: "",
-      name: "",
-      phone: "",
-      email: "",
-      isLoading: false,
-      error: ""
-    });
-    setIsSignupMode(false);
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setLoginForm({ username: "", password: "", isLoading: false, error: "" });
+      setSignupForm({
+        username: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        phone: "",
+        email: "",
+        isLoading: false,
+        error: ""
+      });
+      setIsSignupMode(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading Wipay...</p>
@@ -360,7 +313,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+          <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
             <div className="w-full max-w-md space-y-6">
               {/* Language Selector */}
               <div className="flex justify-center">
@@ -429,12 +382,12 @@ const App = () => {
                         </div>
                       )}
 
-                      {/* Username Field */}
+                      {/* Username/Email Field */}
                       <div className="space-y-2">
                         <Label htmlFor="username">{t.username}</Label>
                         <Input
                           id="username"
-                          type="text"
+                          type="email"
                           value={loginForm.username}
                           onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
                           placeholder={t.enterUsername}
@@ -498,7 +451,7 @@ const App = () => {
                         </div>
                       )}
 
-                      {/* Full Name */}
+                      {/* Full Name Field */}
                       <div className="space-y-2">
                         <Label htmlFor="fullName">{t.fullName}</Label>
                         <Input
@@ -512,21 +465,7 @@ const App = () => {
                         />
                       </div>
 
-                      {/* Username */}
-                      <div className="space-y-2">
-                        <Label htmlFor="signupUsername">{t.username}</Label>
-                        <Input
-                          id="signupUsername"
-                          type="text"
-                          value={signupForm.username}
-                          onChange={(e) => setSignupForm(prev => ({ ...prev, username: e.target.value }))}
-                          placeholder={t.enterUsername}
-                          required
-                          disabled={signupForm.isLoading}
-                        />
-                      </div>
-
-                      {/* Email */}
+                      {/* Email Field */}
                       <div className="space-y-2">
                         <Label htmlFor="email">{t.emailAddress}</Label>
                         <Input
@@ -540,7 +479,7 @@ const App = () => {
                         />
                       </div>
 
-                      {/* Phone */}
+                      {/* Phone Field */}
                       <div className="space-y-2">
                         <Label htmlFor="phone">{t.phoneNumber}</Label>
                         <Input
@@ -554,7 +493,7 @@ const App = () => {
                         />
                       </div>
 
-                      {/* Password */}
+                      {/* Password Field */}
                       <div className="space-y-2">
                         <Label htmlFor="signupPassword">{t.password}</Label>
                         <div className="relative">
@@ -565,6 +504,7 @@ const App = () => {
                             onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
                             placeholder={t.enterPassword}
                             required
+                            minLength={6}
                             disabled={signupForm.isLoading}
                           />
                           <button
@@ -577,7 +517,7 @@ const App = () => {
                         </div>
                       </div>
 
-                      {/* Confirm Password */}
+                      {/* Confirm Password Field */}
                       <div className="space-y-2">
                         <Label htmlFor="confirmPassword">{t.confirmPassword}</Label>
                         <div className="relative">
@@ -588,6 +528,7 @@ const App = () => {
                             onChange={(e) => setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                             placeholder={t.enterConfirmPassword}
                             required
+                            minLength={6}
                             disabled={signupForm.isLoading}
                           />
                           <button
@@ -604,7 +545,7 @@ const App = () => {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={signupForm.isLoading || !signupForm.username || !signupForm.password || !signupForm.name || !signupForm.email || !signupForm.phone}
+                        disabled={signupForm.isLoading || !signupForm.name || !signupForm.email || !signupForm.phone || !signupForm.password || !signupForm.confirmPassword}
                       >
                         {signupForm.isLoading ? (
                           <>
@@ -613,7 +554,7 @@ const App = () => {
                           </>
                         ) : (
                           <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <UserPlus className="h-4 w-4 mr-2" />
                             {t.signup}
                           </>
                         )}
@@ -622,31 +563,6 @@ const App = () => {
                   )}
                 </CardContent>
               </Card>
-
-              {/* Demo Accounts Card - Only show on login */}
-              {!isSignupMode && (
-                <Card className="shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-sm">{t.demoAccounts}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-xs">
-                      <div className="p-2 bg-gray-50 rounded">
-                        <div className="font-medium">Administrator</div>
-                        <div className="text-gray-600">{t.adminAccount}</div>
-                      </div>
-                      <div className="p-2 bg-gray-50 rounded">
-                        <div className="font-medium">Cafe Owner</div>
-                        <div className="text-gray-600">{t.cafeAccount}</div>
-                      </div>
-                      <div className="p-2 bg-gray-50 rounded">
-                        <div className="font-medium">Hotel Manager</div>
-                        <div className="text-gray-600">{t.hotelAccount}</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </div>
         </TooltipProvider>
@@ -661,16 +577,13 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route 
-              path="/" 
-              element={
-                <WiFiTokenSystem 
-                  language={language}
-                  currentUser={currentUser}
-                  onLogout={handleLogout}
-                />
-              } 
-            />
+            <Route path="/" element={
+              <WiFiTokenSystem 
+                language={language} 
+                currentUser={currentUser}
+                onLogout={handleLogout}
+              />
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

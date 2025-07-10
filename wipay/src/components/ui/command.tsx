@@ -67,6 +67,10 @@ const CommandList = React.forwardRef<
 
 CommandList.displayName = CommandPrimitive.List.displayName
 
+interface CommandEmptyProps extends React.ComponentProps<typeof CommandPrimitive.Empty> {
+  // Additional props can be added here if needed
+}
+
 const CommandEmpty = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>

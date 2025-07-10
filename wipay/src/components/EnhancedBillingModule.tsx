@@ -263,7 +263,7 @@ const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
   return (
     <div className="space-y-6">
       {/* Enhanced Billing Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
@@ -440,15 +440,15 @@ const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{billingStats.aging.days030.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-blue-600">{billingStats.aging.days030.toLocaleString()}</div>
               <div className="text-sm text-gray-600">{t.days030}</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">{billingStats.aging.days3060.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-blue-500">{billingStats.aging.days3060.toLocaleString()}</div>
               <div className="text-sm text-gray-600">{t.days3060}</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{billingStats.aging.days6090.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-blue-700">{billingStats.aging.days6090.toLocaleString()}</div>
               <div className="text-sm text-gray-600">{t.days6090}</div>
             </div>
             <div className="text-center p-4 border rounded-lg">

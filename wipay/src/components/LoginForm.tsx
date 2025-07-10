@@ -5,11 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe, Lock, User } from "lucide-react";
-import { AuthService } from "@/lib/auth";
+import { authenticateUser } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormProps {
-  onLogin: (user: any) => void;
+  onLogin: (userData: {
+    id: string;
+    username: string;
+    name: string;
+    phone: string;
+    email: string;
+  }) => void;
   language: string;
   setLanguage: (lang: string) => void;
 }
@@ -19,7 +25,6 @@ const LoginForm = ({ onLogin, language, setLanguage }: LoginFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const authService = AuthService.getInstance();
 
   const translations = {
     en: {
@@ -61,12 +66,20 @@ const LoginForm = ({ onLogin, language, setLanguage }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const user = await authService.login(username, password);
-      onLogin(user);
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.name}!`,
-      });
+      const user = await authenticateUser(username, password);
+      if (user) {
+        onLogin(user);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.name}!`,
+        });
+      } else {
+        toast({
+          title: t.loginFailed,
+          description: t.invalidCredentials,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: t.loginFailed,
@@ -78,15 +91,16 @@ const LoginForm = ({ onLogin, language, setLanguage }: LoginFormProps) => {
     }
   };
 
+  const defaultPassword = import.meta.env.VITE_DEFAULT_PASSWORD || 'change-me-in-production';
   const demoAccounts = [
-    { username: "admin", role: t.admin, password: "password" },
-    { username: "billing", role: t.billing, password: "password" },
-    { username: "support", role: t.support, password: "password" },
-    { username: "tech", role: t.technician, password: "password" }
+    { username: "admin", role: t.admin, password: defaultPassword },
+    { username: "billing", role: t.billing, password: defaultPassword },
+    { username: "support", role: t.support, password: defaultPassword },
+    { username: "tech", role: t.technician, password: defaultPassword }
   ];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
       <div className="w-full max-w-md space-y-6">
         {/* Language Selector */}
         <div className="flex justify-center">
@@ -163,7 +177,7 @@ const LoginForm = ({ onLogin, language, setLanguage }: LoginFormProps) => {
               {demoAccounts.map((account) => (
                 <div key={account.username} className="p-2 bg-gray-50 rounded text-center">
                   <div className="font-medium">{account.role}</div>
-                  <div className="text-gray-600">{account.username}/password</div>
+                  <div className="text-gray-600">{account.username}/{import.meta.env.VITE_DEBUG_MODE === 'true' ? '••••••' : 'check env'}</div>
                 </div>
               ))}
             </div>

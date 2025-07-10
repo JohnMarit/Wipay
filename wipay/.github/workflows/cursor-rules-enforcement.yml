@@ -1,0 +1,70 @@
+name: Cursor Rules Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  enforce-cursor-rules:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: wipay/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./wipay
+      run: npm ci
+      
+    - name: 🎨 Check code formatting
+      working-directory: ./wipay
+      run: npm run format:check
+      
+    - name: 📝 Run ESLint
+      working-directory: ./wipay
+      run: npm run lint
+      
+    - name: 🔍 TypeScript type checking
+      working-directory: ./wipay
+      run: npm run type-check
+      
+    - name: 🔒 Security audit
+      working-directory: ./wipay
+      run: npm run security-audit
+      
+    - name: 🎨 Validate blue color scheme
+      working-directory: ./wipay
+      run: npm run validate-colors
+      
+    - name: 📋 Validate cursor rules compliance
+      working-directory: ./wipay
+      run: npm run validate-rules
+      
+    - name: 🧪 Run tests
+      working-directory: ./wipay
+      run: npm run test
+      
+    - name: 🏗️ Build project
+      working-directory: ./wipay
+      run: npm run build
+      
+    - name: 📊 Generate compliance report
+      working-directory: ./wipay
+      run: |
+        echo "## 📋 Cursor Rules Compliance Report" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All cursor rules enforcement checks passed!" >> $GITHUB_STEP_SUMMARY
+        echo "- Code formatting: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- ESLint rules: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- TypeScript types: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Security audit: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Blue color scheme: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Build successful: ✅ Passed" >> $GITHUB_STEP_SUMMARY 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,13 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign, FileText, Calendar, BarChart3 } from "lucide-react";
+import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign, FileText, Calendar, BarChart3, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { PDFReportGenerator, generateReportData } from "@/lib/pdfGenerator";
+import { PDFReportGenerator } from "@/lib/pdfGenerator";
+import { tokenService, userService, WiFiToken as FirebaseWiFiToken, UserProfile } from "@/lib/firebase";
 
 interface WiFiTokenSystemProps {
   language: string;
-  currentUser?: any;
+  currentUser?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
   onLogout?: () => void;
 }
 
@@ -40,6 +46,23 @@ interface PricingConfig {
   };
 }
 
+interface ReportData {
+  period: string;
+  revenue: number;
+  transactions: number;
+  totalUsers: number;
+  avgTransactionValue: number;
+  serviceBreakdown: Array<{ service: string; count: number; revenue: number }>;
+  paymentBreakdown: Array<{ method: string; count: number; revenue: number }>;
+  recentTransactions: Array<{
+    date: string;
+    customer: string;
+    service: string;
+    payment_method: string;
+    amount: number;
+  }>;
+}
+
 const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemProps) => {
   const { toast } = useToast();
   const [wifiConfig, setWifiConfig] = useState({
@@ -63,8 +86,14 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   const [showWifiSetup, setShowWifiSetup] = useState(false);
   const [setupTab, setSetupTab] = useState("network");
   const [showReportPreview, setShowReportPreview] = useState(false);
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewData, setPreviewData] = useState<ReportData | null>(null);
   const [previewType, setPreviewType] = useState<'week' | 'month' | 'year'>('week');
+  
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: '',
+    endDate: '',
+    reportType: 'custom' as 'custom' | 'week' | 'month' | 'year'
+  });
   
   const [tokenForm, setTokenForm] = useState({
     recipientPhone: "",
@@ -73,25 +102,75 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     price: 0
   });
 
+  // State for Firebase data
   const [tokens, setTokens] = useState<WiFiToken[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // Load tokens from localStorage
-  useEffect(() => {
-    const savedTokens = localStorage.getItem('wifiTokens');
-    if (savedTokens) {
-      try {
-        const parsedTokens = JSON.parse(savedTokens);
-        setTokens(parsedTokens);
-      } catch (error) {
-        console.error('Error loading saved tokens:', error);
+  // Load user profile and tokens from Firebase
+  const loadUserData = useCallback(async () => {
+    if (!currentUser?.id) return;
+    
+    try {
+      setLoading(true);
+      
+      // Load user profile from Firebase
+      const profile = await userService.getUserProfile(currentUser.id);
+      if (profile) {
+        setUserProfile(profile);
+        
+        // Set WiFi configuration from Firebase
+        if (profile.wifiConfig) {
+          setWifiConfig({
+            ssid: profile.wifiConfig.ssid || "",
+            adminPassword: "", // Don't store sensitive data in state
+            momoNumber: "", // Don't store sensitive data in state
+            isConfigured: profile.wifiConfig.isConfigured || false
+          });
+        }
+        
+        // Set pricing configuration from Firebase
+        if (profile.pricingConfig) {
+          setPricingConfig(profile.pricingConfig);
+        }
       }
+      
+      // Load tokens from Firebase
+      const firebaseTokens = await tokenService.getUserTokens(currentUser.id);
+      const convertedTokens: WiFiToken[] = firebaseTokens.map(token => ({
+        id: token.id!,
+        recipientPhone: token.recipientPhone,
+        duration: token.duration,
+        price: token.price,
+        currency: token.currency,
+        paymentMethod: token.paymentMethod,
+        status: token.status,
+        createdAt: token.createdAt.toISOString(),
+        expiresAt: token.expiresAt.toISOString(),
+        username: token.username,
+        password: token.password,
+        isActive: token.isActive
+      }));
+      
+      setTokens(convertedTokens);
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load your data. Please try refreshing the page.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [currentUser, toast]);
 
-  // Save tokens to localStorage whenever tokens change
   useEffect(() => {
-    localStorage.setItem('wifiTokens', JSON.stringify(tokens));
-  }, [tokens]);
+    if (currentUser?.id) {
+      loadUserData();
+    }
+  }, [currentUser, loadUserData]);
 
   const translations = {
     en: {
@@ -270,18 +349,193 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   const t = translations[language as keyof typeof translations];
 
+  // Function to generate custom date range report data
+  const generateCustomDateRangeReport = (startDateStr: string, endDateStr: string) => {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr + 'T23:59:59'); // Include full end date
+    const periodLabel = `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+
+    // Filter tokens within the custom date range
+    const periodTokens = tokens.filter(token => {
+      const tokenDate = new Date(token.createdAt);
+      return tokenDate >= startDate && tokenDate <= endDate;
+    });
+
+    // Calculate basic metrics
+    const totalRevenue = periodTokens.reduce((sum, token) => sum + token.price, 0);
+    const totalTransactions = periodTokens.length;
+    const uniqueCustomers = new Set(periodTokens.map(token => token.recipientPhone)).size;
+
+    // Service breakdown
+    const serviceBreakdown = [
+      { service: "1 Hour WiFi", count: 0, revenue: 0 },
+      { service: "3 Hours WiFi", count: 0, revenue: 0 },
+      { service: "6 Hours WiFi", count: 0, revenue: 0 },
+      { service: "12 Hours WiFi", count: 0, revenue: 0 },
+      { service: "24 Hours WiFi", count: 0, revenue: 0 }
+    ];
+
+    periodTokens.forEach(token => {
+      const serviceIndex = token.duration === 1 ? 0 : 
+                          token.duration === 3 ? 1 :
+                          token.duration === 6 ? 2 :
+                          token.duration === 12 ? 3 : 4;
+      serviceBreakdown[serviceIndex].count++;
+      serviceBreakdown[serviceIndex].revenue += token.price;
+    });
+
+    // Payment method breakdown
+    const paymentBreakdown = [
+      { method: "MTN Mobile Money", count: 0, revenue: 0 },
+      { method: "Cash Payment", count: 0, revenue: 0 }
+    ];
+
+    periodTokens.forEach(token => {
+      const methodIndex = token.paymentMethod === 'mtn_momo' ? 0 : 1;
+      paymentBreakdown[methodIndex].count++;
+      paymentBreakdown[methodIndex].revenue += token.price;
+    });
+
+    // Recent transactions (all within the date range)
+    const recentTransactions = periodTokens
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 20) // Show up to 20 transactions
+      .map(token => ({
+        date: new Date(token.createdAt).toLocaleDateString(),
+        customer: token.recipientPhone,
+        service: `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`,
+        payment_method: token.paymentMethod === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
+        amount: token.price
+      }));
+
+    return {
+      period: periodLabel,
+      revenue: totalRevenue,
+      transactions: totalTransactions,
+      totalUsers: uniqueCustomers,
+      avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      serviceBreakdown: serviceBreakdown.filter(s => s.count > 0),
+      paymentBreakdown: paymentBreakdown.filter(p => p.count > 0),
+      recentTransactions
+    };
+  };
+
+  // Function to generate local report data from actual token transactions
+  const generateLocalReportData = (period: 'week' | 'month' | 'year') => {
+    const now = new Date();
+    let startDate: Date;
+    let periodLabel: string;
+
+    // Calculate date range based on period
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        periodLabel = `${startDate.toLocaleDateString()} - ${now.toLocaleDateString()}`;
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        periodLabel = `${startDate.toLocaleDateString()} - ${now.toLocaleDateString()}`;
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        periodLabel = `${startDate.getFullYear()}`;
+        break;
+    }
+
+    // Filter tokens within the period
+    const periodTokens = tokens.filter(token => {
+      const tokenDate = new Date(token.createdAt);
+      return tokenDate >= startDate && tokenDate <= now;
+    });
+
+    // Calculate basic metrics
+    const totalRevenue = periodTokens.reduce((sum, token) => sum + token.price, 0);
+    const totalTransactions = periodTokens.length;
+    const uniqueCustomers = new Set(periodTokens.map(token => token.recipientPhone)).size;
+
+    // Service breakdown
+    const serviceBreakdown = [
+      { service: "1 Hour WiFi", count: 0, revenue: 0 },
+      { service: "3 Hours WiFi", count: 0, revenue: 0 },
+      { service: "6 Hours WiFi", count: 0, revenue: 0 },
+      { service: "12 Hours WiFi", count: 0, revenue: 0 },
+      { service: "24 Hours WiFi", count: 0, revenue: 0 }
+    ];
+
+    periodTokens.forEach(token => {
+      const serviceIndex = token.duration === 1 ? 0 : 
+                          token.duration === 3 ? 1 :
+                          token.duration === 6 ? 2 :
+                          token.duration === 12 ? 3 : 4;
+      serviceBreakdown[serviceIndex].count++;
+      serviceBreakdown[serviceIndex].revenue += token.price;
+    });
+
+    // Payment method breakdown
+    const paymentBreakdown = [
+      { method: "MTN Mobile Money", count: 0, revenue: 0 },
+      { method: "Cash Payment", count: 0, revenue: 0 }
+    ];
+
+    periodTokens.forEach(token => {
+      const methodIndex = token.paymentMethod === 'mtn_momo' ? 0 : 1;
+      paymentBreakdown[methodIndex].count++;
+      paymentBreakdown[methodIndex].revenue += token.price;
+    });
+
+    // Recent transactions (last 10)
+    const recentTransactions = periodTokens
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10)
+      .map(token => ({
+        date: new Date(token.createdAt).toLocaleDateString(),
+        customer: token.recipientPhone,
+        service: `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`,
+        payment_method: token.paymentMethod === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
+        amount: token.price
+      }));
+
+    return {
+      period: periodLabel,
+      revenue: totalRevenue,
+      transactions: totalTransactions,
+      totalUsers: uniqueCustomers,
+      avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      serviceBreakdown: serviceBreakdown.filter(s => s.count > 0),
+      paymentBreakdown: paymentBreakdown.filter(p => p.count > 0),
+      recentTransactions
+    };
+  };
+
   // Function to preview report data
   const previewReport = async (period: 'week' | 'month' | 'year') => {
     try {
-      const reportData = generateReportData(period, language);
-      
-      // Create simplified report data with only total revenue and users
-      const simplifiedData = {
-        ...reportData,
-        totalUsers: new Set(tokens.map(token => token.recipientPhone)).size
-      };
-      
-      setPreviewData(simplifiedData);
+      // Set default date range based on period
+      const today = new Date();
+      let startDate: Date;
+      const endDate = today;
+
+      switch (period) {
+        case 'week':
+          startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          break;
+        case 'year':
+          startDate = new Date(today.getFullYear(), 0, 1);
+          break;
+      }
+
+      // Initialize custom date range with default values
+      setCustomDateRange({
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        reportType: "custom"
+      });
+
+      const reportData = generateLocalReportData(period);
+      setPreviewData(reportData);
       setPreviewType(period);
       setShowReportPreview(true);
     } catch (error) {
@@ -296,62 +550,82 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   // Function to generate and download PDF reports
   const generatePDFReport = async () => {
-    if (!previewData) return;
+    if (!previewData) {
+      toast({
+        title: "No Data",
+        description: "No report data available to generate PDF.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
+      console.log('Generating PDF with data:', previewData); // Debug log
+      
       const generator = new PDFReportGenerator(t);
       
-      let pdf;
-      let filename;
+      // Ensure the data structure matches what PDFReportGenerator expects
+      const reportData = {
+        period: previewData.period,
+        revenue: previewData.revenue || 0,
+        transactions: previewData.transactions || 0,
+        customers: previewData.totalUsers || 0,
+        avgTransactionValue: previewData.avgTransactionValue || 0,
+        transactions_data: previewData.recentTransactions || [],
+        revenue_by_service: previewData.serviceBreakdown || [],
+        payment_methods: previewData.paymentBreakdown || []
+      };
       
-      switch (previewType) {
-        case 'week':
-          pdf = generator.generateSimpleReport(previewData, 'weekly');
-          filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
-          break;
-        case 'month':
-          pdf = generator.generateSimpleReport(previewData, 'monthly');
-          filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
-          break;
-        case 'year':
-          pdf = generator.generateSimpleReport(previewData, 'yearly');
-          filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
-          break;
-      }
+      console.log('Formatted data for PDF:', reportData); // Debug log
+      
+      // Use the formatted data for PDF generation
+      const pdf = generator.generateSimpleReport(reportData, 'monthly');
+      
+      // Create filename based on the current date range
+      const dateRange = previewData.period.replace(/[^\w-]/g, '-');
+      const filename = `wipay-wifi-token-report-${dateRange}-${new Date().toISOString().slice(0, 10)}.pdf`;
       
       pdf.save(filename);
       
       toast({
         title: t.reportGenerated,
-        description: `${previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport} downloaded successfully`,
+        description: `WiFi Token Report downloaded successfully`,
       });
       
       setShowReportPreview(false);
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Detailed PDF generation error:', error);
       toast({
         title: t.reportError,
-        description: "Please try again later",
+        description: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
         variant: "destructive"
       });
     }
   };
 
   // Duration options with custom pricing
-  const getDurationOptions = () => [
+  const getDurationOptions = useCallback(() => [
     { value: "1", label: t.oneHour, price: pricingConfig.prices["1"] },
     { value: "3", label: t.threeHours, price: pricingConfig.prices["3"] },
     { value: "6", label: t.sixHours, price: pricingConfig.prices["6"] },
     { value: "12", label: t.twelveHours, price: pricingConfig.prices["12"] },
     { value: "24", label: t.oneDay, price: pricingConfig.prices["24"] }
-  ];
+  ], [pricingConfig.prices, t]);
 
-  // Load configuration from localStorage
+  // Load configuration from storage
   useEffect(() => {
-    const savedConfig = localStorage.getItem('wifiConfig');
-    if (savedConfig) {
-      const config = JSON.parse(savedConfig);
-      setWifiConfig({ ...config, isConfigured: true });
+    // Load public configuration
+    const savedPublicConfig = localStorage.getItem('wifiConfigPublic');
+    const savedSecureConfig = sessionStorage.getItem('wifiConfigSecure');
+    
+    if (savedPublicConfig && savedSecureConfig) {
+      const publicConfig = JSON.parse(savedPublicConfig);
+      const secureConfig = JSON.parse(savedSecureConfig);
+      setWifiConfig({ 
+        ...publicConfig, 
+        ...secureConfig, 
+        isConfigured: true 
+      });
     }
 
     const savedPricing = localStorage.getItem('pricingConfig');
@@ -376,24 +650,47 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   };
 
   // Handle WiFi configuration save
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     if (wifiConfig.ssid && wifiConfig.adminPassword && wifiConfig.momoNumber) {
-      const config = {
-        ssid: wifiConfig.ssid,
-        adminPassword: wifiConfig.adminPassword,
-        momoNumber: wifiConfig.momoNumber
-      };
-      localStorage.setItem('wifiConfig', JSON.stringify(config));
-      
-      // Also save pricing config
-      localStorage.setItem('pricingConfig', JSON.stringify(pricingConfig));
-      
-      setWifiConfig({ ...config, isConfigured: true });
-      setShowWifiSetup(false);
-      toast({
-        title: t.configSaved,
-        description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
-      });
+      try {
+        if (!currentUser?.id) {
+          toast({
+            title: "Error",
+            description: "User not authenticated",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Save WiFi configuration to Firebase
+        await userService.updateWifiConfig(currentUser.id, {
+          ssid: wifiConfig.ssid,
+          isConfigured: true
+        });
+
+        // Save pricing configuration to Firebase
+        await userService.updatePricingConfig(currentUser.id, pricingConfig);
+        
+        setWifiConfig({ 
+          ssid: wifiConfig.ssid, 
+          adminPassword: wifiConfig.adminPassword, 
+          momoNumber: wifiConfig.momoNumber, 
+          isConfigured: true 
+        });
+        setShowWifiSetup(false);
+        
+        toast({
+          title: t.configSaved,
+          description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
+        });
+      } catch (error) {
+        console.error('Error saving configuration:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save configuration. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -410,7 +707,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   };
 
   // Handle token generation
-  const handleGenerateToken = () => {
+  const handleGenerateToken = async () => {
     if (!wifiConfig.isConfigured) {
       toast({
         title: "Setup Required",
@@ -421,38 +718,79 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     }
 
     if (tokenForm.recipientPhone && tokenForm.duration && tokenForm.paymentMethod) {
-      const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
-      const credentials = generateCredentials();
-      const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
-      
-      const newToken: WiFiToken = {
-        id: 'TOKEN-' + Date.now(),
-        recipientPhone: tokenForm.recipientPhone,
-        duration: parseInt(tokenForm.duration),
-        price: selectedDuration?.price || 0,
-        currency: pricingConfig.currency,
-        paymentMethod: tokenForm.paymentMethod,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        expiresAt: expiryTime,
-        username: credentials.username,
-        password: credentials.password,
-        isActive: true
-      };
+      try {
+        if (!currentUser?.id) {
+          toast({
+            title: "Error",
+            description: "User not authenticated",
+            variant: "destructive"
+          });
+          return;
+        }
 
-      setTokens([...tokens, newToken]);
-      setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
+        const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
+        const credentials = generateCredentials();
+        const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
+        
+        // Create Firebase token object (without id, Firebase will generate it)
+        const firebaseToken = {
+          recipientPhone: tokenForm.recipientPhone,
+          duration: parseInt(tokenForm.duration),
+          price: selectedDuration?.price || 0,
+          currency: pricingConfig.currency,
+          paymentMethod: tokenForm.paymentMethod,
+          status: 'active',
+          createdAt: new Date(),
+          expiresAt: new Date(expiryTime),
+          username: credentials.username,
+          password: credentials.password,
+          isActive: true,
+          userId: currentUser.id
+        };
 
-      // Simulate SMS sending
-      const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
-      
-      toast({
-        title: t.tokenGenerated,
-        description: `${t.smsSent} ${tokenForm.recipientPhone}`,
-      });
+        // Add token to Firebase
+        const tokenId = await tokenService.addToken(firebaseToken);
+        
+        // Create local token object for state update
+        const newToken: WiFiToken = {
+          id: tokenId,
+          recipientPhone: tokenForm.recipientPhone,
+          duration: parseInt(tokenForm.duration),
+          price: selectedDuration?.price || 0,
+          currency: pricingConfig.currency,
+          paymentMethod: tokenForm.paymentMethod,
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          expiresAt: expiryTime,
+          username: credentials.username,
+          password: credentials.password,
+          isActive: true
+        };
 
-      // In a real app, integrate with SMS API here
-      console.log('SMS to send:', smsMessage);
+        setTokens([...tokens, newToken]);
+        setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
+
+        // Simulate SMS sending
+        const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
+        
+        toast({
+          title: t.tokenGenerated,
+          description: `${t.smsSent} ${tokenForm.recipientPhone}`,
+        });
+
+        // In a real app, integrate with SMS API here
+        if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+          // Only log in development mode
+          console.debug('SMS to send:', smsMessage);
+        }
+      } catch (error) {
+        console.error('Error generating token:', error);
+        toast({
+          title: "Error",
+          description: "Failed to generate token. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -462,7 +800,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     if (selectedDuration) {
       setTokenForm(prev => ({ ...prev, price: selectedDuration.price }));
     }
-  }, [tokenForm.duration, pricingConfig]);
+  }, [tokenForm.duration, getDurationOptions]);
 
   // Calculate statistics
   const stats = {
@@ -477,22 +815,22 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   const getStatusBadge = (status: string) => {
     const configs = {
-      active: { label: t.active, className: "bg-green-100 text-green-800" },
+      active: { label: t.active, className: "bg-blue-100 text-blue-800" },
       expired: { label: t.expired, className: "bg-red-100 text-red-800" },
       used: { label: t.used, className: "bg-gray-100 text-gray-800" },
-      pending: { label: t.pending, className: "bg-yellow-100 text-yellow-800" }
+      pending: { label: t.pending, className: "bg-blue-50 text-blue-700" }
     };
     const config = configs[status as keyof typeof configs];
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
       <div className="container mx-auto space-y-6">
         {/* Enhanced Header with User Info and Logout */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-600 rounded-lg">
                   <Wifi className="h-6 w-6 text-white" />
@@ -505,7 +843,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:gap-4">
                 {/* User Info */}
                 {currentUser && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -593,7 +931,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         <div className="space-y-3">
                           <h4 className="font-medium">{t.tokenPricing}</h4>
                           
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <Label htmlFor="price1">{t.oneHourPrice}</Label>
                               <Input
@@ -634,7 +972,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                                 placeholder={t.enterPrice}
                               />
                             </div>
-                            <div className="col-span-2">
+                            <div className="sm:col-span-2">
                               <Label htmlFor="price24">{t.oneDayPrice}</Label>
                               <Input
                                 id="price24"
@@ -649,7 +987,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                           {/* Pricing Preview */}
                           <div className="p-4 bg-gray-50 rounded-lg">
                             <h5 className="font-medium mb-2">{t.yourPricing}</h5>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                               {getDurationOptions().map((option) => (
                                 <div key={option.value} className="flex justify-between">
                                   <span>{option.label}:</span>
@@ -662,11 +1000,11 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       </TabsContent>
                     </Tabs>
 
-                    <div className="flex justify-end gap-2 mt-6">
-                      <Button variant="outline" onClick={() => setShowWifiSetup(false)}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
+                      <Button variant="outline" onClick={() => setShowWifiSetup(false)} className="w-full sm:w-auto">
                         {t.cancel}
                       </Button>
-                      <Button onClick={handleSaveConfig}>
+                      <Button onClick={handleSaveConfig} className="w-full sm:w-auto">
                         <Settings className="h-4 w-4 mr-2" />
                         {t.saveConfig}
                       </Button>
@@ -742,9 +1080,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                           </div>
                         </div>
                       )}
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline">{t.cancel}</Button>
-                        <Button onClick={handleGenerateToken}>
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
+                        <Button variant="outline" className="w-full sm:w-auto">{t.cancel}</Button>
+                        <Button onClick={handleGenerateToken} className="w-full sm:w-auto">
                           <Send className="h-4 w-4 mr-2" />
                           {t.generate}
                         </Button>
@@ -837,14 +1175,14 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
             <CardDescription>Generate PDF reports showing total revenue and total users</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <Button 
                 onClick={() => previewReport('week')}
                 variant="outline"
-                className="flex items-center gap-2 h-12"
+                className="flex items-center justify-center gap-2 h-12"
               >
                 <Clock className="h-4 w-4" />
-                <div className="text-left">
+                <div className="text-center">
                   <div className="font-medium">{t.previewWeekly}</div>
                 </div>
               </Button>
@@ -852,10 +1190,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <Button 
                 onClick={() => previewReport('month')}
                 variant="outline"
-                className="flex items-center gap-2 h-12"
+                className="flex items-center justify-center gap-2 h-12"
               >
                 <Calendar className="h-4 w-4" />
-                <div className="text-left">
+                <div className="text-center">
                   <div className="font-medium">{t.previewMonthly}</div>
                 </div>
               </Button>
@@ -863,10 +1201,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <Button 
                 onClick={() => previewReport('year')}
                 variant="outline"
-                className="flex items-center gap-2 h-12"
+                className="flex items-center justify-center gap-2 h-12 sm:col-span-2 lg:col-span-1"
               >
                 <BarChart3 className="h-4 w-4" />
-                <div className="text-left">
+                <div className="text-center">
                   <div className="font-medium">{t.previewYearly}</div>
                 </div>
               </Button>
@@ -890,7 +1228,50 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               </TabsList>
               
               <TabsContent value="active" className="space-y-4">
-                <div className="rounded-md border">
+                {/* Mobile Card Layout */}
+                <div className="block lg:hidden space-y-4">
+                  {tokens
+                    .filter(token => token.status === 'active' && new Date(token.expiresAt) > new Date())
+                    .map((token) => (
+                      <Card key={token.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{token.recipientPhone}</p>
+                              <p className="text-sm text-muted-foreground">{token.duration}h duration</p>
+                            </div>
+                            {getStatusBadge(token.status)}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="text-sm">
+                              <span className="font-medium">{t.username}:</span> {token.username}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">{t.password}:</span> {token.password}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {t.expiresAt}: {new Date(token.expiresAt).toLocaleString()}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1">
+                              <Send className="h-3 w-3 mr-1" />
+                              SMS
+                            </Button>
+                            <Button variant="outline" size="sm" className="flex-1">
+                              <QrCode className="h-3 w-3 mr-1" />
+                              QR
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden lg:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -935,7 +1316,48 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               </TabsContent>
 
               <TabsContent value="history" className="space-y-4">
-                <div className="rounded-md border">
+                {/* Mobile Card Layout */}
+                <div className="block lg:hidden space-y-4">
+                  {tokens.map((token) => (
+                    <Card key={token.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{token.recipientPhone}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{token.id}</p>
+                          </div>
+                          {getStatusBadge(token.status)}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="font-medium">{t.duration}:</span> {token.duration}h
+                          </div>
+                          <div>
+                            <span className="font-medium">{t.price}:</span> {token.price} {token.currency}
+                          </div>
+                          <div className="col-span-2">
+                            <div className="flex items-center gap-2">
+                              {token.paymentMethod === 'cash' ? (
+                                <Banknote className="h-4 w-4" />
+                              ) : (
+                                <Smartphone className="h-4 w-4" />
+                              )}
+                              <span className="font-medium">{t.paymentMethod}:</span>
+                              {token.paymentMethod === 'cash' ? t.cash : t.mtnMomo}
+                            </div>
+                          </div>
+                          <div className="col-span-2 text-muted-foreground">
+                            Created: {new Date(token.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden lg:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -979,13 +1401,13 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
         {/* Report Preview Modal */}
         <Dialog open={showReportPreview} onOpenChange={setShowReportPreview}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto w-[95vw] sm:w-full">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
                 <FileText className="h-5 w-5" />
                 {t.reportPreview}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm">
                 {previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport}
                 {previewData && ` - ${previewData.period}`}
               </DialogDescription>
@@ -1005,16 +1427,145 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   </p>
                 </div>
 
+                {/* Custom Date Range Section */}
+                <div className="space-y-4 border-b pb-4">
+                  <h3 className="text-sm font-semibold text-gray-800">Customize Date Range:</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="previewStartDate" className="text-xs font-medium flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3" />
+                        Start Date
+                      </Label>
+                      <Input
+                        id="previewStartDate"
+                        type="date"
+                        value={customDateRange.startDate}
+                        onChange={(e) => {
+                          setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }));
+                        }}
+                        max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="previewEndDate" className="text-xs font-medium flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3" />
+                        End Date
+                      </Label>
+                      <Input
+                        id="previewEndDate"
+                        type="date"
+                        value={customDateRange.endDate}
+                        onChange={(e) => {
+                          setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }));
+                        }}
+                        min={customDateRange.startDate}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick shortcuts in dialog */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Quick Ranges:</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const today = new Date();
+                          const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                          setCustomDateRange({
+                            startDate: lastWeek.toISOString().split('T')[0],
+                            endDate: today.toISOString().split('T')[0],
+                            reportType: "custom"
+                          });
+                        }}
+                      >
+                        Last 7 Days
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const today = new Date();
+                          const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                          setCustomDateRange({
+                            startDate: lastMonth.toISOString().split('T')[0],
+                            endDate: today.toISOString().split('T')[0],
+                            reportType: "custom"
+                          });
+                        }}
+                      >
+                        Last 30 Days
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const today = new Date();
+                          const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                          setCustomDateRange({
+                            startDate: firstDayOfMonth.toISOString().split('T')[0],
+                            endDate: today.toISOString().split('T')[0],
+                            reportType: "custom"
+                          });
+                        }}
+                      >
+                        This Month
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const today = new Date();
+                          const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+                          setCustomDateRange({
+                            startDate: firstDayOfYear.toISOString().split('T')[0],
+                            endDate: today.toISOString().split('T')[0],
+                            reportType: "custom"
+                          });
+                        }}
+                      >
+                        This Year
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Update Preview Button */}
+                  {customDateRange.startDate && customDateRange.endDate && (
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => {
+                          const updatedData = generateCustomDateRangeReport(customDateRange.startDate, customDateRange.endDate);
+                          setPreviewData(updatedData);
+                        }}
+                        size="sm"
+                        className="text-xs"
+                      >
+                        Update Preview
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Summary Section */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Executive Summary</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Report Summary</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm text-gray-600">Total Revenue</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-xl sm:text-2xl font-bold text-blue-600">
                           {previewData.revenue.toLocaleString()} SSP
                         </div>
                       </CardContent>
@@ -1025,7 +1576,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         <CardTitle className="text-sm text-gray-600">Total Users</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-xl sm:text-2xl font-bold text-blue-600">
                           {previewData.totalUsers}
                         </div>
                       </CardContent>
@@ -1034,20 +1585,29 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 </div>
 
                 {/* Period Information */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-700 mb-2">Report Period</h4>
-                  <p className="text-sm text-gray-600">{previewData.period}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-800 mb-2">Report Period</h4>
+                  <p className="text-sm text-blue-700">{previewData.period}</p>
+                  <p className="text-xs text-blue-600 mt-1">
                     This report includes data from {previewData.transactions} transactions
                   </p>
+                  <div className="mt-3 p-3 bg-blue-100 rounded text-sm text-blue-800">
+                    <p className="font-medium">📄 Complete details will be included in the PDF:</p>
+                    <ul className="list-disc list-inside mt-1 text-xs space-y-1">
+                      <li>Service breakdown by duration</li>
+                      <li>Payment method analysis</li>
+                      <li>Recent transaction history</li>
+                      <li>Financial summaries and charts</li>
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setShowReportPreview(false)}>
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowReportPreview(false)} className="w-full sm:w-auto">
                     {t.close}
                   </Button>
-                  <Button onClick={generatePDFReport} className="flex items-center gap-2">
+                  <Button onClick={generatePDFReport} className="flex items-center justify-center gap-2 w-full sm:w-auto">
                     <FileText className="h-4 w-4" />
                     {t.downloadPDF}
                   </Button>

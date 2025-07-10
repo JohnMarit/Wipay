@@ -150,7 +150,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   const t = translations[language as keyof typeof translations];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-green-50 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
       <div className="container mx-auto p-4">
         {/* Enhanced Header with User Info */}
         <div className="flex justify-between items-center mb-6">
@@ -269,7 +269,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+              <Card className="bg-gradient-to-r from-blue-500 to-blue-700 text-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t.activeServices}</CardTitle>
                   <Wifi className="h-4 w-4" />
@@ -282,7 +282,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+              <Card className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{t.monthlyRevenue}</CardTitle>
                   <DollarSign className="h-4 w-4" />
@@ -326,7 +326,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
                   <CardTitle className="text-sm">Cash Payments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{dashboardStats.cashPayments}%</div>
+                  <div className="text-2xl font-bold text-blue-700">{dashboardStats.cashPayments}%</div>
                   <div className="text-xs text-gray-500">Walk-in payments</div>
                 </CardContent>
               </Card>
@@ -335,7 +335,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
                   <CardTitle className="text-sm">Bank Transfers</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">{dashboardStats.bankTransfers}%</div>
+                  <div className="text-2xl font-bold text-blue-800">{dashboardStats.bankTransfers}%</div>
                   <div className="text-xs text-gray-500">Local banks</div>
                 </CardContent>
               </Card>
