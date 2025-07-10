@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,12 +16,12 @@ import { onAuthStateChange, signOutUser } from '@/lib/auth';
 import { authService } from '@/lib/firebase';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-    AlertTriangle,
-    Eye,
-    EyeOff,
-    LogIn,
-    UserPlus,
-    Wifi
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  Wifi,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -637,7 +637,9 @@ const App = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Initializing Wipay...</p>
-          <p className="text-sm text-gray-500 mt-2">Please wait while we set up your workspace</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Please wait while we set up your workspace
+          </p>
         </div>
       </div>
     );
