@@ -1,9 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔍 Running pre-commit checks in wipay directory..."
-
-cd wipay
+echo "🔍 Running pre-commit checks..."
 
 # Run linting
 echo "📝 Checking ESLint rules..."
@@ -25,4 +23,4 @@ npm run security-check
 echo "🎨 Formatting code..."
 npm run format
 
-echo "✅ Pre-commit checks completed!"
+echo "✅ Pre-commit checks completed!" 

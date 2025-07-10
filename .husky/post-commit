@@ -1,9 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🎯 Running post-commit validation in wipay directory..."
-
-cd wipay
+echo "🎯 Running post-commit validation..."
 
 # Validate blue color usage in components
 echo "🎨 Validating blue color scheme usage..."
@@ -21,4 +19,4 @@ npm run a11y-check
 echo "⚡ Analyzing performance..."
 npm run perf-check
 
-echo "✅ Post-commit validation completed!"
+echo "✅ Post-commit validation completed!" 

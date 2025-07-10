@@ -8,105 +8,39 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🚀 Setting up Cursor Rules enforcement for Wipay project...');
+console.log('🚀 Setting up Cursor Rules enforcement...');
 
 try {
-  // Change to wipay directory for npm operations
-  process.chdir('wipay');
-  
-  // Install Husky in the wipay project
+  // Install Husky
   console.log('📦 Installing Husky...');
-  execSync('npm install husky prettier --save-dev', { stdio: 'inherit' });
+  execSync('npm install husky --save-dev', { stdio: 'inherit' });
   
-  // Initialize Husky from root directory
+  // Initialize Husky
   console.log('🔧 Initializing Husky...');
-  process.chdir('..');
   execSync('npx husky install', { stdio: 'inherit' });
-  
-  // Create git hooks that work with the wipay subdirectory
-  console.log('🔗 Creating git hooks...');
-  
-  // Pre-commit hook
-  const preCommitHook = `#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🔍 Running pre-commit checks in wipay directory..."
-
-cd wipay
-
-# Run linting
-echo "📝 Checking ESLint rules..."
-npm run lint
-
-# Run type checking
-echo "🔍 Checking TypeScript types..."
-npm run type-check
-
-# Run tests
-echo "🧪 Running tests..."
-npm run test
-
-# Check for secrets and sensitive data
-echo "🔒 Checking for secrets..."
-npm run security-check
-
-# Format code
-echo "🎨 Formatting code..."
-npm run format
-
-echo "✅ Pre-commit checks completed!"
-`;
-
-  fs.writeFileSync('.husky/pre-commit', preCommitHook);
-  
-  // Post-commit hook
-  const postCommitHook = `#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🎯 Running post-commit validation in wipay directory..."
-
-cd wipay
-
-# Validate blue color usage in components
-echo "🎨 Validating blue color scheme usage..."
-npm run validate-colors
-
-# Check security compliance
-echo "🔒 Running security audit..."
-npm run security-audit
-
-# Validate accessibility standards
-echo "♿ Checking accessibility compliance..."
-npm run a11y-check
-
-# Check performance metrics
-echo "⚡ Analyzing performance..."
-npm run perf-check
-
-echo "✅ Post-commit validation completed!"
-`;
-
-  fs.writeFileSync('.husky/post-commit', postCommitHook);
-  
-  // Make git hooks executable
-  console.log('🛠️ Making git hooks executable...');
-  if (process.platform !== 'win32') {
-    fs.chmodSync('.husky/pre-commit', '755');
-    fs.chmodSync('.husky/post-commit', '755');
-  }
-  
-  // Change back to wipay directory for validation
-  process.chdir('wipay');
   
   // Make scripts executable
   console.log('🛠️ Making scripts executable...');
-  const scriptsDir = path.join(process.cwd(), 'scripts');
+  const scriptsDir = path.join(__dirname, 'scripts');
   if (fs.existsSync(scriptsDir)) {
     const files = fs.readdirSync(scriptsDir);
     files.forEach(file => {
       const filePath = path.join(scriptsDir, file);
-      if (process.platform !== 'win32') {
-        fs.chmodSync(filePath, '755');
+      fs.chmodSync(filePath, '755');
+    });
+  }
+  
+  // Make git hooks executable
+  console.log('🔗 Making git hooks executable...');
+  const hooksDir = path.join(__dirname, '.husky');
+  if (fs.existsSync(hooksDir)) {
+    const files = fs.readdirSync(hooksDir);
+    files.forEach(file => {
+      if (!file.startsWith('_') && !file.includes('.')) {
+        const filePath = path.join(hooksDir, file);
+        if (fs.existsSync(filePath)) {
+          fs.chmodSync(filePath, '755');
+        }
       }
     });
   }

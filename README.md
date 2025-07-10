@@ -53,7 +53,7 @@ A modern React-based WiFi token distribution system with Firebase backend for ca
    ```
 
 3. **Firebase Setup**
-   
+
    Follow the detailed guide in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to:
    - Create a Firebase project
    - Enable Authentication and Firestore
@@ -61,7 +61,7 @@ A modern React-based WiFi token distribution system with Firebase backend for ca
    - Set up security rules
 
 4. **Environment Configuration**
-   
+
    Create a `.env` file in the `wipay` directory:
    ```env
    # Your Firebase Configuration
@@ -72,7 +72,7 @@ A modern React-based WiFi token distribution system with Firebase backend for ca
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    VITE_FIREBASE_APP_ID=your_app_id
    VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   
+
    # Optional Settings
    VITE_DEBUG_MODE=true
    ```
@@ -264,3 +264,5 @@ For support and questions:
 ---
 
 **Made with ❤️ for South Sudan's digital transformation**
+
+
