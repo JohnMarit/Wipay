@@ -168,7 +168,7 @@ export const debugStorage = {
     
     try {
       // Check if Firebase is loaded
-      if (typeof window !== 'undefined' && (window as any).firebase) {
+      if (typeof window !== 'undefined' && 'firebase' in window) {
         console.log('✅ Firebase SDK loaded');
       } else {
         console.log('ℹ️ Firebase SDK status unknown');
@@ -214,6 +214,7 @@ export const debugStorage = {
 
 // Make debugStorage available globally for user troubleshooting
 if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).debugStorage = debugStorage;
 }
 

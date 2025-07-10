@@ -31,7 +31,12 @@ import ReportsAnalytics from "@/components/ReportsAnalytics";
 import LanguageSelector from "@/components/LanguageSelector";
 
 interface IndexProps {
-  currentUser?: any;
+  currentUser?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
   onLogout?: () => void;
 }
 

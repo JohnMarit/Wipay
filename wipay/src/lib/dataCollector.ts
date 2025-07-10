@@ -90,14 +90,16 @@ export class WiFiDataCollector {
     let periodLabel: string;
     
     switch (period) {
-      case 'week':
+      case 'week': {
         const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         periodLabel = `${weekStart.toLocaleDateString()} - ${now.toLocaleDateString()}`;
         break;
-      case 'month':
+      }
+      case 'month': {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         periodLabel = `${monthStart.toLocaleDateString()} - ${now.toLocaleDateString()}`;
         break;
+      }
       case 'year':
         periodLabel = now.getFullYear().toString();
         break;
