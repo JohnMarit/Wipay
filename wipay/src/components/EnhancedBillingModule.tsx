@@ -15,6 +15,23 @@ interface EnhancedBillingModuleProps {
   language: string;
 }
 
+// Invoice interface for type safety
+interface Invoice {
+  id: string;
+  customer: string;
+  planType: "prepaid" | "postpaid";
+  baseAmount: number;
+  installationFee: number;
+  equipmentFee: number;
+  vatAmount: number;
+  totalAmount: number;
+  dueDate: string;
+  status: "pending" | "paid" | "overdue" | "partial";
+  generatedDate: string;
+  remindersSent: number;
+  daysOverdue: number;
+}
+
 const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
   const { toast } = useToast();
   const [selectedCustomer, setSelectedCustomer] = useState("");
@@ -143,7 +160,7 @@ const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
     }
   };
 
-  const [invoices, setInvoices] = useState([
+  const [invoices, setInvoices] = useState<Invoice[]>([
     {
       id: "INV-2024-001",
       customer: "Ahmed Hassan Mohamed",
@@ -229,7 +246,7 @@ const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
     }
   };
 
-  const handleSendReminder = (invoice: any) => {
+  const handleSendReminder = (invoice: Invoice) => {
     const customerData = customers.find(c => c.name === invoice.customer);
     
     // Simulate SMS sending

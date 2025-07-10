@@ -614,42 +614,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   // Load configuration from storage
   useEffect(() => {
-    try {
-      // Load public configuration
-      const savedPublicConfig = localStorage.getItem('wifiConfigPublic');
-      const savedSecureConfig = sessionStorage.getItem('wifiConfigSecure');
-      
-      if (savedPublicConfig && savedSecureConfig) {
-        try {
-          const publicConfig = JSON.parse(savedPublicConfig);
-          const secureConfig = JSON.parse(savedSecureConfig);
-          setWifiConfig({ 
-            ...publicConfig, 
-            ...secureConfig, 
-            isConfigured: true 
-          });
-        } catch (parseError) {
-          console.warn('Failed to parse WiFi config from storage:', parseError);
-          // Clear invalid data
-          localStorage.removeItem('wifiConfigPublic');
-          sessionStorage.removeItem('wifiConfigSecure');
-        }
-      }
-
-      const savedPricing = localStorage.getItem('pricingConfig');
-      if (savedPricing) {
-        try {
-          const pricing = JSON.parse(savedPricing);
-          setPricingConfig(pricing);
-        } catch (parseError) {
-          console.warn('Failed to parse pricing config from storage:', parseError);
-          // Clear invalid data
-          localStorage.removeItem('pricingConfig');
-        }
-      }
-    } catch (error) {
-      console.error('Error accessing localStorage:', error);
-    }
+    // Since we're now using Firebase for data storage, we can skip localStorage for configuration
+    // The loadUserData function handles loading from Firebase
+    console.log('[Wipay] Configuration loading handled by Firebase integration');
   }, []);
 
   // Generate random WiFi credentials

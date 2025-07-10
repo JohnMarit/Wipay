@@ -43,7 +43,9 @@ export interface CollectedReportData {
 
 export class WiFiDataCollector {
   private getStoredTokens(): TokenTransaction[] {
-    return storage.getItem<TokenTransaction[]>('wifiTokens', []) || [];
+    // Note: With Firebase integration, this fallback localStorage is rarely used
+    // The main app uses Firebase for token storage
+    return storage.getItem<TokenTransaction[]>('tokens', []) || [];
   }
 
   private filterTokensByPeriod(tokens: TokenTransaction[], period: 'week' | 'month' | 'year'): TokenTransaction[] {
