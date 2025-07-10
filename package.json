@@ -8,6 +8,7 @@
     "build": "npm run type-check && vite build",
     "build:dev": "vite build --mode development",
     "build:prod": "npm run type-check && vite build --mode production",
+    "build:vercel": "npm run type-check && vite build --mode production",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
@@ -23,7 +24,8 @@
     "perf-check": "echo 'Performance check completed - implement with lighthouse-ci'",
     "pre-commit": "npm run lint && npm run type-check && npm run format:check",
     "prepare": "husky install",
-    "validate-rules": "node scripts/validate-cursor-rules.js"
+    "validate-rules": "node scripts/validate-cursor-rules.js",
+    "postbuild": "echo 'Build completed successfully!'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

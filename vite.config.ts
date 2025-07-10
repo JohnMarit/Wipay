@@ -32,6 +32,18 @@ export default defineConfig(({ mode }) => ({
           ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-slot']
         }
       }
-    }
+    },
+    // Ensure proper handling of dynamic imports
+    target: 'es2015',
+    chunkSizeWarningLimit: 1000,
+  },
+  // Add preview configuration for testing
+  preview: {
+    port: 4173,
+    host: true,
+  },
+  // Define for production builds
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(mode),
   },
 }));

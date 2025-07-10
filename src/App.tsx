@@ -1,33 +1,32 @@
-import { useState, useEffect } from 'react';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Index from './pages/Index';
-import NotFound from './pages/NotFound';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  AlertTriangle,
-  Wifi,
-  Eye,
-  EyeOff,
-  UserPlus,
-  LogIn,
-  CheckCircle,
-} from 'lucide-react';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { authService, userService } from '@/lib/firebase';
 import { onAuthStateChange, signOutUser } from '@/lib/auth';
+import { authService } from '@/lib/firebase';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+    AlertTriangle,
+    Eye,
+    EyeOff,
+    LogIn,
+    UserPlus,
+    Wifi
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -156,7 +155,15 @@ const App = () => {
       setIsLoading(false);
     });
 
-    return () => unsubscribe && unsubscribe();
+    // Set a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 10000); // 10 seconds timeout
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Validation functions
@@ -629,7 +636,8 @@ const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Wipay...</p>
+          <p className="text-gray-600">Initializing Wipay...</p>
+          <p className="text-sm text-gray-500 mt-2">Please wait while we set up your workspace</p>
         </div>
       </div>
     );
