@@ -246,17 +246,17 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
           });
           return;
         }
-        
-        switch (period) {
-          case 'week':
-            filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
-            break;
-          case 'month':
-            filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
-            break;
-          case 'year':
-            filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
-            break;
+      
+      switch (period) {
+        case 'week':
+          filename = `wipay-weekly-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+          break;
+        case 'month':
+          filename = `wipay-monthly-report-${new Date().toISOString().slice(0, 7)}.pdf`;
+          break;
+        case 'year':
+          filename = `wipay-yearly-report-${new Date().getFullYear()}.pdf`;
+          break;
         }
       }
       
@@ -562,7 +562,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
               >
                 <FileText className="h-5 w-5 mr-2" />
                 {t.generate}
-              </Button>
+            </Button>
             </div>
           </div>
 
@@ -618,8 +618,8 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
               >
                 This Month
               </Button>
-              <Button
-                variant="outline"
+            <Button 
+              variant="outline"
                 size="sm"
                 className="text-xs"
                 onClick={() => {
@@ -635,7 +635,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
                 This Year
               </Button>
             </div>
-          </div>
+              </div>
 
           {/* Month Range Selection */}
           <div className="border-t pt-4">
@@ -663,7 +663,7 @@ const ReportsAnalytics = ({ language }: ReportsAnalyticsProps) => {
                   }}
                 >
                   {month.label}
-                </Button>
+            </Button>
               ))}
             </div>
           </div>

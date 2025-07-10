@@ -79,8 +79,8 @@ A modern React-based WiFi token distribution system with Firebase backend for ca
 
 5. **Start the development server**
    ```bash
-   npm run dev
-   ```
+npm run dev
+```
 
 6. **Open your browser**
    ```

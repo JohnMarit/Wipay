@@ -614,24 +614,41 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   // Load configuration from storage
   useEffect(() => {
-    // Load public configuration
-    const savedPublicConfig = localStorage.getItem('wifiConfigPublic');
-    const savedSecureConfig = sessionStorage.getItem('wifiConfigSecure');
-    
-    if (savedPublicConfig && savedSecureConfig) {
-      const publicConfig = JSON.parse(savedPublicConfig);
-      const secureConfig = JSON.parse(savedSecureConfig);
-      setWifiConfig({ 
-        ...publicConfig, 
-        ...secureConfig, 
-        isConfigured: true 
-      });
-    }
+    try {
+      // Load public configuration
+      const savedPublicConfig = localStorage.getItem('wifiConfigPublic');
+      const savedSecureConfig = sessionStorage.getItem('wifiConfigSecure');
+      
+      if (savedPublicConfig && savedSecureConfig) {
+        try {
+          const publicConfig = JSON.parse(savedPublicConfig);
+          const secureConfig = JSON.parse(savedSecureConfig);
+          setWifiConfig({ 
+            ...publicConfig, 
+            ...secureConfig, 
+            isConfigured: true 
+          });
+        } catch (parseError) {
+          console.warn('Failed to parse WiFi config from storage:', parseError);
+          // Clear invalid data
+          localStorage.removeItem('wifiConfigPublic');
+          sessionStorage.removeItem('wifiConfigSecure');
+        }
+      }
 
-    const savedPricing = localStorage.getItem('pricingConfig');
-    if (savedPricing) {
-      const pricing = JSON.parse(savedPricing);
-      setPricingConfig(pricing);
+      const savedPricing = localStorage.getItem('pricingConfig');
+      if (savedPricing) {
+        try {
+          const pricing = JSON.parse(savedPricing);
+          setPricingConfig(pricing);
+        } catch (parseError) {
+          console.warn('Failed to parse pricing config from storage:', parseError);
+          // Clear invalid data
+          localStorage.removeItem('pricingConfig');
+        }
+      }
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
     }
   }, []);
 
@@ -664,7 +681,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
         // Save WiFi configuration to Firebase
         await userService.updateWifiConfig(currentUser.id, {
-          ssid: wifiConfig.ssid,
+        ssid: wifiConfig.ssid,
           isConfigured: true
         });
 
@@ -677,12 +694,12 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
           momoNumber: wifiConfig.momoNumber, 
           isConfigured: true 
         });
-        setShowWifiSetup(false);
+      setShowWifiSetup(false);
         
-        toast({
-          title: t.configSaved,
-          description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
-        });
+      toast({
+        title: t.configSaved,
+        description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
+      });
       } catch (error) {
         console.error('Error saving configuration:', error);
         toast({
@@ -728,10 +745,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
           return;
         }
 
-        const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
-        const credentials = generateCredentials();
-        const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
-        
+      const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
+      const credentials = generateCredentials();
+      const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
+      
         // Create Firebase token object (without id, Firebase will generate it)
         const firebaseToken = {
           recipientPhone: tokenForm.recipientPhone,
@@ -752,33 +769,33 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         const tokenId = await tokenService.addToken(firebaseToken);
         
         // Create local token object for state update
-        const newToken: WiFiToken = {
+      const newToken: WiFiToken = {
           id: tokenId,
-          recipientPhone: tokenForm.recipientPhone,
-          duration: parseInt(tokenForm.duration),
-          price: selectedDuration?.price || 0,
-          currency: pricingConfig.currency,
-          paymentMethod: tokenForm.paymentMethod,
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          expiresAt: expiryTime,
-          username: credentials.username,
-          password: credentials.password,
-          isActive: true
-        };
+        recipientPhone: tokenForm.recipientPhone,
+        duration: parseInt(tokenForm.duration),
+        price: selectedDuration?.price || 0,
+        currency: pricingConfig.currency,
+        paymentMethod: tokenForm.paymentMethod,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        expiresAt: expiryTime,
+        username: credentials.username,
+        password: credentials.password,
+        isActive: true
+      };
 
-        setTokens([...tokens, newToken]);
-        setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
+      setTokens([...tokens, newToken]);
+      setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
 
-        // Simulate SMS sending
-        const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
-        
-        toast({
-          title: t.tokenGenerated,
-          description: `${t.smsSent} ${tokenForm.recipientPhone}`,
-        });
+      // Simulate SMS sending
+      const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
+      
+      toast({
+        title: t.tokenGenerated,
+        description: `${t.smsSent} ${tokenForm.recipientPhone}`,
+      });
 
-        // In a real app, integrate with SMS API here
+      // In a real app, integrate with SMS API here
         if (import.meta.env.VITE_DEBUG_MODE === 'true') {
           // Only log in development mode
           console.debug('SMS to send:', smsMessage);

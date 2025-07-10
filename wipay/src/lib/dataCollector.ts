@@ -1,4 +1,6 @@
 // Data collector for real WiFi token transactions
+import { storage } from './utils';
+
 export interface TokenTransaction {
   id: string;
   recipientPhone: string;
@@ -41,13 +43,7 @@ export interface CollectedReportData {
 
 export class WiFiDataCollector {
   private getStoredTokens(): TokenTransaction[] {
-    try {
-      const storedTokens = localStorage.getItem('wifiTokens');
-      return storedTokens ? JSON.parse(storedTokens) : [];
-    } catch (error) {
-      console.error('Error reading stored tokens:', error);
-      return [];
-    }
+    return storage.getItem<TokenTransaction[]>('wifiTokens', []) || [];
   }
 
   private filterTokensByPeriod(tokens: TokenTransaction[], period: 'week' | 'month' | 'year'): TokenTransaction[] {
