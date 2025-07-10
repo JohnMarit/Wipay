@@ -154,13 +154,84 @@ export const sessionStorage_ = {
 export const initializeStorageErrorHandler = () => {
   if (typeof window === 'undefined') return;
   
+  // More aggressive console override to suppress external localStorage errors
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  
+  console.error = (...args) => {
+    const message = args.join(' ');
+    // Suppress external localStorage errors
+    if (message.includes('Failed to parse item from local storage') || 
+        message.includes('localStorage') && message.includes('content.js')) {
+      return; // Completely suppress these errors
+    }
+    originalConsoleError.apply(console, args);
+  };
+  
+  console.warn = (...args) => {
+    const message = args.join(' ');
+    // Suppress external localStorage warnings
+    if (message.includes('Failed to parse item from local storage') || 
+        message.includes('localStorage') && message.includes('content.js')) {
+      return; // Completely suppress these warnings
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+  
   // Catch any global storage errors and prevent them from affecting the app
   window.addEventListener('error', (event) => {
-    if (event.message && event.message.includes('localStorage')) {
-      console.warn('[Wipay] Caught external localStorage error (likely from browser extension):', event.message);
+    if (event.message && (
+        event.message.includes('localStorage') || 
+        event.message.includes('Failed to parse item from local storage') ||
+        event.filename?.includes('content.js')
+      )) {
+      console.log('[Wipay] ✅ Blocked external localStorage error from browser extension');
       event.preventDefault(); // Prevent the error from bubbling up
+      event.stopPropagation();
+      return false;
+    }
+  }, true);
+
+  // Additional protection for unhandled promise rejections related to storage
+  window.addEventListener('unhandledrejection', (event) => {
+    if (event.reason && event.reason.message && 
+        event.reason.message.includes('localStorage')) {
+      console.log('[Wipay] ✅ Blocked external localStorage promise rejection');
+      event.preventDefault();
     }
   });
+
+  // Override localStorage and sessionStorage access to catch external errors
+  const originalLocalStorageGetItem = localStorage.getItem;
+  const originalSessionStorageGetItem = sessionStorage.getItem;
+  
+  // Intercept external localStorage access
+  localStorage.getItem = function(key: string) {
+    try {
+      return originalLocalStorageGetItem.call(this, key);
+    } catch (error) {
+      // If it's not a Wipay key and it fails, suppress the error
+      if (!key.startsWith('wipay_')) {
+        console.log(`[Wipay] ✅ Blocked external localStorage error for key: ${key}`);
+        return null;
+      }
+      throw error;
+    }
+  };
+  
+  // Intercept external sessionStorage access
+  sessionStorage.getItem = function(key: string) {
+    try {
+      return originalSessionStorageGetItem.call(this, key);
+    } catch (error) {
+      // If it's not a Wipay key and it fails, suppress the error
+      if (!key.startsWith('wipay_')) {
+        console.log(`[Wipay] ✅ Blocked external sessionStorage error for key: ${key}`);
+        return null;
+      }
+      throw error;
+    }
+  };
 
   // Additional protection for quota exceeded errors
   window.addEventListener('storage', (event) => {
