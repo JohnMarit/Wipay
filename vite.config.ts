@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-button']
+          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-slot']
         }
       }
     }
