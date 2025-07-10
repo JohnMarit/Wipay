@@ -1,19 +1,33 @@
-import { useState, useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Wifi, Eye, EyeOff, UserPlus, LogIn, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { authService, userService } from "@/lib/firebase";
-import { onAuthStateChange, signOutUser } from "@/lib/auth";
+import { useState, useEffect } from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  AlertTriangle,
+  Wifi,
+  Eye,
+  EyeOff,
+  UserPlus,
+  LogIn,
+  CheckCircle,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { authService, userService } from '@/lib/firebase';
+import { onAuthStateChange, signOutUser } from '@/lib/auth';
 
 const queryClient = new QueryClient();
 
@@ -30,28 +44,28 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState('en');
   const [isSignupMode, setIsSignupMode] = useState(false);
   const { toast } = useToast();
-  
+
   // Login form state
   const [loginForm, setLoginForm] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     isLoading: false,
-    error: ""
+    error: '',
   });
 
   // Signup form state
   const [signupForm, setSignupForm] = useState({
-    username: "",
-    password: "",
-    confirmPassword: "",
-    name: "",
-    phone: "",
-    email: "",
+    username: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    phone: '',
+    email: '',
     isLoading: false,
-    error: ""
+    error: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -59,84 +73,84 @@ const App = () => {
 
   const translations = {
     en: {
-      title: "Wipay",
-      loginSubtitle: "Login to your account",
-      signupSubtitle: "Create a new account",
-      username: "Username or Email",
-      password: "Password",
-      confirmPassword: "Confirm Password",
-      fullName: "Full Name",
-      phoneNumber: "Phone Number",
-      emailAddress: "Email Address",
-      login: "Login",
-      signup: "Sign Up",
-      signingIn: "Signing in...",
-      signingUp: "Creating account...",
-      loginError: "Invalid credentials or user not found",
-      signupError: "Failed to create account",
-      passwordMismatch: "Passwords do not match",
-      usernameExists: "Email already exists",
-      invalidPhone: "Please enter a valid phone number",
-      invalidEmail: "Please enter a valid email address",
-      accountCreated: "Account created successfully!",
-      enterUsername: "Enter your email address",
-      enterPassword: "Enter your password",
-      enterConfirmPassword: "Confirm your password",
-      enterFullName: "Enter your full name",
-      enterPhone: "Enter your phone number",
-      enterEmail: "Enter your email address",
-      selectLanguage: "Select Language",
+      title: 'Wipay',
+      loginSubtitle: 'Login to your account',
+      signupSubtitle: 'Create a new account',
+      username: 'Username or Email',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      fullName: 'Full Name',
+      phoneNumber: 'Phone Number',
+      emailAddress: 'Email Address',
+      login: 'Login',
+      signup: 'Sign Up',
+      signingIn: 'Signing in...',
+      signingUp: 'Creating account...',
+      loginError: 'Invalid credentials or user not found',
+      signupError: 'Failed to create account',
+      passwordMismatch: 'Passwords do not match',
+      usernameExists: 'Email already exists',
+      invalidPhone: 'Please enter a valid phone number',
+      invalidEmail: 'Please enter a valid email address',
+      accountCreated: 'Account created successfully!',
+      enterUsername: 'Enter your email address',
+      enterPassword: 'Enter your password',
+      enterConfirmPassword: 'Confirm your password',
+      enterFullName: 'Enter your full name',
+      enterPhone: 'Enter your phone number',
+      enterEmail: 'Enter your email address',
+      selectLanguage: 'Select Language',
       switchToSignup: "Don't have an account? Sign up",
-      switchToLogin: "Already have an account? Login",
-      createAccount: "Create Account",
-      loginToAccount: "Login to Account",
-      passwordLength: "Password must be at least 6 characters",
-      networkError: "Network error. Please check your connection.",
-      unknownError: "An unknown error occurred. Please try again."
+      switchToLogin: 'Already have an account? Login',
+      createAccount: 'Create Account',
+      loginToAccount: 'Login to Account',
+      passwordLength: 'Password must be at least 6 characters',
+      networkError: 'Network error. Please check your connection.',
+      unknownError: 'An unknown error occurred. Please try again.',
     },
     ar: {
-      title: "Wipay",
-      loginSubtitle: "تسجيل الدخول إلى حسابك",
-      signupSubtitle: "إنشاء حساب جديد",
-      username: "اسم المستخدم أو البريد الإلكتروني",
-      password: "كلمة المرور",
-      confirmPassword: "تأكيد كلمة المرور",
-      fullName: "الاسم الكامل",
-      phoneNumber: "رقم الهاتف",
-      emailAddress: "عنوان البريد الإلكتروني",
-      login: "تسجيل الدخول",
-      signup: "إنشاء حساب",
-      signingIn: "جاري تسجيل الدخول...",
-      signingUp: "جاري إنشاء الحساب...",
-      loginError: "بيانات الاعتماد غير صحيحة أو المستخدم غير موجود",
-      signupError: "فشل في إنشاء الحساب",
-      passwordMismatch: "كلمات المرور غير متطابقة",
-      usernameExists: "البريد الإلكتروني موجود بالفعل",
-      invalidPhone: "يرجى إدخال رقم هاتف صحيح",
-      invalidEmail: "يرجى إدخال عنوان بريد إلكتروني صحيح",
-      accountCreated: "تم إنشاء الحساب بنجاح!",
-      enterUsername: "أدخل عنوان بريدك الإلكتروني",
-      enterPassword: "أدخل كلمة المرور",
-      enterConfirmPassword: "أكد كلمة المرور",
-      enterFullName: "أدخل اسمك الكامل",
-      enterPhone: "أدخل رقم الهاتف",
-      enterEmail: "أدخل عنوان البريد الإلكتروني",
-      selectLanguage: "اختر اللغة",
-      switchToSignup: "ليس لديك حساب؟ أنشئ حساباً",
-      switchToLogin: "لديك حساب بالفعل؟ سجل دخولك",
-      createAccount: "إنشاء حساب",
-      loginToAccount: "تسجيل الدخول",
-      passwordLength: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
-      networkError: "خطأ في الشبكة. يرجى التحقق من اتصالك.",
-      unknownError: "حدث خطأ غير معروف. يرجى المحاولة مرة أخرى."
-    }
+      title: 'Wipay',
+      loginSubtitle: 'تسجيل الدخول إلى حسابك',
+      signupSubtitle: 'إنشاء حساب جديد',
+      username: 'اسم المستخدم أو البريد الإلكتروني',
+      password: 'كلمة المرور',
+      confirmPassword: 'تأكيد كلمة المرور',
+      fullName: 'الاسم الكامل',
+      phoneNumber: 'رقم الهاتف',
+      emailAddress: 'عنوان البريد الإلكتروني',
+      login: 'تسجيل الدخول',
+      signup: 'إنشاء حساب',
+      signingIn: 'جاري تسجيل الدخول...',
+      signingUp: 'جاري إنشاء الحساب...',
+      loginError: 'بيانات الاعتماد غير صحيحة أو المستخدم غير موجود',
+      signupError: 'فشل في إنشاء الحساب',
+      passwordMismatch: 'كلمات المرور غير متطابقة',
+      usernameExists: 'البريد الإلكتروني موجود بالفعل',
+      invalidPhone: 'يرجى إدخال رقم هاتف صحيح',
+      invalidEmail: 'يرجى إدخال عنوان بريد إلكتروني صحيح',
+      accountCreated: 'تم إنشاء الحساب بنجاح!',
+      enterUsername: 'أدخل عنوان بريدك الإلكتروني',
+      enterPassword: 'أدخل كلمة المرور',
+      enterConfirmPassword: 'أكد كلمة المرور',
+      enterFullName: 'أدخل اسمك الكامل',
+      enterPhone: 'أدخل رقم الهاتف',
+      enterEmail: 'أدخل عنوان البريد الإلكتروني',
+      selectLanguage: 'اختر اللغة',
+      switchToSignup: 'ليس لديك حساب؟ أنشئ حساباً',
+      switchToLogin: 'لديك حساب بالفعل؟ سجل دخولك',
+      createAccount: 'إنشاء حساب',
+      loginToAccount: 'تسجيل الدخول',
+      passwordLength: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
+      networkError: 'خطأ في الشبكة. يرجى التحقق من اتصالك.',
+      unknownError: 'حدث خطأ غير معروف. يرجى المحاولة مرة أخرى.',
+    },
   };
 
   const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
     // Listen to Firebase authentication state changes
-    const unsubscribe = onAuthStateChange((user) => {
+    const unsubscribe = onAuthStateChange(user => {
       setCurrentUser(user);
       setIsAuthenticated(!!user);
       setIsLoading(false);
@@ -156,21 +170,21 @@ const App = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginForm(prev => ({ ...prev, isLoading: true, error: "" }));
+    setLoginForm(prev => ({ ...prev, isLoading: true, error: '' }));
 
     try {
       // Use email for Firebase authentication
-      const email = loginForm.username.includes('@') 
-        ? loginForm.username 
+      const email = loginForm.username.includes('@')
+        ? loginForm.username
         : `${loginForm.username}@wipay.local`; // Fallback for username
 
       await authService.signIn(email, loginForm.password);
-      
-      setLoginForm({ username: "", password: "", isLoading: false, error: "" });
+
+      setLoginForm({ username: '', password: '', isLoading: false, error: '' });
     } catch (error: unknown) {
       let errorMessage = t.loginError;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      
+
       if (errorMsg.includes('user-not-found')) {
         errorMessage = t.loginError;
       } else if (errorMsg.includes('wrong-password')) {
@@ -178,20 +192,20 @@ const App = () => {
       } else if (errorMsg.includes('network')) {
         errorMessage = t.networkError;
       } else if (errorMsg.includes('too-many-requests')) {
-        errorMessage = "Too many failed attempts. Please try again later.";
+        errorMessage = 'Too many failed attempts. Please try again later.';
       }
 
       setLoginForm(prev => ({
         ...prev,
         isLoading: false,
-        error: errorMessage
+        error: errorMessage,
       }));
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSignupForm(prev => ({ ...prev, isLoading: true, error: "" }));
+    setSignupForm(prev => ({ ...prev, isLoading: true, error: '' }));
 
     try {
       // Validation
@@ -199,7 +213,7 @@ const App = () => {
         setSignupForm(prev => ({
           ...prev,
           isLoading: false,
-          error: t.passwordMismatch
+          error: t.passwordMismatch,
         }));
         return;
       }
@@ -208,7 +222,7 @@ const App = () => {
         setSignupForm(prev => ({
           ...prev,
           isLoading: false,
-          error: t.passwordLength
+          error: t.passwordLength,
         }));
         return;
       }
@@ -217,7 +231,7 @@ const App = () => {
         setSignupForm(prev => ({
           ...prev,
           isLoading: false,
-          error: t.invalidEmail
+          error: t.invalidEmail,
         }));
         return;
       }
@@ -226,7 +240,7 @@ const App = () => {
         setSignupForm(prev => ({
           ...prev,
           isLoading: false,
-          error: t.invalidPhone
+          error: t.invalidPhone,
         }));
         return;
       }
@@ -238,16 +252,16 @@ const App = () => {
         signupForm.name,
         signupForm.phone
       );
-      
+
       setSignupForm({
-        username: "",
-        password: "",
-        confirmPassword: "",
-        name: "",
-        phone: "",
-        email: "",
+        username: '',
+        password: '',
+        confirmPassword: '',
+        name: '',
+        phone: '',
+        email: '',
         isLoading: false,
-        error: ""
+        error: '',
       });
 
       toast({
@@ -257,7 +271,7 @@ const App = () => {
     } catch (error: unknown) {
       let errorMessage = t.signupError;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      
+
       if (errorMsg.includes('email-already-in-use')) {
         errorMessage = t.usernameExists;
       } else if (errorMsg.includes('weak-password')) {
@@ -269,7 +283,7 @@ const App = () => {
       setSignupForm(prev => ({
         ...prev,
         isLoading: false,
-        error: errorMessage
+        error: errorMessage,
       }));
     }
   };
@@ -279,16 +293,16 @@ const App = () => {
       await signOutUser();
       setCurrentUser(null);
       setIsAuthenticated(false);
-      setLoginForm({ username: "", password: "", isLoading: false, error: "" });
+      setLoginForm({ username: '', password: '', isLoading: false, error: '' });
       setSignupForm({
-        username: "",
-        password: "",
-        confirmPassword: "",
-        name: "",
-        phone: "",
-        email: "",
+        username: '',
+        password: '',
+        confirmPassword: '',
+        name: '',
+        phone: '',
+        email: '',
         isLoading: false,
-        error: ""
+        error: '',
       });
       setIsSignupMode(false);
     } catch (error) {
@@ -297,13 +311,15 @@ const App = () => {
   };
 
   const LoginComponent = () => (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div
+      className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}
+    >
       <div className="w-full max-w-md space-y-6">
         {/* Language Selector */}
         <div className="flex justify-center">
-          <select 
-            value={language} 
-            onChange={(e) => setLanguage(e.target.value)}
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
             className="p-2 border rounded bg-white"
           >
             <option value="en">English</option>
@@ -333,8 +349,8 @@ const App = () => {
                 type="button"
                 onClick={() => setIsSignupMode(false)}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  !isSignupMode 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  !isSignupMode
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -345,8 +361,8 @@ const App = () => {
                 type="button"
                 onClick={() => setIsSignupMode(true)}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  isSignupMode 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  isSignupMode
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -373,7 +389,12 @@ const App = () => {
                     id="username"
                     type="email"
                     value={loginForm.username}
-                    onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                    onChange={e =>
+                      setLoginForm(prev => ({
+                        ...prev,
+                        username: e.target.value,
+                      }))
+                    }
                     placeholder={t.enterUsername}
                     required
                     disabled={loginForm.isLoading}
@@ -386,9 +407,14 @@ const App = () => {
                   <div className="relative">
                     <Input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={loginForm.password}
-                      onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={e =>
+                        setLoginForm(prev => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       placeholder={t.enterPassword}
                       required
                       disabled={loginForm.isLoading}
@@ -398,16 +424,24 @@ const App = () => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 {/* Login Button */}
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loginForm.isLoading || !loginForm.username || !loginForm.password}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={
+                    loginForm.isLoading ||
+                    !loginForm.username ||
+                    !loginForm.password
+                  }
                 >
                   {loginForm.isLoading ? (
                     <>
@@ -442,7 +476,9 @@ const App = () => {
                     id="fullName"
                     type="text"
                     value={signupForm.name}
-                    onChange={(e) => setSignupForm(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={e =>
+                      setSignupForm(prev => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder={t.enterFullName}
                     required
                     disabled={signupForm.isLoading}
@@ -456,7 +492,12 @@ const App = () => {
                     id="email"
                     type="email"
                     value={signupForm.email}
-                    onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={e =>
+                      setSignupForm(prev => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     placeholder={t.enterEmail}
                     required
                     disabled={signupForm.isLoading}
@@ -470,7 +511,12 @@ const App = () => {
                     id="phone"
                     type="tel"
                     value={signupForm.phone}
-                    onChange={(e) => setSignupForm(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={e =>
+                      setSignupForm(prev => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
                     placeholder={t.enterPhone}
                     required
                     disabled={signupForm.isLoading}
@@ -483,9 +529,14 @@ const App = () => {
                   <div className="relative">
                     <Input
                       id="signupPassword"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={signupForm.password}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={e =>
+                        setSignupForm(prev => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       placeholder={t.enterPassword}
                       required
                       minLength={6}
@@ -496,7 +547,11 @@ const App = () => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -507,9 +562,14 @@ const App = () => {
                   <div className="relative">
                     <Input
                       id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
+                      type={showConfirmPassword ? 'text' : 'password'}
                       value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onChange={e =>
+                        setSignupForm(prev => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
                       placeholder={t.enterConfirmPassword}
                       required
                       minLength={6}
@@ -517,19 +577,32 @@ const App = () => {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 {/* Signup Button */}
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={signupForm.isLoading || !signupForm.name || !signupForm.email || !signupForm.phone || !signupForm.password || !signupForm.confirmPassword}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={
+                    signupForm.isLoading ||
+                    !signupForm.name ||
+                    !signupForm.email ||
+                    !signupForm.phone ||
+                    !signupForm.password ||
+                    !signupForm.confirmPassword
+                  }
                 >
                   {signupForm.isLoading ? (
                     <>
@@ -570,23 +643,20 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginComponent />} />
-            <Route path="/" element={
-              isAuthenticated ? (
-                <Index 
-                  currentUser={currentUser}
-                  onLogout={handleLogout}
-                />
-              ) : (
-                <LoginComponent />
-              )
-            } />
-            <Route path="*" element={
-              isAuthenticated ? (
-                <NotFound />
-              ) : (
-                <LoginComponent />
-              )
-            } />
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Index currentUser={currentUser} onLogout={handleLogout} />
+                ) : (
+                  <LoginComponent />
+                )
+              }
+            />
+            <Route
+              path="*"
+              element={isAuthenticated ? <NotFound /> : <LoginComponent />}
+            />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

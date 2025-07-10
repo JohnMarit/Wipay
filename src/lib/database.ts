@@ -58,7 +58,12 @@ export interface Payment {
   customerName: string;
   invoiceId?: string;
   amount: number;
-  method: 'orange_money' | 'mtn_money' | 'bank_transfer' | 'cash' | 'credit_card';
+  method:
+    | 'orange_money'
+    | 'mtn_money'
+    | 'bank_transfer'
+    | 'cash'
+    | 'credit_card';
   reference: string;
   date: string;
   status: 'completed' | 'pending' | 'failed' | 'cancelled';
@@ -120,7 +125,13 @@ export interface ServiceRequest {
   requestId: string;
   customerId: string;
   customerName: string;
-  type: 'installation' | 'maintenance' | 'upgrade' | 'downgrade' | 'termination' | 'support';
+  type:
+    | 'installation'
+    | 'maintenance'
+    | 'upgrade'
+    | 'downgrade'
+    | 'termination'
+    | 'support';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
   description: string;
@@ -185,16 +196,21 @@ export class ISPDatabase extends Dexie {
 
   constructor() {
     super('ISPBillingDB');
-    
+
     this.version(1).stores({
-      customers: '++id, customerId, name, phone, email, status, planType, syncStatus, updatedAt',
-      invoices: '++id, invoiceId, customerId, status, dueDate, syncStatus, updatedAt',
-      payments: '++id, paymentId, customerId, invoiceId, method, status, date, syncStatus, updatedAt',
+      customers:
+        '++id, customerId, name, phone, email, status, planType, syncStatus, updatedAt',
+      invoices:
+        '++id, invoiceId, customerId, status, dueDate, syncStatus, updatedAt',
+      payments:
+        '++id, paymentId, customerId, invoiceId, method, status, date, syncStatus, updatedAt',
       servicePlans: '++id, planId, name, isActive, price',
-      equipment: '++id, equipmentId, type, serialNumber, status, customerId, syncStatus, updatedAt',
-      serviceRequests: '++id, requestId, customerId, type, status, assignedTechnician, syncStatus, updatedAt',
+      equipment:
+        '++id, equipmentId, type, serialNumber, status, customerId, syncStatus, updatedAt',
+      serviceRequests:
+        '++id, requestId, customerId, type, status, assignedTechnician, syncStatus, updatedAt',
       usageRecords: '++id, customerId, month, year, syncStatus, updatedAt',
-      notificationLogs: '++id, customerId, type, category, sentDate, status'
+      notificationLogs: '++id, customerId, type, category, sentDate, status',
     });
   }
 
@@ -208,12 +224,30 @@ export class ISPDatabase extends Dexie {
     usageRecords: UsageRecord[];
   }> {
     return {
-      customers: await this.customers.where('syncStatus').equals('pending').toArray(),
-      invoices: await this.invoices.where('syncStatus').equals('pending').toArray(),
-      payments: await this.payments.where('syncStatus').equals('pending').toArray(),
-      equipment: await this.equipment.where('syncStatus').equals('pending').toArray(),
-      serviceRequests: await this.serviceRequests.where('syncStatus').equals('pending').toArray(),
-      usageRecords: await this.usageRecords.where('syncStatus').equals('pending').toArray(),
+      customers: await this.customers
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
+      invoices: await this.invoices
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
+      payments: await this.payments
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
+      equipment: await this.equipment
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
+      serviceRequests: await this.serviceRequests
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
+      usageRecords: await this.usageRecords
+        .where('syncStatus')
+        .equals('pending')
+        .toArray(),
     };
   }
 
@@ -229,19 +263,26 @@ export class ISPDatabase extends Dexie {
 
   // Utility methods
   async getCustomerBalance(customerId: string): Promise<number> {
-    const customer = await this.customers.where('customerId').equals(customerId).first();
+    const customer = await this.customers
+      .where('customerId')
+      .equals(customerId)
+      .first();
     return customer?.balance || 0;
   }
 
   async getOverdueInvoices(): Promise<Invoice[]> {
     const today = new Date().toISOString().split('T')[0];
     return await this.invoices
-      .where('status').equals('sent')
+      .where('status')
+      .equals('sent')
       .and(invoice => invoice.dueDate < today)
       .toArray();
   }
 
-  async getCustomerUsage(customerId: string, year: number): Promise<UsageRecord[]> {
+  async getCustomerUsage(
+    customerId: string,
+    year: number
+  ): Promise<UsageRecord[]> {
     return await this.usageRecords
       .where(['customerId', 'year'])
       .equals([customerId, year])
@@ -282,7 +323,7 @@ export class ISPDatabase extends Dexie {
           installationFee: 200,
           equipmentFee: 150,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           planId: 'STANDARD_10M',
@@ -299,7 +340,7 @@ export class ISPDatabase extends Dexie {
           installationFee: 200,
           equipmentFee: 150,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           planId: 'PREMIUM_20M',
@@ -316,7 +357,7 @@ export class ISPDatabase extends Dexie {
           installationFee: 200,
           equipmentFee: 150,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           planId: 'BUSINESS_50M',
@@ -333,12 +374,12 @@ export class ISPDatabase extends Dexie {
           installationFee: 300,
           equipmentFee: 250,
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ]);
     }
   }
 }
 
 // Create and export database instance
-export const db = new ISPDatabase(); 
+export const db = new ISPDatabase();

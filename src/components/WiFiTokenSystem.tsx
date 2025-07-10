@@ -1,17 +1,66 @@
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, Smartphone, Banknote, Clock, Send, Settings, History, Plus, QrCode, LogOut, User, AlertCircle, DollarSign, FileText, Calendar, BarChart3, CalendarDays } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { PDFReportGenerator } from "@/lib/pdfGenerator";
-import { tokenService, userService, WiFiToken as FirebaseWiFiToken, UserProfile } from "@/lib/firebase";
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Wifi,
+  Smartphone,
+  Banknote,
+  Clock,
+  Send,
+  Settings,
+  History,
+  Plus,
+  QrCode,
+  LogOut,
+  User,
+  AlertCircle,
+  DollarSign,
+  FileText,
+  Calendar,
+  BarChart3,
+  CalendarDays,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { PDFReportGenerator } from '@/lib/pdfGenerator';
+import {
+  tokenService,
+  userService,
+  WiFiToken as FirebaseWiFiToken,
+  UserProfile,
+} from '@/lib/firebase';
 
 interface WiFiTokenSystemProps {
   language: string;
@@ -63,43 +112,49 @@ interface ReportData {
   }>;
 }
 
-const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemProps) => {
+const WiFiTokenSystem = ({
+  language,
+  currentUser,
+  onLogout,
+}: WiFiTokenSystemProps) => {
   const { toast } = useToast();
   const [wifiConfig, setWifiConfig] = useState({
-    ssid: "",
-    adminPassword: "",
-    momoNumber: "",
-    isConfigured: false
+    ssid: '',
+    adminPassword: '',
+    momoNumber: '',
+    isConfigured: false,
   });
 
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>({
-    currency: "SSP",
+    currency: 'SSP',
     prices: {
-      "1": 50,
-      "3": 120,
-      "6": 200,
-      "12": 350,
-      "24": 500
-    }
+      '1': 50,
+      '3': 120,
+      '6': 200,
+      '12': 350,
+      '24': 500,
+    },
   });
-  
+
   const [showWifiSetup, setShowWifiSetup] = useState(false);
-  const [setupTab, setSetupTab] = useState("network");
+  const [setupTab, setSetupTab] = useState('network');
   const [showReportPreview, setShowReportPreview] = useState(false);
   const [previewData, setPreviewData] = useState<ReportData | null>(null);
-  const [previewType, setPreviewType] = useState<'week' | 'month' | 'year'>('week');
-  
+  const [previewType, setPreviewType] = useState<'week' | 'month' | 'year'>(
+    'week'
+  );
+
   const [customDateRange, setCustomDateRange] = useState({
     startDate: '',
     endDate: '',
-    reportType: 'custom' as 'custom' | 'week' | 'month' | 'year'
+    reportType: 'custom' as 'custom' | 'week' | 'month' | 'year',
   });
-  
+
   const [tokenForm, setTokenForm] = useState({
-    recipientPhone: "",
-    duration: "",
-    paymentMethod: "",
-    price: 0
+    recipientPhone: '',
+    duration: '',
+    paymentMethod: '',
+    price: 0,
   });
 
   // State for Firebase data
@@ -110,31 +165,31 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   // Load user profile and tokens from Firebase
   const loadUserData = useCallback(async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Load user profile from Firebase
       const profile = await userService.getUserProfile(currentUser.id);
       if (profile) {
         setUserProfile(profile);
-        
+
         // Set WiFi configuration from Firebase
         if (profile.wifiConfig) {
           setWifiConfig({
-            ssid: profile.wifiConfig.ssid || "",
-            adminPassword: "", // Don't store sensitive data in state
-            momoNumber: "", // Don't store sensitive data in state
-            isConfigured: profile.wifiConfig.isConfigured || false
+            ssid: profile.wifiConfig.ssid || '',
+            adminPassword: '', // Don't store sensitive data in state
+            momoNumber: '', // Don't store sensitive data in state
+            isConfigured: profile.wifiConfig.isConfigured || false,
           });
         }
-        
+
         // Set pricing configuration from Firebase
         if (profile.pricingConfig) {
           setPricingConfig(profile.pricingConfig);
         }
       }
-      
+
       // Load tokens from Firebase
       const firebaseTokens = await tokenService.getUserTokens(currentUser.id);
       const convertedTokens: WiFiToken[] = firebaseTokens.map(token => ({
@@ -149,17 +204,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         expiresAt: token.expiresAt.toISOString(),
         username: token.username,
         password: token.password,
-        isActive: token.isActive
+        isActive: token.isActive,
       }));
-      
+
       setTokens(convertedTokens);
-      
     } catch (error) {
       console.error('Error loading user data:', error);
       toast({
-        title: "Error Loading Data",
-        description: "Failed to load your data. Please try refreshing the page.",
-        variant: "destructive"
+        title: 'Error Loading Data',
+        description:
+          'Failed to load your data. Please try refreshing the page.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -174,183 +229,187 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   const translations = {
     en: {
-      title: "Wipay",
-      description: "WiFi Token Distribution System",
-      setup: "Network Setup",
-      wifiSetup: "WiFi Network Configuration",
-      networkConfig: "Network Settings",
-      pricingConfig: "Token Pricing",
-      ssid: "WiFi Network Name (SSID)",
-      adminPassword: "Admin WiFi Password",
-      momoNumber: "Your MTN MoMo Number",
-      currency: "Currency",
-      tokenPricing: "Set Token Prices",
-      oneHourPrice: "1 Hour Price",
-      threeHourPrice: "3 Hours Price",
-      sixHourPrice: "6 Hours Price",
-      twelveHourPrice: "12 Hours Price",
-      oneDayPrice: "24 Hours Price",
-      saveConfig: "Save Configuration",
-      setupWifi: "Setup WiFi Network",
-      generateToken: "Generate WiFi Token",
-      tokenManagement: "Token Management",
-      activeTokens: "Active Tokens",
-      tokenHistory: "Token History",
-      recipientPhone: "Recipient Phone Number",
-      duration: "Access Duration",
-      paymentMethod: "Payment Method",
-      cash: "Cash Payment",
-      mtnMomo: "MTN Mobile Money",
-      oneHour: "1 Hour",
-      threeHours: "3 Hours",
-      sixHours: "6 Hours",
-      twelveHours: "12 Hours",
-      oneDay: "24 Hours",
-      price: "Price",
-      generate: "Generate & Send Token",
-      cancel: "Cancel",
-      status: "Status",
-      active: "Active",
-      expired: "Expired",
-      used: "Used",
-      pending: "Pending",
-      credentials: "WiFi Credentials",
-      username: "Username",
-      password: "Password",
-      expiresAt: "Expires At",
-      actions: "Actions",
-      sendSMS: "Resend SMS",
-      deactivate: "Deactivate",
-      tokenGenerated: "WiFi token generated successfully",
-      smsSent: "SMS sent to recipient",
-      configSaved: "WiFi configuration saved",
-      pricingSaved: "Pricing configuration saved",
-      enterSSID: "Enter WiFi network name",
-      enterAdminPassword: "Enter admin password",
-      enterMomoNumber: "Enter MTN MoMo number",
+      title: 'Wipay',
+      description: 'WiFi Token Distribution System',
+      setup: 'Network Setup',
+      wifiSetup: 'WiFi Network Configuration',
+      networkConfig: 'Network Settings',
+      pricingConfig: 'Token Pricing',
+      ssid: 'WiFi Network Name (SSID)',
+      adminPassword: 'Admin WiFi Password',
+      momoNumber: 'Your MTN MoMo Number',
+      currency: 'Currency',
+      tokenPricing: 'Set Token Prices',
+      oneHourPrice: '1 Hour Price',
+      threeHourPrice: '3 Hours Price',
+      sixHourPrice: '6 Hours Price',
+      twelveHourPrice: '12 Hours Price',
+      oneDayPrice: '24 Hours Price',
+      saveConfig: 'Save Configuration',
+      setupWifi: 'Setup WiFi Network',
+      generateToken: 'Generate WiFi Token',
+      tokenManagement: 'Token Management',
+      activeTokens: 'Active Tokens',
+      tokenHistory: 'Token History',
+      recipientPhone: 'Recipient Phone Number',
+      duration: 'Access Duration',
+      paymentMethod: 'Payment Method',
+      cash: 'Cash Payment',
+      mtnMomo: 'MTN Mobile Money',
+      oneHour: '1 Hour',
+      threeHours: '3 Hours',
+      sixHours: '6 Hours',
+      twelveHours: '12 Hours',
+      oneDay: '24 Hours',
+      price: 'Price',
+      generate: 'Generate & Send Token',
+      cancel: 'Cancel',
+      status: 'Status',
+      active: 'Active',
+      expired: 'Expired',
+      used: 'Used',
+      pending: 'Pending',
+      credentials: 'WiFi Credentials',
+      username: 'Username',
+      password: 'Password',
+      expiresAt: 'Expires At',
+      actions: 'Actions',
+      sendSMS: 'Resend SMS',
+      deactivate: 'Deactivate',
+      tokenGenerated: 'WiFi token generated successfully',
+      smsSent: 'SMS sent to recipient',
+      configSaved: 'WiFi configuration saved',
+      pricingSaved: 'Pricing configuration saved',
+      enterSSID: 'Enter WiFi network name',
+      enterAdminPassword: 'Enter admin password',
+      enterMomoNumber: 'Enter MTN MoMo number',
       enterRecipientPhone: "Enter recipient's phone",
-      enterPrice: "Enter price",
-      selectDuration: "Select access duration",
-      selectPayment: "Select payment method",
-      selectCurrency: "Select currency",
-      setupRequired: "Please setup your WiFi network first",
-      totalRevenue: "Total Revenue",
-      activeUsers: "Active Users",
-      tokensToday: "Tokens Today",
-      logout: "Logout",
-      welcomeBack: "Welcome back",
-      userProfile: "User Profile",
-      wifiNotConfigured: "WiFi Network Not Configured",
-      wifiNotConfiguredDesc: "Set up your WiFi network to start generating tokens",
-      configureNow: "Configure WiFi Network",
-      customPricing: "Custom Pricing Enabled",
-      yourPricing: "Your Custom Pricing",
-      generateReports: "Generate Reports",
-      weeklyReport: "Weekly Report",
-      monthlyReport: "Monthly Report",
-      yearlyReport: "Yearly Report",
-      previewWeekly: "Preview Weekly",
-      previewMonthly: "Preview Monthly",
-      previewYearly: "Preview Yearly",
-      downloadPDF: "Download PDF",
-      reportPreview: "Report Preview",
-      reportGenerated: "PDF report generated successfully",
-      reportError: "Error generating PDF report",
-      close: "Close",
-      totalUsers: "Total Users"
+      enterPrice: 'Enter price',
+      selectDuration: 'Select access duration',
+      selectPayment: 'Select payment method',
+      selectCurrency: 'Select currency',
+      setupRequired: 'Please setup your WiFi network first',
+      totalRevenue: 'Total Revenue',
+      activeUsers: 'Active Users',
+      tokensToday: 'Tokens Today',
+      logout: 'Logout',
+      welcomeBack: 'Welcome back',
+      userProfile: 'User Profile',
+      wifiNotConfigured: 'WiFi Network Not Configured',
+      wifiNotConfiguredDesc:
+        'Set up your WiFi network to start generating tokens',
+      configureNow: 'Configure WiFi Network',
+      customPricing: 'Custom Pricing Enabled',
+      yourPricing: 'Your Custom Pricing',
+      generateReports: 'Generate Reports',
+      weeklyReport: 'Weekly Report',
+      monthlyReport: 'Monthly Report',
+      yearlyReport: 'Yearly Report',
+      previewWeekly: 'Preview Weekly',
+      previewMonthly: 'Preview Monthly',
+      previewYearly: 'Preview Yearly',
+      downloadPDF: 'Download PDF',
+      reportPreview: 'Report Preview',
+      reportGenerated: 'PDF report generated successfully',
+      reportError: 'Error generating PDF report',
+      close: 'Close',
+      totalUsers: 'Total Users',
     },
     ar: {
-      title: "Wipay",
-      description: "نظام توزيع رموز الواي فاي",
-      setup: "إعداد الشبكة",
-      wifiSetup: "تكوين شبكة الواي فاي",
-      networkConfig: "إعدادات الشبكة",
-      pricingConfig: "تسعير الرموز",
-      ssid: "اسم شبكة الواي فاي",
-      adminPassword: "كلمة مرور المدير",
-      momoNumber: "رقم إم تي إن موبايل موني",
-      currency: "العملة",
-      tokenPricing: "تحديد أسعار الرموز",
-      oneHourPrice: "سعر الساعة الواحدة",
-      threeHourPrice: "سعر 3 ساعات",
-      sixHourPrice: "سعر 6 ساعات",
-      twelveHourPrice: "سعر 12 ساعة",
-      oneDayPrice: "سعر 24 ساعة",
-      saveConfig: "حفظ التكوين",
-      setupWifi: "إعداد شبكة الواي فاي",
-      generateToken: "إنشاء رمز واي فاي",
-      tokenManagement: "إدارة الرموز",
-      activeTokens: "الرموز النشطة",
-      tokenHistory: "تاريخ الرموز",
-      recipientPhone: "رقم هاتف المستلم",
-      duration: "مدة الوصول",
-      paymentMethod: "طريقة الدفع",
-      cash: "دفع نقدي",
-      mtnMomo: "إم تي إن موبايل موني",
-      oneHour: "ساعة واحدة",
-      threeHours: "3 ساعات",
-      sixHours: "6 ساعات",
-      twelveHours: "12 ساعة",
-      oneDay: "24 ساعة",
-      price: "السعر",
-      generate: "إنشاء وإرسال الرمز",
-      cancel: "إلغاء",
-      status: "الحالة",
-      active: "نشط",
-      expired: "منتهي الصلاحية",
-      used: "مستخدم",
-      pending: "معلق",
-      credentials: "بيانات الواي فاي",
-      username: "اسم المستخدم",
-      password: "كلمة المرور",
-      expiresAt: "تنتهي في",
-      actions: "الإجراءات",
-      sendSMS: "إعادة إرسال رسالة",
-      deactivate: "إلغاء التفعيل",
-      tokenGenerated: "تم إنشاء رمز الواي فاي بنجاح",
-      smsSent: "تم إرسال الرسالة للمستلم",
-      configSaved: "تم حفظ تكوين الواي فاي",
-      pricingSaved: "تم حفظ تكوين التسعير",
-      enterSSID: "أدخل اسم شبكة الواي فاي",
-      enterAdminPassword: "أدخل كلمة مرور المدير",
-      enterMomoNumber: "أدخل رقم موبايل موني",
-      enterRecipientPhone: "أدخل رقم هاتف المستلم",
-      enterPrice: "أدخل السعر",
-      selectDuration: "اختر مدة الوصول",
-      selectPayment: "اختر طريقة الدفع",
-      selectCurrency: "اختر العملة",
-      setupRequired: "يرجى إعداد شبكة الواي فاي أولاً",
-      totalRevenue: "إجمالي الإيرادات",
-      activeUsers: "المستخدمون النشطون",
-      tokensToday: "الرموز اليوم",
-      logout: "تسجيل الخروج",
-      welcomeBack: "أهلاً بعودتك",
-      userProfile: "الملف الشخصي",
-      wifiNotConfigured: "شبكة الواي فاي غير مكونة",
-      wifiNotConfiguredDesc: "قم بإعداد شبكة الواي فاي لبدء إنشاء الرموز",
-      configureNow: "تكوين شبكة الواي فاي",
-      customPricing: "التسعير المخصص مفعل",
-      yourPricing: "التسعير المخصص الخاص بك",
-      generateReports: "إنشاء التقارير",
-      weeklyReport: "التقرير الأسبوعي",
-      monthlyReport: "التقرير الشهري",
-      yearlyReport: "التقرير السنوي",
-      previewWeekly: "معاينة أسبوعي",
-      previewMonthly: "معاينة شهري",
-      previewYearly: "معاينة سنوي",
-      downloadPDF: "تحميل PDF",
-      reportPreview: "معاينة التقرير",
-      reportGenerated: "تم إنشاء تقرير PDF بنجاح",
-      reportError: "خطأ في إنشاء تقرير PDF",
-      close: "إغلاق",
-      totalUsers: "المستخدمون"
-    }
+      title: 'Wipay',
+      description: 'نظام توزيع رموز الواي فاي',
+      setup: 'إعداد الشبكة',
+      wifiSetup: 'تكوين شبكة الواي فاي',
+      networkConfig: 'إعدادات الشبكة',
+      pricingConfig: 'تسعير الرموز',
+      ssid: 'اسم شبكة الواي فاي',
+      adminPassword: 'كلمة مرور المدير',
+      momoNumber: 'رقم إم تي إن موبايل موني',
+      currency: 'العملة',
+      tokenPricing: 'تحديد أسعار الرموز',
+      oneHourPrice: 'سعر الساعة الواحدة',
+      threeHourPrice: 'سعر 3 ساعات',
+      sixHourPrice: 'سعر 6 ساعات',
+      twelveHourPrice: 'سعر 12 ساعة',
+      oneDayPrice: 'سعر 24 ساعة',
+      saveConfig: 'حفظ التكوين',
+      setupWifi: 'إعداد شبكة الواي فاي',
+      generateToken: 'إنشاء رمز واي فاي',
+      tokenManagement: 'إدارة الرموز',
+      activeTokens: 'الرموز النشطة',
+      tokenHistory: 'تاريخ الرموز',
+      recipientPhone: 'رقم هاتف المستلم',
+      duration: 'مدة الوصول',
+      paymentMethod: 'طريقة الدفع',
+      cash: 'دفع نقدي',
+      mtnMomo: 'إم تي إن موبايل موني',
+      oneHour: 'ساعة واحدة',
+      threeHours: '3 ساعات',
+      sixHours: '6 ساعات',
+      twelveHours: '12 ساعة',
+      oneDay: '24 ساعة',
+      price: 'السعر',
+      generate: 'إنشاء وإرسال الرمز',
+      cancel: 'إلغاء',
+      status: 'الحالة',
+      active: 'نشط',
+      expired: 'منتهي الصلاحية',
+      used: 'مستخدم',
+      pending: 'معلق',
+      credentials: 'بيانات الواي فاي',
+      username: 'اسم المستخدم',
+      password: 'كلمة المرور',
+      expiresAt: 'تنتهي في',
+      actions: 'الإجراءات',
+      sendSMS: 'إعادة إرسال رسالة',
+      deactivate: 'إلغاء التفعيل',
+      tokenGenerated: 'تم إنشاء رمز الواي فاي بنجاح',
+      smsSent: 'تم إرسال الرسالة للمستلم',
+      configSaved: 'تم حفظ تكوين الواي فاي',
+      pricingSaved: 'تم حفظ تكوين التسعير',
+      enterSSID: 'أدخل اسم شبكة الواي فاي',
+      enterAdminPassword: 'أدخل كلمة مرور المدير',
+      enterMomoNumber: 'أدخل رقم موبايل موني',
+      enterRecipientPhone: 'أدخل رقم هاتف المستلم',
+      enterPrice: 'أدخل السعر',
+      selectDuration: 'اختر مدة الوصول',
+      selectPayment: 'اختر طريقة الدفع',
+      selectCurrency: 'اختر العملة',
+      setupRequired: 'يرجى إعداد شبكة الواي فاي أولاً',
+      totalRevenue: 'إجمالي الإيرادات',
+      activeUsers: 'المستخدمون النشطون',
+      tokensToday: 'الرموز اليوم',
+      logout: 'تسجيل الخروج',
+      welcomeBack: 'أهلاً بعودتك',
+      userProfile: 'الملف الشخصي',
+      wifiNotConfigured: 'شبكة الواي فاي غير مكونة',
+      wifiNotConfiguredDesc: 'قم بإعداد شبكة الواي فاي لبدء إنشاء الرموز',
+      configureNow: 'تكوين شبكة الواي فاي',
+      customPricing: 'التسعير المخصص مفعل',
+      yourPricing: 'التسعير المخصص الخاص بك',
+      generateReports: 'إنشاء التقارير',
+      weeklyReport: 'التقرير الأسبوعي',
+      monthlyReport: 'التقرير الشهري',
+      yearlyReport: 'التقرير السنوي',
+      previewWeekly: 'معاينة أسبوعي',
+      previewMonthly: 'معاينة شهري',
+      previewYearly: 'معاينة سنوي',
+      downloadPDF: 'تحميل PDF',
+      reportPreview: 'معاينة التقرير',
+      reportGenerated: 'تم إنشاء تقرير PDF بنجاح',
+      reportError: 'خطأ في إنشاء تقرير PDF',
+      close: 'إغلاق',
+      totalUsers: 'المستخدمون',
+    },
   };
 
   const t = translations[language as keyof typeof translations];
 
   // Function to generate custom date range report data
-  const generateCustomDateRangeReport = (startDateStr: string, endDateStr: string) => {
+  const generateCustomDateRangeReport = (
+    startDateStr: string,
+    endDateStr: string
+  ) => {
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr + 'T23:59:59'); // Include full end date
     const periodLabel = `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
@@ -362,32 +421,43 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     });
 
     // Calculate basic metrics
-    const totalRevenue = periodTokens.reduce((sum, token) => sum + token.price, 0);
+    const totalRevenue = periodTokens.reduce(
+      (sum, token) => sum + token.price,
+      0
+    );
     const totalTransactions = periodTokens.length;
-    const uniqueCustomers = new Set(periodTokens.map(token => token.recipientPhone)).size;
+    const uniqueCustomers = new Set(
+      periodTokens.map(token => token.recipientPhone)
+    ).size;
 
     // Service breakdown
     const serviceBreakdown = [
-      { service: "1 Hour WiFi", count: 0, revenue: 0 },
-      { service: "3 Hours WiFi", count: 0, revenue: 0 },
-      { service: "6 Hours WiFi", count: 0, revenue: 0 },
-      { service: "12 Hours WiFi", count: 0, revenue: 0 },
-      { service: "24 Hours WiFi", count: 0, revenue: 0 }
+      { service: '1 Hour WiFi', count: 0, revenue: 0 },
+      { service: '3 Hours WiFi', count: 0, revenue: 0 },
+      { service: '6 Hours WiFi', count: 0, revenue: 0 },
+      { service: '12 Hours WiFi', count: 0, revenue: 0 },
+      { service: '24 Hours WiFi', count: 0, revenue: 0 },
     ];
 
     periodTokens.forEach(token => {
-      const serviceIndex = token.duration === 1 ? 0 : 
-                          token.duration === 3 ? 1 :
-                          token.duration === 6 ? 2 :
-                          token.duration === 12 ? 3 : 4;
+      const serviceIndex =
+        token.duration === 1
+          ? 0
+          : token.duration === 3
+            ? 1
+            : token.duration === 6
+              ? 2
+              : token.duration === 12
+                ? 3
+                : 4;
       serviceBreakdown[serviceIndex].count++;
       serviceBreakdown[serviceIndex].revenue += token.price;
     });
 
     // Payment method breakdown
     const paymentBreakdown = [
-      { method: "MTN Mobile Money", count: 0, revenue: 0 },
-      { method: "Cash Payment", count: 0, revenue: 0 }
+      { method: 'MTN Mobile Money', count: 0, revenue: 0 },
+      { method: 'Cash Payment', count: 0, revenue: 0 },
     ];
 
     periodTokens.forEach(token => {
@@ -398,14 +468,20 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
     // Recent transactions (all within the date range)
     const recentTransactions = periodTokens
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       .slice(0, 20) // Show up to 20 transactions
       .map(token => ({
         date: new Date(token.createdAt).toLocaleDateString(),
         customer: token.recipientPhone,
         service: `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`,
-        payment_method: token.paymentMethod === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
-        amount: token.price
+        payment_method:
+          token.paymentMethod === 'mtn_momo'
+            ? 'MTN Mobile Money'
+            : 'Cash Payment',
+        amount: token.price,
       }));
 
     return {
@@ -413,10 +489,11 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       revenue: totalRevenue,
       transactions: totalTransactions,
       totalUsers: uniqueCustomers,
-      avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      avgTransactionValue:
+        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
       serviceBreakdown: serviceBreakdown.filter(s => s.count > 0),
       paymentBreakdown: paymentBreakdown.filter(p => p.count > 0),
-      recentTransactions
+      recentTransactions,
     };
   };
 
@@ -449,32 +526,43 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
     });
 
     // Calculate basic metrics
-    const totalRevenue = periodTokens.reduce((sum, token) => sum + token.price, 0);
+    const totalRevenue = periodTokens.reduce(
+      (sum, token) => sum + token.price,
+      0
+    );
     const totalTransactions = periodTokens.length;
-    const uniqueCustomers = new Set(periodTokens.map(token => token.recipientPhone)).size;
+    const uniqueCustomers = new Set(
+      periodTokens.map(token => token.recipientPhone)
+    ).size;
 
     // Service breakdown
     const serviceBreakdown = [
-      { service: "1 Hour WiFi", count: 0, revenue: 0 },
-      { service: "3 Hours WiFi", count: 0, revenue: 0 },
-      { service: "6 Hours WiFi", count: 0, revenue: 0 },
-      { service: "12 Hours WiFi", count: 0, revenue: 0 },
-      { service: "24 Hours WiFi", count: 0, revenue: 0 }
+      { service: '1 Hour WiFi', count: 0, revenue: 0 },
+      { service: '3 Hours WiFi', count: 0, revenue: 0 },
+      { service: '6 Hours WiFi', count: 0, revenue: 0 },
+      { service: '12 Hours WiFi', count: 0, revenue: 0 },
+      { service: '24 Hours WiFi', count: 0, revenue: 0 },
     ];
 
     periodTokens.forEach(token => {
-      const serviceIndex = token.duration === 1 ? 0 : 
-                          token.duration === 3 ? 1 :
-                          token.duration === 6 ? 2 :
-                          token.duration === 12 ? 3 : 4;
+      const serviceIndex =
+        token.duration === 1
+          ? 0
+          : token.duration === 3
+            ? 1
+            : token.duration === 6
+              ? 2
+              : token.duration === 12
+                ? 3
+                : 4;
       serviceBreakdown[serviceIndex].count++;
       serviceBreakdown[serviceIndex].revenue += token.price;
     });
 
     // Payment method breakdown
     const paymentBreakdown = [
-      { method: "MTN Mobile Money", count: 0, revenue: 0 },
-      { method: "Cash Payment", count: 0, revenue: 0 }
+      { method: 'MTN Mobile Money', count: 0, revenue: 0 },
+      { method: 'Cash Payment', count: 0, revenue: 0 },
     ];
 
     periodTokens.forEach(token => {
@@ -485,14 +573,20 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
     // Recent transactions (last 10)
     const recentTransactions = periodTokens
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       .slice(0, 10)
       .map(token => ({
         date: new Date(token.createdAt).toLocaleDateString(),
         customer: token.recipientPhone,
         service: `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`,
-        payment_method: token.paymentMethod === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
-        amount: token.price
+        payment_method:
+          token.paymentMethod === 'mtn_momo'
+            ? 'MTN Mobile Money'
+            : 'Cash Payment',
+        amount: token.price,
       }));
 
     return {
@@ -500,10 +594,11 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       revenue: totalRevenue,
       transactions: totalTransactions,
       totalUsers: uniqueCustomers,
-      avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      avgTransactionValue:
+        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
       serviceBreakdown: serviceBreakdown.filter(s => s.count > 0),
       paymentBreakdown: paymentBreakdown.filter(p => p.count > 0),
-      recentTransactions
+      recentTransactions,
     };
   };
 
@@ -531,7 +626,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       setCustomDateRange({
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
-        reportType: "custom"
+        reportType: 'custom',
       });
 
       const reportData = generateLocalReportData(period);
@@ -542,8 +637,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       console.error('Error generating preview:', error);
       toast({
         title: t.reportError,
-        description: "Please try again later",
-        variant: "destructive"
+        description: 'Please try again later',
+        variant: 'destructive',
       });
     }
   };
@@ -552,18 +647,18 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   const generatePDFReport = async () => {
     if (!previewData) {
       toast({
-        title: "No Data",
-        description: "No report data available to generate PDF.",
-        variant: "destructive"
+        title: 'No Data',
+        description: 'No report data available to generate PDF.',
+        variant: 'destructive',
       });
       return;
     }
-    
+
     try {
       console.log('Generating PDF with data:', previewData); // Debug log
-      
+
       const generator = new PDFReportGenerator(t);
-      
+
       // Ensure the data structure matches what PDFReportGenerator expects
       const reportData = {
         period: previewData.period,
@@ -573,50 +668,55 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         avgTransactionValue: previewData.avgTransactionValue || 0,
         transactions_data: previewData.recentTransactions || [],
         revenue_by_service: previewData.serviceBreakdown || [],
-        payment_methods: previewData.paymentBreakdown || []
+        payment_methods: previewData.paymentBreakdown || [],
       };
-      
+
       console.log('Formatted data for PDF:', reportData); // Debug log
-      
+
       // Use the formatted data for PDF generation
       const pdf = generator.generateSimpleReport(reportData, 'monthly');
-      
+
       // Create filename based on the current date range
       const dateRange = previewData.period.replace(/[^\w-]/g, '-');
       const filename = `wipay-wifi-token-report-${dateRange}-${new Date().toISOString().slice(0, 10)}.pdf`;
-      
+
       pdf.save(filename);
-      
+
       toast({
         title: t.reportGenerated,
         description: `WiFi Token Report downloaded successfully`,
       });
-      
+
       setShowReportPreview(false);
     } catch (error) {
       console.error('Detailed PDF generation error:', error);
       toast({
         title: t.reportError,
         description: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
-        variant: "destructive"
+        variant: 'destructive',
       });
     }
   };
 
   // Duration options with custom pricing
-  const getDurationOptions = useCallback(() => [
-    { value: "1", label: t.oneHour, price: pricingConfig.prices["1"] },
-    { value: "3", label: t.threeHours, price: pricingConfig.prices["3"] },
-    { value: "6", label: t.sixHours, price: pricingConfig.prices["6"] },
-    { value: "12", label: t.twelveHours, price: pricingConfig.prices["12"] },
-    { value: "24", label: t.oneDay, price: pricingConfig.prices["24"] }
-  ], [pricingConfig.prices, t]);
+  const getDurationOptions = useCallback(
+    () => [
+      { value: '1', label: t.oneHour, price: pricingConfig.prices['1'] },
+      { value: '3', label: t.threeHours, price: pricingConfig.prices['3'] },
+      { value: '6', label: t.sixHours, price: pricingConfig.prices['6'] },
+      { value: '12', label: t.twelveHours, price: pricingConfig.prices['12'] },
+      { value: '24', label: t.oneDay, price: pricingConfig.prices['24'] },
+    ],
+    [pricingConfig.prices, t]
+  );
 
   // Load configuration from storage
   useEffect(() => {
     // Since we're now using Firebase for data storage, we can skip localStorage for configuration
     // The loadUserData function handles loading from Firebase
-    console.log('[Wipay] Configuration loading handled by Firebase integration');
+    console.log(
+      '[Wipay] Configuration loading handled by Firebase integration'
+    );
   }, []);
 
   // Generate random WiFi credentials
@@ -629,7 +729,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   // Calculate token expiry time
   const calculateExpiryTime = (hours: number) => {
     const now = new Date();
-    const expiry = new Date(now.getTime() + (hours * 60 * 60 * 1000));
+    const expiry = new Date(now.getTime() + hours * 60 * 60 * 1000);
     return expiry.toISOString();
   };
 
@@ -639,40 +739,40 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       try {
         if (!currentUser?.id) {
           toast({
-            title: "Error",
-            description: "User not authenticated",
-            variant: "destructive"
+            title: 'Error',
+            description: 'User not authenticated',
+            variant: 'destructive',
           });
           return;
         }
 
         // Save WiFi configuration to Firebase
         await userService.updateWifiConfig(currentUser.id, {
-        ssid: wifiConfig.ssid,
-          isConfigured: true
+          ssid: wifiConfig.ssid,
+          isConfigured: true,
         });
 
         // Save pricing configuration to Firebase
         await userService.updatePricingConfig(currentUser.id, pricingConfig);
-        
-        setWifiConfig({ 
-          ssid: wifiConfig.ssid, 
-          adminPassword: wifiConfig.adminPassword, 
-          momoNumber: wifiConfig.momoNumber, 
-          isConfigured: true 
+
+        setWifiConfig({
+          ssid: wifiConfig.ssid,
+          adminPassword: wifiConfig.adminPassword,
+          momoNumber: wifiConfig.momoNumber,
+          isConfigured: true,
         });
-      setShowWifiSetup(false);
-        
-      toast({
-        title: t.configSaved,
-        description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
-      });
+        setShowWifiSetup(false);
+
+        toast({
+          title: t.configSaved,
+          description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
+        });
       } catch (error) {
         console.error('Error saving configuration:', error);
         toast({
-          title: "Error",
-          description: "Failed to save configuration. Please try again.",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to save configuration. Please try again.',
+          variant: 'destructive',
         });
       }
     }
@@ -685,8 +785,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       ...prev,
       prices: {
         ...prev.prices,
-        [duration]: numPrice
-      }
+        [duration]: numPrice,
+      },
     }));
   };
 
@@ -694,28 +794,34 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   const handleGenerateToken = async () => {
     if (!wifiConfig.isConfigured) {
       toast({
-        title: "Setup Required",
+        title: 'Setup Required',
         description: t.setupRequired,
-        variant: "destructive"
+        variant: 'destructive',
       });
       return;
     }
 
-    if (tokenForm.recipientPhone && tokenForm.duration && tokenForm.paymentMethod) {
+    if (
+      tokenForm.recipientPhone &&
+      tokenForm.duration &&
+      tokenForm.paymentMethod
+    ) {
       try {
         if (!currentUser?.id) {
           toast({
-            title: "Error",
-            description: "User not authenticated",
-            variant: "destructive"
+            title: 'Error',
+            description: 'User not authenticated',
+            variant: 'destructive',
           });
           return;
         }
 
-      const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
-      const credentials = generateCredentials();
-      const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
-      
+        const selectedDuration = getDurationOptions().find(
+          d => d.value === tokenForm.duration
+        );
+        const credentials = generateCredentials();
+        const expiryTime = calculateExpiryTime(parseInt(tokenForm.duration));
+
         // Create Firebase token object (without id, Firebase will generate it)
         const firebaseToken = {
           recipientPhone: tokenForm.recipientPhone,
@@ -729,40 +835,45 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
           username: credentials.username,
           password: credentials.password,
           isActive: true,
-          userId: currentUser.id
+          userId: currentUser.id,
         };
 
         // Add token to Firebase
         const tokenId = await tokenService.addToken(firebaseToken);
-        
+
         // Create local token object for state update
-      const newToken: WiFiToken = {
+        const newToken: WiFiToken = {
           id: tokenId,
-        recipientPhone: tokenForm.recipientPhone,
-        duration: parseInt(tokenForm.duration),
-        price: selectedDuration?.price || 0,
-        currency: pricingConfig.currency,
-        paymentMethod: tokenForm.paymentMethod,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        expiresAt: expiryTime,
-        username: credentials.username,
-        password: credentials.password,
-        isActive: true
-      };
+          recipientPhone: tokenForm.recipientPhone,
+          duration: parseInt(tokenForm.duration),
+          price: selectedDuration?.price || 0,
+          currency: pricingConfig.currency,
+          paymentMethod: tokenForm.paymentMethod,
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          expiresAt: expiryTime,
+          username: credentials.username,
+          password: credentials.password,
+          isActive: true,
+        };
 
-      setTokens([...tokens, newToken]);
-      setTokenForm({ recipientPhone: "", duration: "", paymentMethod: "", price: 0 });
+        setTokens([...tokens, newToken]);
+        setTokenForm({
+          recipientPhone: '',
+          duration: '',
+          paymentMethod: '',
+          price: 0,
+        });
 
-      // Simulate SMS sending
-      const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
-      
-      toast({
-        title: t.tokenGenerated,
-        description: `${t.smsSent} ${tokenForm.recipientPhone}`,
-      });
+        // Simulate SMS sending
+        const smsMessage = `WiFi Access Token\nNetwork: ${wifiConfig.ssid}\nUsername: ${credentials.username}\nPassword: ${credentials.password}\nDuration: ${selectedDuration?.label}\nPrice: ${selectedDuration?.price} ${pricingConfig.currency}\nExpires: ${new Date(expiryTime).toLocaleString()}`;
 
-      // In a real app, integrate with SMS API here
+        toast({
+          title: t.tokenGenerated,
+          description: `${t.smsSent} ${tokenForm.recipientPhone}`,
+        });
+
+        // In a real app, integrate with SMS API here
         if (import.meta.env.VITE_DEBUG_MODE === 'true') {
           // Only log in development mode
           console.debug('SMS to send:', smsMessage);
@@ -770,9 +881,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
       } catch (error) {
         console.error('Error generating token:', error);
         toast({
-          title: "Error",
-          description: "Failed to generate token. Please try again.",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to generate token. Please try again.',
+          variant: 'destructive',
         });
       }
     }
@@ -780,7 +891,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
   // Update price when duration changes
   useEffect(() => {
-    const selectedDuration = getDurationOptions().find(d => d.value === tokenForm.duration);
+    const selectedDuration = getDurationOptions().find(
+      d => d.value === tokenForm.duration
+    );
     if (selectedDuration) {
       setTokenForm(prev => ({ ...prev, price: selectedDuration.price }));
     }
@@ -789,20 +902,23 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   // Calculate statistics
   const stats = {
     totalRevenue: tokens.reduce((sum, token) => sum + token.price, 0),
-    activeUsers: tokens.filter(token => token.status === 'active' && new Date(token.expiresAt) > new Date()).length,
+    activeUsers: tokens.filter(
+      token =>
+        token.status === 'active' && new Date(token.expiresAt) > new Date()
+    ).length,
     tokensToday: tokens.filter(token => {
       const today = new Date().toDateString();
       return new Date(token.createdAt).toDateString() === today;
     }).length,
-    totalUsers: new Set(tokens.map(token => token.recipientPhone)).size
+    totalUsers: new Set(tokens.map(token => token.recipientPhone)).size,
   };
 
   const getStatusBadge = (status: string) => {
     const configs = {
-      active: { label: t.active, className: "bg-blue-100 text-blue-800" },
-      expired: { label: t.expired, className: "bg-red-100 text-red-800" },
-      used: { label: t.used, className: "bg-gray-100 text-gray-800" },
-      pending: { label: t.pending, className: "bg-blue-50 text-blue-700" }
+      active: { label: t.active, className: 'bg-blue-100 text-blue-800' },
+      expired: { label: t.expired, className: 'bg-red-100 text-red-800' },
+      used: { label: t.used, className: 'bg-gray-100 text-gray-800' },
+      pending: { label: t.pending, className: 'bg-blue-50 text-blue-700' },
     };
     const config = configs[status as keyof typeof configs];
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -822,11 +938,13 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 <div>
                   <CardTitle>{t.title}</CardTitle>
                   <CardDescription>
-                    {wifiConfig.isConfigured ? `Network: ${wifiConfig.ssid}` : t.description}
+                    {wifiConfig.isConfigured
+                      ? `Network: ${wifiConfig.ssid}`
+                      : t.description}
                   </CardDescription>
                 </div>
               </div>
-              
+
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:gap-4">
                 {/* User Info */}
                 {currentUser && (
@@ -836,7 +954,7 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                     <Badge variant="outline">{currentUser.phone}</Badge>
                   </div>
                 )}
-                
+
                 {/* Custom Pricing Indicator */}
                 {wifiConfig.isConfigured && (
                   <Badge variant="outline" className="flex items-center gap-1">
@@ -844,13 +962,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                     {pricingConfig.currency}
                   </Badge>
                 )}
-                
+
                 {/* WiFi Setup Button */}
                 <Dialog open={showWifiSetup} onOpenChange={setShowWifiSetup}>
                   <DialogTrigger asChild>
-                    <Button variant={wifiConfig.isConfigured ? "outline" : "default"}>
+                    <Button
+                      variant={wifiConfig.isConfigured ? 'outline' : 'default'}
+                    >
                       <Settings className="h-4 w-4 mr-2" />
-                      {wifiConfig.isConfigured ? "WiFi Settings" : t.setupWifi}
+                      {wifiConfig.isConfigured ? 'WiFi Settings' : t.setupWifi}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -858,30 +978,50 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       <DialogTitle>{t.wifiSetup}</DialogTitle>
                       <DialogDescription>{t.description}</DialogDescription>
                     </DialogHeader>
-                    
-                    <Tabs value={setupTab} onValueChange={setSetupTab} className="w-full">
+
+                    <Tabs
+                      value={setupTab}
+                      onValueChange={setSetupTab}
+                      className="w-full"
+                    >
                       <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="network">{t.networkConfig}</TabsTrigger>
-                        <TabsTrigger value="pricing">{t.pricingConfig}</TabsTrigger>
+                        <TabsTrigger value="network">
+                          {t.networkConfig}
+                        </TabsTrigger>
+                        <TabsTrigger value="pricing">
+                          {t.pricingConfig}
+                        </TabsTrigger>
                       </TabsList>
-                      
+
                       <TabsContent value="network" className="space-y-4">
                         <div>
                           <Label htmlFor="ssid">{t.ssid}</Label>
                           <Input
                             id="ssid"
                             value={wifiConfig.ssid}
-                            onChange={(e) => setWifiConfig(prev => ({ ...prev, ssid: e.target.value }))}
+                            onChange={e =>
+                              setWifiConfig(prev => ({
+                                ...prev,
+                                ssid: e.target.value,
+                              }))
+                            }
                             placeholder={t.enterSSID}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="adminPassword">{t.adminPassword}</Label>
+                          <Label htmlFor="adminPassword">
+                            {t.adminPassword}
+                          </Label>
                           <Input
                             id="adminPassword"
                             type="password"
                             value={wifiConfig.adminPassword}
-                            onChange={(e) => setWifiConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
+                            onChange={e =>
+                              setWifiConfig(prev => ({
+                                ...prev,
+                                adminPassword: e.target.value,
+                              }))
+                            }
                             placeholder={t.enterAdminPassword}
                           />
                         </div>
@@ -890,7 +1030,12 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                           <Input
                             id="momoNumber"
                             value={wifiConfig.momoNumber}
-                            onChange={(e) => setWifiConfig(prev => ({ ...prev, momoNumber: e.target.value }))}
+                            onChange={e =>
+                              setWifiConfig(prev => ({
+                                ...prev,
+                                momoNumber: e.target.value,
+                              }))
+                            }
                             placeholder={t.enterMomoNumber}
                           />
                         </div>
@@ -899,30 +1044,46 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       <TabsContent value="pricing" className="space-y-4">
                         <div>
                           <Label htmlFor="currency">{t.currency}</Label>
-                          <Select value={pricingConfig.currency} onValueChange={(value) => setPricingConfig(prev => ({ ...prev, currency: value }))}>
+                          <Select
+                            value={pricingConfig.currency}
+                            onValueChange={value =>
+                              setPricingConfig(prev => ({
+                                ...prev,
+                                currency: value,
+                              }))
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder={t.selectCurrency} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="SSP">South Sudanese Pound (SSP)</SelectItem>
-                              <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                              <SelectItem value="SSP">
+                                South Sudanese Pound (SSP)
+                              </SelectItem>
+                              <SelectItem value="USD">
+                                US Dollar (USD)
+                              </SelectItem>
                               <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                              <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                              <SelectItem value="GBP">
+                                British Pound (GBP)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="space-y-3">
                           <h4 className="font-medium">{t.tokenPricing}</h4>
-                          
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <Label htmlFor="price1">{t.oneHourPrice}</Label>
                               <Input
                                 id="price1"
                                 type="number"
-                                value={pricingConfig.prices["1"]}
-                                onChange={(e) => handlePricingUpdate("1", e.target.value)}
+                                value={pricingConfig.prices['1']}
+                                onChange={e =>
+                                  handlePricingUpdate('1', e.target.value)
+                                }
                                 placeholder={t.enterPrice}
                               />
                             </div>
@@ -931,8 +1092,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                               <Input
                                 id="price3"
                                 type="number"
-                                value={pricingConfig.prices["3"]}
-                                onChange={(e) => handlePricingUpdate("3", e.target.value)}
+                                value={pricingConfig.prices['3']}
+                                onChange={e =>
+                                  handlePricingUpdate('3', e.target.value)
+                                }
                                 placeholder={t.enterPrice}
                               />
                             </div>
@@ -941,18 +1104,24 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                               <Input
                                 id="price6"
                                 type="number"
-                                value={pricingConfig.prices["6"]}
-                                onChange={(e) => handlePricingUpdate("6", e.target.value)}
+                                value={pricingConfig.prices['6']}
+                                onChange={e =>
+                                  handlePricingUpdate('6', e.target.value)
+                                }
                                 placeholder={t.enterPrice}
                               />
                             </div>
                             <div>
-                              <Label htmlFor="price12">{t.twelveHourPrice}</Label>
+                              <Label htmlFor="price12">
+                                {t.twelveHourPrice}
+                              </Label>
                               <Input
                                 id="price12"
                                 type="number"
-                                value={pricingConfig.prices["12"]}
-                                onChange={(e) => handlePricingUpdate("12", e.target.value)}
+                                value={pricingConfig.prices['12']}
+                                onChange={e =>
+                                  handlePricingUpdate('12', e.target.value)
+                                }
                                 placeholder={t.enterPrice}
                               />
                             </div>
@@ -961,8 +1130,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                               <Input
                                 id="price24"
                                 type="number"
-                                value={pricingConfig.prices["24"]}
-                                onChange={(e) => handlePricingUpdate("24", e.target.value)}
+                                value={pricingConfig.prices['24']}
+                                onChange={e =>
+                                  handlePricingUpdate('24', e.target.value)
+                                }
                                 placeholder={t.enterPrice}
                               />
                             </div>
@@ -970,12 +1141,19 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
                           {/* Pricing Preview */}
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <h5 className="font-medium mb-2">{t.yourPricing}</h5>
+                            <h5 className="font-medium mb-2">
+                              {t.yourPricing}
+                            </h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                              {getDurationOptions().map((option) => (
-                                <div key={option.value} className="flex justify-between">
+                              {getDurationOptions().map(option => (
+                                <div
+                                  key={option.value}
+                                  className="flex justify-between"
+                                >
                                   <span>{option.label}:</span>
-                                  <span className="font-medium">{option.price} {pricingConfig.currency}</span>
+                                  <span className="font-medium">
+                                    {option.price} {pricingConfig.currency}
+                                  </span>
                                 </div>
                               ))}
                             </div>
@@ -985,10 +1163,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                     </Tabs>
 
                     <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
-                      <Button variant="outline" onClick={() => setShowWifiSetup(false)} className="w-full sm:w-auto">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowWifiSetup(false)}
+                        className="w-full sm:w-auto"
+                      >
                         {t.cancel}
                       </Button>
-                      <Button onClick={handleSaveConfig} className="w-full sm:w-auto">
+                      <Button
+                        onClick={handleSaveConfig}
+                        className="w-full sm:w-auto"
+                      >
                         <Settings className="h-4 w-4 mr-2" />
                         {t.saveConfig}
                       </Button>
@@ -1007,28 +1192,46 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{t.generateToken}</DialogTitle>
-                      <DialogDescription>Create a new WiFi access token for a user</DialogDescription>
+                      <DialogDescription>
+                        Create a new WiFi access token for a user
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="recipientPhone">{t.recipientPhone}</Label>
+                        <Label htmlFor="recipientPhone">
+                          {t.recipientPhone}
+                        </Label>
                         <Input
                           id="recipientPhone"
                           value={tokenForm.recipientPhone}
-                          onChange={(e) => setTokenForm(prev => ({ ...prev, recipientPhone: e.target.value }))}
+                          onChange={e =>
+                            setTokenForm(prev => ({
+                              ...prev,
+                              recipientPhone: e.target.value,
+                            }))
+                          }
                           placeholder={t.enterRecipientPhone}
                         />
                       </div>
                       <div>
                         <Label htmlFor="duration">{t.duration}</Label>
-                        <Select value={tokenForm.duration} onValueChange={(value) => setTokenForm(prev => ({ ...prev, duration: value }))}>
+                        <Select
+                          value={tokenForm.duration}
+                          onValueChange={value =>
+                            setTokenForm(prev => ({ ...prev, duration: value }))
+                          }
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder={t.selectDuration} />
                           </SelectTrigger>
                           <SelectContent>
-                            {getDurationOptions().map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label} - {option.price} {pricingConfig.currency}
+                            {getDurationOptions().map(option => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label} - {option.price}{' '}
+                                {pricingConfig.currency}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1036,7 +1239,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       </div>
                       <div>
                         <Label htmlFor="paymentMethod">{t.paymentMethod}</Label>
-                        <Select value={tokenForm.paymentMethod} onValueChange={(value) => setTokenForm(prev => ({ ...prev, paymentMethod: value }))}>
+                        <Select
+                          value={tokenForm.paymentMethod}
+                          onValueChange={value =>
+                            setTokenForm(prev => ({
+                              ...prev,
+                              paymentMethod: value,
+                            }))
+                          }
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder={t.selectPayment} />
                           </SelectTrigger>
@@ -1060,13 +1271,20 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         <div className="p-3 bg-gray-50 rounded-lg">
                           <div className="flex justify-between items-center">
                             <span className="font-medium">{t.price}:</span>
-                            <span className="text-lg font-bold">{tokenForm.price} {pricingConfig.currency}</span>
+                            <span className="text-lg font-bold">
+                              {tokenForm.price} {pricingConfig.currency}
+                            </span>
                           </div>
                         </div>
                       )}
                       <div className="flex flex-col sm:flex-row justify-end gap-2">
-                        <Button variant="outline" className="w-full sm:w-auto">{t.cancel}</Button>
-                        <Button onClick={handleGenerateToken} className="w-full sm:w-auto">
+                        <Button variant="outline" className="w-full sm:w-auto">
+                          {t.cancel}
+                        </Button>
+                        <Button
+                          onClick={handleGenerateToken}
+                          className="w-full sm:w-auto"
+                        >
                           <Send className="h-4 w-4 mr-2" />
                           {t.generate}
                         </Button>
@@ -1094,11 +1312,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-yellow-800">{t.wifiNotConfigured}</h4>
-                  <p className="text-sm text-yellow-700">{t.wifiNotConfiguredDesc}</p>
+                  <h4 className="font-medium text-yellow-800">
+                    {t.wifiNotConfigured}
+                  </h4>
+                  <p className="text-sm text-yellow-700">
+                    {t.wifiNotConfiguredDesc}
+                  </p>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
                   onClick={() => setShowWifiSetup(true)}
                 >
@@ -1113,11 +1335,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t.totalRevenue}
+              </CardTitle>
               <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} {pricingConfig.currency}</div>
+              <div className="text-2xl font-bold">
+                {stats.totalRevenue.toLocaleString()} {pricingConfig.currency}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -1131,7 +1357,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t.activeUsers}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t.activeUsers}
+              </CardTitle>
               <Wifi className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -1140,7 +1368,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t.tokensToday}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t.tokensToday}
+              </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -1156,11 +1386,13 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <FileText className="h-5 w-5" />
               {t.generateReports}
             </CardTitle>
-            <CardDescription>Generate PDF reports showing total revenue and total users</CardDescription>
+            <CardDescription>
+              Generate PDF reports showing total revenue and total users
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Button 
+              <Button
                 onClick={() => previewReport('week')}
                 variant="outline"
                 className="flex items-center justify-center gap-2 h-12"
@@ -1170,8 +1402,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   <div className="font-medium">{t.previewWeekly}</div>
                 </div>
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={() => previewReport('month')}
                 variant="outline"
                 className="flex items-center justify-center gap-2 h-12"
@@ -1181,8 +1413,8 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                   <div className="font-medium">{t.previewMonthly}</div>
                 </div>
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={() => previewReport('year')}
                 variant="outline"
                 className="flex items-center justify-center gap-2 h-12 sm:col-span-2 lg:col-span-1"
@@ -1210,41 +1442,60 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 <TabsTrigger value="active">{t.activeTokens}</TabsTrigger>
                 <TabsTrigger value="history">{t.tokenHistory}</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="active" className="space-y-4">
                 {/* Mobile Card Layout */}
                 <div className="block lg:hidden space-y-4">
                   {tokens
-                    .filter(token => token.status === 'active' && new Date(token.expiresAt) > new Date())
-                    .map((token) => (
+                    .filter(
+                      token =>
+                        token.status === 'active' &&
+                        new Date(token.expiresAt) > new Date()
+                    )
+                    .map(token => (
                       <Card key={token.id} className="p-4">
                         <div className="space-y-3">
                           <div className="flex justify-between items-start">
                             <div>
-                              <p className="font-medium">{token.recipientPhone}</p>
-                              <p className="text-sm text-muted-foreground">{token.duration}h duration</p>
+                              <p className="font-medium">
+                                {token.recipientPhone}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {token.duration}h duration
+                              </p>
                             </div>
                             {getStatusBadge(token.status)}
                           </div>
-                          
+
                           <div className="space-y-2">
                             <div className="text-sm">
-                              <span className="font-medium">{t.username}:</span> {token.username}
+                              <span className="font-medium">{t.username}:</span>{' '}
+                              {token.username}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">{t.password}:</span> {token.password}
+                              <span className="font-medium">{t.password}:</span>{' '}
+                              {token.password}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {t.expiresAt}: {new Date(token.expiresAt).toLocaleString()}
+                              {t.expiresAt}:{' '}
+                              {new Date(token.expiresAt).toLocaleString()}
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                            >
                               <Send className="h-3 w-3 mr-1" />
                               SMS
                             </Button>
-                            <Button variant="outline" size="sm" className="flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                            >
                               <QrCode className="h-3 w-3 mr-1" />
                               QR
                             </Button>
@@ -1269,19 +1520,33 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                     </TableHeader>
                     <TableBody>
                       {tokens
-                        .filter(token => token.status === 'active' && new Date(token.expiresAt) > new Date())
-                        .map((token) => (
+                        .filter(
+                          token =>
+                            token.status === 'active' &&
+                            new Date(token.expiresAt) > new Date()
+                        )
+                        .map(token => (
                           <TableRow key={token.id}>
                             <TableCell>{token.recipientPhone}</TableCell>
                             <TableCell>
                               <div className="space-y-1">
-                                <div className="text-sm"><strong>{t.username}:</strong> {token.username}</div>
-                                <div className="text-sm"><strong>{t.password}:</strong> {token.password}</div>
+                                <div className="text-sm">
+                                  <strong>{t.username}:</strong>{' '}
+                                  {token.username}
+                                </div>
+                                <div className="text-sm">
+                                  <strong>{t.password}:</strong>{' '}
+                                  {token.password}
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>{token.duration}h</TableCell>
-                            <TableCell>{new Date(token.expiresAt).toLocaleString()}</TableCell>
-                            <TableCell>{getStatusBadge(token.status)}</TableCell>
+                            <TableCell>
+                              {new Date(token.expiresAt).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(token.status)}
+                            </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button variant="outline" size="sm">
@@ -1302,23 +1567,29 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
               <TabsContent value="history" className="space-y-4">
                 {/* Mobile Card Layout */}
                 <div className="block lg:hidden space-y-4">
-                  {tokens.map((token) => (
+                  {tokens.map(token => (
                     <Card key={token.id} className="p-4">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{token.recipientPhone}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{token.id}</p>
+                            <p className="font-medium">
+                              {token.recipientPhone}
+                            </p>
+                            <p className="text-xs text-muted-foreground font-mono">
+                              {token.id}
+                            </p>
                           </div>
                           {getStatusBadge(token.status)}
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <span className="font-medium">{t.duration}:</span> {token.duration}h
+                            <span className="font-medium">{t.duration}:</span>{' '}
+                            {token.duration}h
                           </div>
                           <div>
-                            <span className="font-medium">{t.price}:</span> {token.price} {token.currency}
+                            <span className="font-medium">{t.price}:</span>{' '}
+                            {token.price} {token.currency}
                           </div>
                           <div className="col-span-2">
                             <div className="flex items-center gap-2">
@@ -1327,12 +1598,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                               ) : (
                                 <Smartphone className="h-4 w-4" />
                               )}
-                              <span className="font-medium">{t.paymentMethod}:</span>
-                              {token.paymentMethod === 'cash' ? t.cash : t.mtnMomo}
+                              <span className="font-medium">
+                                {t.paymentMethod}:
+                              </span>
+                              {token.paymentMethod === 'cash'
+                                ? t.cash
+                                : t.mtnMomo}
                             </div>
                           </div>
                           <div className="col-span-2 text-muted-foreground">
-                            Created: {new Date(token.createdAt).toLocaleString()}
+                            Created:{' '}
+                            {new Date(token.createdAt).toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -1355,12 +1631,16 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tokens.map((token) => (
+                      {tokens.map(token => (
                         <TableRow key={token.id}>
-                          <TableCell className="font-mono text-sm">{token.id}</TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {token.id}
+                          </TableCell>
                           <TableCell>{token.recipientPhone}</TableCell>
                           <TableCell>{token.duration}h</TableCell>
-                          <TableCell>{token.price} {token.currency}</TableCell>
+                          <TableCell>
+                            {token.price} {token.currency}
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {token.paymentMethod === 'cash' ? (
@@ -1368,11 +1648,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                               ) : (
                                 <Smartphone className="h-4 w-4" />
                               )}
-                              {token.paymentMethod === 'cash' ? t.cash : t.mtnMomo}
+                              {token.paymentMethod === 'cash'
+                                ? t.cash
+                                : t.mtnMomo}
                             </div>
                           </TableCell>
                           <TableCell>{getStatusBadge(token.status)}</TableCell>
-                          <TableCell>{new Date(token.createdAt).toLocaleString()}</TableCell>
+                          <TableCell>
+                            {new Date(token.createdAt).toLocaleString()}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1392,32 +1676,48 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                 {t.reportPreview}
               </DialogTitle>
               <DialogDescription className="text-sm">
-                {previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport}
+                {previewType === 'week'
+                  ? t.weeklyReport
+                  : previewType === 'month'
+                    ? t.monthlyReport
+                    : t.yearlyReport}
                 {previewData && ` - ${previewData.period}`}
               </DialogDescription>
             </DialogHeader>
-            
+
             {previewData && (
               <div className="space-y-6">
                 {/* Report Header */}
                 <div className="text-center border-b pb-4">
                   <h2 className="text-xl font-bold text-blue-600">Wipay</h2>
-                  <p className="text-sm text-gray-600">WiFi Token Distribution System</p>
+                  <p className="text-sm text-gray-600">
+                    WiFi Token Distribution System
+                  </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    {previewType === 'week' ? t.weeklyReport : previewType === 'month' ? t.monthlyReport : t.yearlyReport}
+                    {previewType === 'week'
+                      ? t.weeklyReport
+                      : previewType === 'month'
+                        ? t.monthlyReport
+                        : t.yearlyReport}
                   </p>
                   <p className="text-xs text-gray-400">
-                    Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                    Generated: {new Date().toLocaleDateString()}{' '}
+                    {new Date().toLocaleTimeString()}
                   </p>
                 </div>
 
                 {/* Custom Date Range Section */}
                 <div className="space-y-4 border-b pb-4">
-                  <h3 className="text-sm font-semibold text-gray-800">Customize Date Range:</h3>
-                  
+                  <h3 className="text-sm font-semibold text-gray-800">
+                    Customize Date Range:
+                  </h3>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="previewStartDate" className="text-xs font-medium flex items-center gap-1">
+                      <Label
+                        htmlFor="previewStartDate"
+                        className="text-xs font-medium flex items-center gap-1"
+                      >
                         <CalendarDays className="h-3 w-3" />
                         Start Date
                       </Label>
@@ -1425,16 +1725,25 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         id="previewStartDate"
                         type="date"
                         value={customDateRange.startDate}
-                        onChange={(e) => {
-                          setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }));
+                        onChange={e => {
+                          setCustomDateRange(prev => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }));
                         }}
-                        max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                        max={
+                          customDateRange.endDate ||
+                          new Date().toISOString().split('T')[0]
+                        }
                         className="text-sm"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <Label htmlFor="previewEndDate" className="text-xs font-medium flex items-center gap-1">
+                      <Label
+                        htmlFor="previewEndDate"
+                        className="text-xs font-medium flex items-center gap-1"
+                      >
                         <CalendarDays className="h-3 w-3" />
                         End Date
                       </Label>
@@ -1442,8 +1751,11 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         id="previewEndDate"
                         type="date"
                         value={customDateRange.endDate}
-                        onChange={(e) => {
-                          setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }));
+                        onChange={e => {
+                          setCustomDateRange(prev => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }));
                         }}
                         min={customDateRange.startDate}
                         max={new Date().toISOString().split('T')[0]}
@@ -1454,7 +1766,9 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
                   {/* Quick shortcuts in dialog */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Quick Ranges:</Label>
+                    <Label className="text-xs text-gray-600">
+                      Quick Ranges:
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
@@ -1462,11 +1776,13 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         className="text-xs h-8"
                         onClick={() => {
                           const today = new Date();
-                          const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                          const lastWeek = new Date(
+                            today.getTime() - 7 * 24 * 60 * 60 * 1000
+                          );
                           setCustomDateRange({
                             startDate: lastWeek.toISOString().split('T')[0],
                             endDate: today.toISOString().split('T')[0],
-                            reportType: "custom"
+                            reportType: 'custom',
                           });
                         }}
                       >
@@ -1478,11 +1794,13 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         className="text-xs h-8"
                         onClick={() => {
                           const today = new Date();
-                          const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                          const lastMonth = new Date(
+                            today.getTime() - 30 * 24 * 60 * 60 * 1000
+                          );
                           setCustomDateRange({
                             startDate: lastMonth.toISOString().split('T')[0],
                             endDate: today.toISOString().split('T')[0],
-                            reportType: "custom"
+                            reportType: 'custom',
                           });
                         }}
                       >
@@ -1494,11 +1812,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         className="text-xs h-8"
                         onClick={() => {
                           const today = new Date();
-                          const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                          const firstDayOfMonth = new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            1
+                          );
                           setCustomDateRange({
-                            startDate: firstDayOfMonth.toISOString().split('T')[0],
+                            startDate: firstDayOfMonth
+                              .toISOString()
+                              .split('T')[0],
                             endDate: today.toISOString().split('T')[0],
-                            reportType: "custom"
+                            reportType: 'custom',
                           });
                         }}
                       >
@@ -1510,11 +1834,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         className="text-xs h-8"
                         onClick={() => {
                           const today = new Date();
-                          const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+                          const firstDayOfYear = new Date(
+                            today.getFullYear(),
+                            0,
+                            1
+                          );
                           setCustomDateRange({
-                            startDate: firstDayOfYear.toISOString().split('T')[0],
+                            startDate: firstDayOfYear
+                              .toISOString()
+                              .split('T')[0],
                             endDate: today.toISOString().split('T')[0],
-                            reportType: "custom"
+                            reportType: 'custom',
                           });
                         }}
                       >
@@ -1528,7 +1858,10 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                     <div className="flex justify-center">
                       <Button
                         onClick={() => {
-                          const updatedData = generateCustomDateRangeReport(customDateRange.startDate, customDateRange.endDate);
+                          const updatedData = generateCustomDateRangeReport(
+                            customDateRange.startDate,
+                            customDateRange.endDate
+                          );
                           setPreviewData(updatedData);
                         }}
                         size="sm"
@@ -1542,11 +1875,15 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
                 {/* Summary Section */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Report Summary</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                    Report Summary
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm text-gray-600">Total Revenue</CardTitle>
+                        <CardTitle className="text-sm text-gray-600">
+                          Total Revenue
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl sm:text-2xl font-bold text-blue-600">
@@ -1554,10 +1891,12 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm text-gray-600">Total Users</CardTitle>
+                        <CardTitle className="text-sm text-gray-600">
+                          Total Users
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl sm:text-2xl font-bold text-blue-600">
@@ -1570,13 +1909,18 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
                 {/* Period Information */}
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h4 className="font-medium text-blue-800 mb-2">Report Period</h4>
+                  <h4 className="font-medium text-blue-800 mb-2">
+                    Report Period
+                  </h4>
                   <p className="text-sm text-blue-700">{previewData.period}</p>
                   <p className="text-xs text-blue-600 mt-1">
-                    This report includes data from {previewData.transactions} transactions
+                    This report includes data from {previewData.transactions}{' '}
+                    transactions
                   </p>
                   <div className="mt-3 p-3 bg-blue-100 rounded text-sm text-blue-800">
-                    <p className="font-medium">📄 Complete details will be included in the PDF:</p>
+                    <p className="font-medium">
+                      📄 Complete details will be included in the PDF:
+                    </p>
                     <ul className="list-disc list-inside mt-1 text-xs space-y-1">
                       <li>Service breakdown by duration</li>
                       <li>Payment method analysis</li>
@@ -1588,10 +1932,17 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setShowReportPreview(false)} className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowReportPreview(false)}
+                    className="w-full sm:w-auto"
+                  >
                     {t.close}
                   </Button>
-                  <Button onClick={generatePDFReport} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={generatePDFReport}
+                    className="flex items-center justify-center gap-2 w-full sm:w-auto"
+                  >
                     <FileText className="h-4 w-4" />
                     {t.downloadPDF}
                   </Button>
@@ -1605,4 +1956,4 @@ const WiFiTokenSystem = ({ language, currentUser, onLogout }: WiFiTokenSystemPro
   );
 };
 
-export default WiFiTokenSystem; 
+export default WiFiTokenSystem;

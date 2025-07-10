@@ -1,16 +1,53 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Search, UserPlus, Edit, Trash2, Phone, Mail, MapPin, CreditCard, History, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Search,
+  UserPlus,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
+  MapPin,
+  CreditCard,
+  History,
+  AlertTriangle,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnhancedCustomerManagementProps {
   language: string;
@@ -39,115 +76,142 @@ interface Customer {
   riskLevel: 'low' | 'medium' | 'high';
 }
 
-const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProps) => {
+const EnhancedCustomerManagement = ({
+  language,
+}: EnhancedCustomerManagementProps) => {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterPlanType, setFilterPlanType] = useState("all");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPlanType, setFilterPlanType] = useState('all');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
   const [isEditMode, setIsEditMode] = useState(false);
 
   const translations = {
     en: {
-      title: "Enhanced Customer Management",
-      description: "Complete customer relationship management with CRM features",
-      addCustomer: "Add New Customer",
-      editCustomer: "Edit Customer",
-      customerDetails: "Customer Details",
-      basicInfo: "Basic Information",
-      contactInfo: "Contact Information", 
-      serviceInfo: "Service Information",
-      billingInfo: "Billing Information",
-      notes: "Notes & History",
-      customerId: "Customer ID",
-      fullName: "Full Name",
-      phoneNumber: "Phone Number",
-      secondaryPhone: "Secondary Phone",
-      emailAddress: "Email Address",
-      address: "Street Address",
-      city: "City",
-      state: "State",
-      nationalId: "National ID",
-      servicePlan: "Service Plan",
-      planType: "Plan Type",
-      prepaid: "Prepaid",
-      postpaid: "Postpaid",
-      status: "Status",
-      balance: "Current Balance",
-      creditLimit: "Credit Limit",
-      installationDate: "Installation Date",
-      lastPayment: "Last Payment",
-      riskLevel: "Risk Level",
-      customerNotes: "Customer Notes",
-      active: "Active",
-      suspended: "Suspended",
-      terminated: "Terminated",
-      low: "Low",
-      medium: "Medium",
-      high: "High",
-      southSudanStates: ["Central Equatoria", "Eastern Equatoria", "Western Equatoria", "Jonglei", "Unity", "Upper Nile", "Northern Bahr el Ghazal", "Western Bahr el Ghazal", "Lakes", "Warrap"],
-      filterByStatus: "Filter by Status",
-      filterByPlan: "Filter by Plan Type",
-      searchCustomers: "Search customers...",
-      save: "Save Customer",
-      cancel: "Cancel",
-      actions: "Actions",
-      viewDetails: "View Details",
-      suspend: "Suspend",
-      activate: "Activate",
-      terminate: "Terminate",
-      all: "All"
+      title: 'Enhanced Customer Management',
+      description:
+        'Complete customer relationship management with CRM features',
+      addCustomer: 'Add New Customer',
+      editCustomer: 'Edit Customer',
+      customerDetails: 'Customer Details',
+      basicInfo: 'Basic Information',
+      contactInfo: 'Contact Information',
+      serviceInfo: 'Service Information',
+      billingInfo: 'Billing Information',
+      notes: 'Notes & History',
+      customerId: 'Customer ID',
+      fullName: 'Full Name',
+      phoneNumber: 'Phone Number',
+      secondaryPhone: 'Secondary Phone',
+      emailAddress: 'Email Address',
+      address: 'Street Address',
+      city: 'City',
+      state: 'State',
+      nationalId: 'National ID',
+      servicePlan: 'Service Plan',
+      planType: 'Plan Type',
+      prepaid: 'Prepaid',
+      postpaid: 'Postpaid',
+      status: 'Status',
+      balance: 'Current Balance',
+      creditLimit: 'Credit Limit',
+      installationDate: 'Installation Date',
+      lastPayment: 'Last Payment',
+      riskLevel: 'Risk Level',
+      customerNotes: 'Customer Notes',
+      active: 'Active',
+      suspended: 'Suspended',
+      terminated: 'Terminated',
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      southSudanStates: [
+        'Central Equatoria',
+        'Eastern Equatoria',
+        'Western Equatoria',
+        'Jonglei',
+        'Unity',
+        'Upper Nile',
+        'Northern Bahr el Ghazal',
+        'Western Bahr el Ghazal',
+        'Lakes',
+        'Warrap',
+      ],
+      filterByStatus: 'Filter by Status',
+      filterByPlan: 'Filter by Plan Type',
+      searchCustomers: 'Search customers...',
+      save: 'Save Customer',
+      cancel: 'Cancel',
+      actions: 'Actions',
+      viewDetails: 'View Details',
+      suspend: 'Suspend',
+      activate: 'Activate',
+      terminate: 'Terminate',
+      all: 'All',
     },
     ar: {
-      title: "إدارة العملاء المحسنة",
-      description: "إدارة علاقات العملاء الكاملة مع ميزات إدارة علاقات العملاء",
-      addCustomer: "إضافة عميل جديد",
-      editCustomer: "تعديل العميل",
-      customerDetails: "تفاصيل العميل",
-      basicInfo: "المعلومات الأساسية",
-      contactInfo: "معلومات الاتصال",
-      serviceInfo: "معلومات الخدمة",
-      billingInfo: "معلومات الفوترة",
-      notes: "الملاحظات والتاريخ",
-      customerId: "رقم العميل",
-      fullName: "الاسم الكامل",
-      phoneNumber: "رقم الهاتف",
-      secondaryPhone: "هاتف ثانوي",
-      emailAddress: "عنوان البريد الإلكتروني",
-      address: "عنوان الشارع",
-      city: "المدينة",
-      state: "الولاية",
-      nationalId: "الرقم الوطني",
-      servicePlan: "خطة الخدمة",
-      planType: "نوع الخطة",
-      prepaid: "مدفوع مسبقاً",
-      postpaid: "مدفوع لاحقاً",
-      status: "الحالة",
-      balance: "الرصيد الحالي",
-      creditLimit: "حد الائتمان",
-      installationDate: "تاريخ التركيب",
-      lastPayment: "آخر دفعة",
-      riskLevel: "مستوى المخاطر",
-      customerNotes: "ملاحظات العميل",
-      active: "نشط",
-      suspended: "معلق",
-      terminated: "منتهي",
-      low: "منخفض",
-      medium: "متوسط",
-      high: "عالي",
-      southSudanStates: ["وسط الاستوائية", "شرق الاستوائية", "غرب الاستوائية", "جونقلي", "الوحدة", "أعالي النيل", "شمال بحر الغزال", "غرب بحر الغزال", "البحيرات", "وراب"],
-      filterByStatus: "تصفية حسب الحالة",
-      filterByPlan: "تصفية حسب نوع الخطة",
-      searchCustomers: "البحث عن العملاء...",
-      save: "حفظ العميل",
-      cancel: "إلغاء",
-      actions: "الإجراءات",
-      viewDetails: "عرض التفاصيل",
-      suspend: "تعليق",
-      activate: "تفعيل",
-      terminate: "إنهاء",
-      all: "الكل"
-    }
+      title: 'إدارة العملاء المحسنة',
+      description: 'إدارة علاقات العملاء الكاملة مع ميزات إدارة علاقات العملاء',
+      addCustomer: 'إضافة عميل جديد',
+      editCustomer: 'تعديل العميل',
+      customerDetails: 'تفاصيل العميل',
+      basicInfo: 'المعلومات الأساسية',
+      contactInfo: 'معلومات الاتصال',
+      serviceInfo: 'معلومات الخدمة',
+      billingInfo: 'معلومات الفوترة',
+      notes: 'الملاحظات والتاريخ',
+      customerId: 'رقم العميل',
+      fullName: 'الاسم الكامل',
+      phoneNumber: 'رقم الهاتف',
+      secondaryPhone: 'هاتف ثانوي',
+      emailAddress: 'عنوان البريد الإلكتروني',
+      address: 'عنوان الشارع',
+      city: 'المدينة',
+      state: 'الولاية',
+      nationalId: 'الرقم الوطني',
+      servicePlan: 'خطة الخدمة',
+      planType: 'نوع الخطة',
+      prepaid: 'مدفوع مسبقاً',
+      postpaid: 'مدفوع لاحقاً',
+      status: 'الحالة',
+      balance: 'الرصيد الحالي',
+      creditLimit: 'حد الائتمان',
+      installationDate: 'تاريخ التركيب',
+      lastPayment: 'آخر دفعة',
+      riskLevel: 'مستوى المخاطر',
+      customerNotes: 'ملاحظات العميل',
+      active: 'نشط',
+      suspended: 'معلق',
+      terminated: 'منتهي',
+      low: 'منخفض',
+      medium: 'متوسط',
+      high: 'عالي',
+      southSudanStates: [
+        'وسط الاستوائية',
+        'شرق الاستوائية',
+        'غرب الاستوائية',
+        'جونقلي',
+        'الوحدة',
+        'أعالي النيل',
+        'شمال بحر الغزال',
+        'غرب بحر الغزال',
+        'البحيرات',
+        'وراب',
+      ],
+      filterByStatus: 'تصفية حسب الحالة',
+      filterByPlan: 'تصفية حسب نوع الخطة',
+      searchCustomers: 'البحث عن العملاء...',
+      save: 'حفظ العميل',
+      cancel: 'إلغاء',
+      actions: 'الإجراءات',
+      viewDetails: 'عرض التفاصيل',
+      suspend: 'تعليق',
+      activate: 'تفعيل',
+      terminate: 'إنهاء',
+      all: 'الكل',
+    },
   };
 
   const t = translations[language as keyof typeof translations];
@@ -156,73 +220,73 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
   const [customers, setCustomers] = useState<Customer[]>([
     {
       id: 1,
-      customerId: "CUST-2024-001",
-      name: "Ahmed Hassan Mohamed",
-      phone: "+211 912 345 678",
-      secondaryPhone: "+211 925 123 456",
-      email: "ahmed.hassan@email.com",
-      address: "Hai Malakal, Block 15",
-      city: "Juba",
-      state: "Central Equatoria",
-      nationalId: "SS12345678901",
-      plan: "Standard Plan (10 Mbps)",
-      planType: "postpaid",
-      status: "active",
-      joinDate: "2024-01-15",
-      lastPayment: "2024-01-20",
+      customerId: 'CUST-2024-001',
+      name: 'Ahmed Hassan Mohamed',
+      phone: '+211 912 345 678',
+      secondaryPhone: '+211 925 123 456',
+      email: 'ahmed.hassan@email.com',
+      address: 'Hai Malakal, Block 15',
+      city: 'Juba',
+      state: 'Central Equatoria',
+      nationalId: 'SS12345678901',
+      plan: 'Standard Plan (10 Mbps)',
+      planType: 'postpaid',
+      status: 'active',
+      joinDate: '2024-01-15',
+      lastPayment: '2024-01-20',
       balance: -50,
       creditLimit: 300,
-      installationDate: "2024-01-16",
-      riskLevel: "low",
-      notes: "Reliable customer, always pays on time"
+      installationDate: '2024-01-16',
+      riskLevel: 'low',
+      notes: 'Reliable customer, always pays on time',
     },
     {
       id: 2,
-      customerId: "CUST-2024-002",
-      name: "Mary John Deng",
-      phone: "+211 923 456 789",
-      email: "mary.john@email.com",
-      address: "Hai Jebel, Street 12",
-      city: "Wau",
-      state: "Western Bahr el Ghazal",
-      plan: "Basic Plan (5 Mbps)",
-      planType: "prepaid",
-      status: "active",
-      joinDate: "2024-02-20",
+      customerId: 'CUST-2024-002',
+      name: 'Mary John Deng',
+      phone: '+211 923 456 789',
+      email: 'mary.john@email.com',
+      address: 'Hai Jebel, Street 12',
+      city: 'Wau',
+      state: 'Western Bahr el Ghazal',
+      plan: 'Basic Plan (5 Mbps)',
+      planType: 'prepaid',
+      status: 'active',
+      joinDate: '2024-02-20',
       balance: 25,
-      installationDate: "2024-02-22",
-      riskLevel: "low",
-      notes: "Prepaid customer, good payment history"
-    }
+      installationDate: '2024-02-22',
+      riskLevel: 'low',
+      notes: 'Prepaid customer, good payment history',
+    },
   ]);
 
   const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    phone: "",
-    secondaryPhone: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    nationalId: "",
-    planType: "postpaid" as 'prepaid' | 'postpaid',
-    plan: "",
+    name: '',
+    phone: '',
+    secondaryPhone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    nationalId: '',
+    planType: 'postpaid' as 'prepaid' | 'postpaid',
+    plan: '',
     creditLimit: 0,
-    notes: ""
+    notes: '',
   });
 
   const servicePlans = [
-    "Basic Plan (5 Mbps)",
-    "Standard Plan (10 Mbps)", 
-    "Premium Plan (20 Mbps)",
-    "Business Plan (50 Mbps)"
+    'Basic Plan (5 Mbps)',
+    'Standard Plan (10 Mbps)',
+    'Premium Plan (20 Mbps)',
+    'Business Plan (50 Mbps)',
   ];
 
   const getStatusBadge = (status: string) => {
     const configs = {
-      active: { label: t.active, variant: "default" as const },
-      suspended: { label: t.suspended, variant: "destructive" as const },
-      terminated: { label: t.terminated, variant: "secondary" as const }
+      active: { label: t.active, variant: 'default' as const },
+      suspended: { label: t.suspended, variant: 'destructive' as const },
+      terminated: { label: t.terminated, variant: 'secondary' as const },
     };
     const config = configs[status as keyof typeof configs];
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -230,21 +294,24 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
 
   const getRiskBadge = (risk: string) => {
     const configs = {
-      low: { label: t.low, variant: "default" as const },
-      medium: { label: t.medium, variant: "secondary" as const },
-      high: { label: t.high, variant: "destructive" as const }
+      low: { label: t.low, variant: 'default' as const },
+      medium: { label: t.medium, variant: 'secondary' as const },
+      high: { label: t.high, variant: 'destructive' as const },
     };
     const config = configs[risk as keyof typeof configs];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.phone.includes(searchTerm) ||
-                         customer.customerId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || customer.status === filterStatus;
-    const matchesPlanType = filterPlanType === "all" || customer.planType === filterPlanType;
-    
+    const matchesSearch =
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      customer.customerId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === 'all' || customer.status === filterStatus;
+    const matchesPlanType =
+      filterPlanType === 'all' || customer.planType === filterPlanType;
+
     return matchesSearch && matchesStatus && matchesPlanType;
   });
 
@@ -266,7 +333,7 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                   <DialogTitle>{t.addCustomer}</DialogTitle>
                   <DialogDescription>{t.description}</DialogDescription>
                 </DialogHeader>
-                
+
                 <Tabs defaultValue="basic" className="w-full">
                   <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="basic">{t.basicInfo}</TabsTrigger>
@@ -274,7 +341,7 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                     <TabsTrigger value="service">{t.serviceInfo}</TabsTrigger>
                     <TabsTrigger value="billing">{t.billingInfo}</TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="basic" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -287,7 +354,7 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="contact" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -295,12 +362,21 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                         <Input id="phone" placeholder="+211 XXX XXX XXX" />
                       </div>
                       <div>
-                        <Label htmlFor="secondaryPhone">{t.secondaryPhone}</Label>
-                        <Input id="secondaryPhone" placeholder="+211 XXX XXX XXX" />
+                        <Label htmlFor="secondaryPhone">
+                          {t.secondaryPhone}
+                        </Label>
+                        <Input
+                          id="secondaryPhone"
+                          placeholder="+211 XXX XXX XXX"
+                        />
                       </div>
                       <div className="col-span-2">
                         <Label htmlFor="email">{t.emailAddress}</Label>
-                        <Input id="email" type="email" placeholder="customer@email.com" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="customer@email.com"
+                        />
                       </div>
                       <div className="col-span-2">
                         <Label htmlFor="address">{t.address}</Label>
@@ -317,8 +393,10 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent>
-                            {t.southSudanStates.map((state) => (
-                              <SelectItem key={state} value={state}>{state}</SelectItem>
+                            {t.southSudanStates.map(state => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -336,7 +414,9 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="prepaid">{t.prepaid}</SelectItem>
-                            <SelectItem value="postpaid">{t.postpaid}</SelectItem>
+                            <SelectItem value="postpaid">
+                              {t.postpaid}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -347,8 +427,10 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                             <SelectValue placeholder="Select service plan" />
                           </SelectTrigger>
                           <SelectContent>
-                            {servicePlans.map((plan) => (
-                              <SelectItem key={plan} value={plan}>{plan}</SelectItem>
+                            {servicePlans.map(plan => (
+                              <SelectItem key={plan} value={plan}>
+                                {plan}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -359,13 +441,18 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                   <TabsContent value="billing" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="creditLimit">{t.creditLimit} (SSP)</Label>
+                        <Label htmlFor="creditLimit">
+                          {t.creditLimit} (SSP)
+                        </Label>
                         <Input id="creditLimit" type="number" placeholder="0" />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="notes">{t.customerNotes}</Label>
-                      <Textarea id="notes" placeholder="Add any notes about the customer..." />
+                      <Textarea
+                        id="notes"
+                        placeholder="Add any notes about the customer..."
+                      />
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -387,7 +474,7 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
               <Input
                 placeholder={t.searchCustomers}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -429,9 +516,11 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCustomers.map((customer) => (
+                {filteredCustomers.map(customer => (
                   <TableRow key={customer.id}>
-                    <TableCell className="font-mono text-sm">{customer.customerId}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {customer.customerId}
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{customer.name}</div>
@@ -446,14 +535,25 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={customer.planType === 'prepaid' ? 'default' : 'secondary'}>
-                        {customer.planType === 'prepaid' ? t.prepaid : t.postpaid}
+                      <Badge
+                        variant={
+                          customer.planType === 'prepaid'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {customer.planType === 'prepaid'
+                          ? t.prepaid
+                          : t.postpaid}
                       </Badge>
                     </TableCell>
                     <TableCell>{getStatusBadge(customer.status)}</TableCell>
                     <TableCell>
-                      <div className={`font-medium ${customer.balance < 0 ? 'text-red-600' : 'text-blue-600'}`}>
-                        {customer.balance > 0 ? '+' : ''}{customer.balance} SSP
+                      <div
+                        className={`font-medium ${customer.balance < 0 ? 'text-red-600' : 'text-blue-600'}`}
+                      >
+                        {customer.balance > 0 ? '+' : ''}
+                        {customer.balance} SSP
                       </div>
                     </TableCell>
                     <TableCell>{getRiskBadge(customer.riskLevel)}</TableCell>
@@ -463,7 +563,9 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button variant="outline" size="sm">
-                          {customer.status === 'active' ? t.suspend : t.activate}
+                          {customer.status === 'active'
+                            ? t.suspend
+                            : t.activate}
                         </Button>
                       </div>
                     </TableCell>
@@ -478,4 +580,4 @@ const EnhancedCustomerManagement = ({ language }: EnhancedCustomerManagementProp
   );
 };
 
-export default EnhancedCustomerManagement; 
+export default EnhancedCustomerManagement;

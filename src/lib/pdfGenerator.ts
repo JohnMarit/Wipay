@@ -23,7 +23,7 @@ export class PDFReportGenerator {
     this.doc.setFontSize(24);
     this.doc.setTextColor(41, 128, 185);
     this.doc.text('Wipay', 20, this.currentY);
-    
+
     this.doc.setFontSize(12);
     this.doc.setTextColor(100, 100, 100);
     this.doc.text('WiFi Token Distribution System', 20, this.currentY + 10);
@@ -39,14 +39,18 @@ export class PDFReportGenerator {
 
     // Date generated
     const now = new Date();
-    this.doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 20, this.currentY + 54);
+    this.doc.text(
+      `Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`,
+      20,
+      this.currentY + 54
+    );
 
     this.currentY += 80;
   }
 
   private addSummarySection(data: any) {
     this.checkPageBreak(80);
-    
+
     this.doc.setFontSize(16);
     this.doc.setTextColor(0, 0, 0);
     this.doc.text('Executive Summary', 20, this.currentY);
@@ -60,16 +64,16 @@ export class PDFReportGenerator {
     // Summary content
     this.doc.setFontSize(12);
     this.doc.setTextColor(0, 0, 0);
-    
+
     const summaryItems = [
       `Total Revenue: ${data.revenue?.toLocaleString() || '0'} SSP`,
       `Total Users: ${data.totalUsers || data.customers || '0'}`,
       `Total Transactions: ${data.transactions || '0'}`,
-      `Average Transaction: ${data.avgTransactionValue ? data.avgTransactionValue.toFixed(2) : '0'} SSP`
+      `Average Transaction: ${data.avgTransactionValue ? data.avgTransactionValue.toFixed(2) : '0'} SSP`,
     ];
 
     summaryItems.forEach((item, index) => {
-      this.doc.text(item, 25, this.currentY + 15 + (index * 10));
+      this.doc.text(item, 25, this.currentY + 15 + index * 10);
     });
 
     this.currentY += 80;
@@ -77,9 +81,9 @@ export class PDFReportGenerator {
 
   private addServiceBreakdown(data: any) {
     if (!data.serviceBreakdown || data.serviceBreakdown.length === 0) return;
-    
+
     this.checkPageBreak(100);
-    
+
     this.doc.setFontSize(14);
     this.doc.setTextColor(0, 0, 0);
     this.doc.text('Service Breakdown', 20, this.currentY);
@@ -102,17 +106,24 @@ export class PDFReportGenerator {
     // Service data
     this.doc.setFontSize(9);
     this.doc.setTextColor(0, 0, 0);
-    
+
     data.serviceBreakdown.forEach((service: any, index: number) => {
-      const percentage = data.revenue > 0 ? ((service.revenue / data.revenue) * 100).toFixed(1) : '0';
-      
+      const percentage =
+        data.revenue > 0
+          ? ((service.revenue / data.revenue) * 100).toFixed(1)
+          : '0';
+
       this.doc.text(service.service, 25, this.currentY);
       this.doc.text(service.count.toString(), 80, this.currentY);
-      this.doc.text(`${service.revenue.toLocaleString()} SSP`, 120, this.currentY);
+      this.doc.text(
+        `${service.revenue.toLocaleString()} SSP`,
+        120,
+        this.currentY
+      );
       this.doc.text(`${percentage}%`, 160, this.currentY);
-      
+
       this.currentY += 12;
-      
+
       if (index < data.serviceBreakdown.length - 1) {
         this.doc.setDrawColor(240, 240, 240);
         this.doc.line(20, this.currentY - 2, 190, this.currentY - 2);
@@ -124,9 +135,9 @@ export class PDFReportGenerator {
 
   private addPaymentBreakdown(data: any) {
     if (!data.paymentBreakdown || data.paymentBreakdown.length === 0) return;
-    
+
     this.checkPageBreak(80);
-    
+
     this.doc.setFontSize(14);
     this.doc.setTextColor(0, 0, 0);
     this.doc.text('Payment Method Analysis', 20, this.currentY);
@@ -148,14 +159,18 @@ export class PDFReportGenerator {
     // Payment data
     this.doc.setFontSize(9);
     this.doc.setTextColor(0, 0, 0);
-    
+
     data.paymentBreakdown.forEach((method: any, index: number) => {
       this.doc.text(method.method, 25, this.currentY);
       this.doc.text(method.count.toString(), 100, this.currentY);
-      this.doc.text(`${method.revenue.toLocaleString()} SSP`, 150, this.currentY);
-      
+      this.doc.text(
+        `${method.revenue.toLocaleString()} SSP`,
+        150,
+        this.currentY
+      );
+
       this.currentY += 12;
-      
+
       if (index < data.paymentBreakdown.length - 1) {
         this.doc.setDrawColor(240, 240, 240);
         this.doc.line(20, this.currentY - 2, 190, this.currentY - 2);
@@ -166,10 +181,11 @@ export class PDFReportGenerator {
   }
 
   private addRecentTransactions(data: any) {
-    if (!data.recentTransactions || data.recentTransactions.length === 0) return;
-    
+    if (!data.recentTransactions || data.recentTransactions.length === 0)
+      return;
+
     this.checkPageBreak(120);
-    
+
     this.doc.setFontSize(14);
     this.doc.setTextColor(0, 0, 0);
     this.doc.text('Recent Transactions', 20, this.currentY);
@@ -192,17 +208,17 @@ export class PDFReportGenerator {
     // Transaction data (show up to 15 to fit on page)
     this.doc.setFontSize(7);
     this.doc.setTextColor(0, 0, 0);
-    
+
     const transactions = data.recentTransactions.slice(0, 15);
-    
+
     transactions.forEach((tx: any, index: number) => {
       this.doc.text(tx.date, 25, this.currentY);
       this.doc.text(tx.customer.substring(0, 15) + '...', 60, this.currentY);
       this.doc.text(tx.service, 110, this.currentY);
       this.doc.text(`${tx.amount} SSP`, 160, this.currentY);
-      
+
       this.currentY += 10;
-      
+
       if (index < transactions.length - 1) {
         this.doc.setDrawColor(245, 245, 245);
         this.doc.line(20, this.currentY - 2, 190, this.currentY - 2);
@@ -213,7 +229,11 @@ export class PDFReportGenerator {
       this.currentY += 5;
       this.doc.setFontSize(8);
       this.doc.setTextColor(100, 100, 100);
-      this.doc.text(`Showing 15 of ${data.recentTransactions.length} transactions`, 25, this.currentY);
+      this.doc.text(
+        `Showing 15 of ${data.recentTransactions.length} transactions`,
+        25,
+        this.currentY
+      );
     }
 
     this.currentY += 20;
@@ -245,22 +265,25 @@ export class PDFReportGenerator {
     }
   }
 
-  public generateSimpleReport(data: any, type: 'weekly' | 'monthly' | 'yearly'): jsPDF {
-    const reportTitle = type === 'weekly' ? this.translations.weeklyReport || 'Weekly Report' 
-                      : type === 'monthly' ? this.translations.monthlyReport || 'Monthly Report'
-                      : this.translations.yearlyReport || 'Yearly Report';
-    
-    this.addHeader(
-      reportTitle,
-      `Period: ${data.period}`
-    );
-    
+  public generateSimpleReport(
+    data: any,
+    type: 'weekly' | 'monthly' | 'yearly'
+  ): jsPDF {
+    const reportTitle =
+      type === 'weekly'
+        ? this.translations.weeklyReport || 'Weekly Report'
+        : type === 'monthly'
+          ? this.translations.monthlyReport || 'Monthly Report'
+          : this.translations.yearlyReport || 'Yearly Report';
+
+    this.addHeader(reportTitle, `Period: ${data.period}`);
+
     this.addSummarySection(data);
     this.addServiceBreakdown(data);
     this.addPaymentBreakdown(data);
     this.addRecentTransactions(data);
     this.addFooter();
-    
+
     return this.doc;
   }
 
@@ -276,4 +299,4 @@ export class PDFReportGenerator {
   public generateYearlyReport(data: any): jsPDF {
     return this.generateSimpleReport(data, 'yearly');
   }
-} 
+}

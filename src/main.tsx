@@ -1,9 +1,9 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
-import { initializeStorageErrorHandler } from "./lib/utils.ts";
-import { debugStorage } from "./lib/debug.ts";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import { initializeStorageErrorHandler } from './lib/utils.ts';
+import { debugStorage } from './lib/debug.ts';
 
 // Initialize protection against external localStorage errors
 initializeStorageErrorHandler();
@@ -43,7 +43,7 @@ setTimeout(() => {
   debugStorage.runAllChecks();
 }, 1000);
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>
