@@ -1,4 +1,4 @@
-import { authService, userService, UserProfile } from './firebase';
+import { authService, userService } from './firebase';
 
 // User interface
 export interface User {
@@ -116,10 +116,15 @@ export const getCurrentUser = (): Promise<User | null> => {
 // Listen to authentication state changes
 export const onAuthStateChange = (callback: (user: User | null) => void) => {
   return authService.onAuthStateChanged(async firebaseUser => {
+    console.log('🔄 Auth state changed:', firebaseUser?.uid || 'null');
+
     if (firebaseUser) {
       try {
+        console.log('🔍 Getting user profile for Firebase user:', firebaseUser.uid);
         const userProfile = await userService.getUserProfile(firebaseUser.uid);
+
         if (userProfile) {
+          console.log('✅ User profile loaded successfully:', userProfile.name);
           callback({
             id: firebaseUser.uid,
             username: userProfile.name.toLowerCase().replace(/\s+/g, ''),
@@ -129,13 +134,15 @@ export const onAuthStateChange = (callback: (user: User | null) => void) => {
             role: 'user',
           });
         } else {
+          console.log('❌ User profile not found, signing out user');
           callback(null);
         }
       } catch (error) {
-        console.error('Error getting user profile:', error);
+        console.error('❌ Error getting user profile:', error);
         callback(null);
       }
     } else {
+      console.log('📤 User signed out');
       callback(null);
     }
   });

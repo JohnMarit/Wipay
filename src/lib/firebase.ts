@@ -14,11 +14,13 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   onSnapshot,
   orderBy,
   query,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
@@ -118,7 +120,7 @@ export const authService = {
       );
       const user = userCredential.user;
 
-      // Create user profile in Firestore
+      // Create user profile in Firestore using UID as document ID
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
@@ -137,7 +139,8 @@ export const authService = {
         createdAt: new Date(),
       };
 
-      await addDoc(collection(db, 'users'), userProfile);
+      // Use setDoc with user.uid as document ID instead of addDoc
+      await setDoc(doc(db, 'users', user.uid), userProfile);
       return userProfile;
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -304,22 +307,62 @@ export const userService = {
   // Get user profile
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const q = query(collection(db, 'users'), where('uid', '==', userId));
-      const querySnapshot = await getDocs(q);
+      console.log('🔍 Getting user profile for UID:', userId);
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (querySnapshot.empty) {
-        return null;
+      if (!userDocSnap.exists()) {
+        console.log('❌ User profile not found for UID:', userId);
+        // Try to find user in old collection structure (for migration)
+        return await this.migrateOldUserProfile(userId);
       }
 
-      const doc = querySnapshot.docs[0];
-      const data = doc.data();
+      const data = userDocSnap.data();
+      console.log('✅ User profile found:', data);
       return {
         ...data,
         createdAt: data.createdAt.toDate(),
       } as UserProfile;
     } catch (error: unknown) {
+      console.error('❌ Error getting user profile:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to get user profile: ${errorMsg}`);
+    }
+  },
+
+  // Migrate user profile from old collection structure (for existing users)
+  async migrateOldUserProfile(userId: string): Promise<UserProfile | null> {
+    try {
+      console.log('🔄 Attempting to migrate old user profile for UID:', userId);
+      const q = query(collection(db, 'users'), where('uid', '==', userId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log('❌ No old user profile found for migration');
+        return null;
+      }
+
+      const oldDoc = querySnapshot.docs[0];
+      const data = oldDoc.data();
+      const userProfile = {
+        ...data,
+        createdAt: data.createdAt.toDate(),
+      } as UserProfile;
+
+      // Create new document with UID as document ID
+      await setDoc(doc(db, 'users', userId), {
+        ...data,
+        createdAt: data.createdAt,
+      });
+
+      // Delete old document
+      await deleteDoc(oldDoc.ref);
+
+      console.log('✅ User profile migrated successfully');
+      return userProfile;
+    } catch (error: unknown) {
+      console.error('❌ Error migrating user profile:', error);
+      return null;
     }
   },
 
@@ -329,12 +372,14 @@ export const userService = {
     updates: Partial<UserProfile>
   ): Promise<void> {
     try {
-      const q = query(collection(db, 'users'), where('uid', '==', userId));
-      const querySnapshot = await getDocs(q);
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        await updateDoc(userDoc.ref, updates);
+      if (userDocSnap.exists()) {
+        await updateDoc(userDocRef, updates);
+      } else {
+        // If user document doesn't exist, we can't update it
+        throw new Error('User profile not found');
       }
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
