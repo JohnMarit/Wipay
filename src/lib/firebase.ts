@@ -4,8 +4,10 @@ import { initializeApp } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
   getAuth,
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   User,
 } from 'firebase/auth';
@@ -160,6 +162,49 @@ export const authService = {
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Sign in failed: ${errorMsg}`);
+    }
+  },
+
+  // Sign in with Google
+  async signInWithGoogle(): Promise<User> {
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user profile exists, if not create one
+      const existingProfile = await userService.getUserProfile(user.uid);
+
+      if (!existingProfile) {
+        // Create user profile for new Google user
+        const userProfile: UserProfile = {
+          uid: user.uid,
+          email: user.email!,
+          name: user.displayName || 'Google User',
+          phone: user.phoneNumber || '', // Google doesn't always provide phone number
+          pricingConfig: {
+            currency: 'SSP',
+            prices: {
+              '1': 50,
+              '3': 120,
+              '6': 200,
+              '12': 350,
+              '24': 500,
+            },
+          },
+          createdAt: new Date(),
+        };
+
+        await setDoc(doc(db, 'users', user.uid), userProfile);
+      }
+
+      return user;
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Google sign in failed: ${errorMsg}`);
     }
   },
 

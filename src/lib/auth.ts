@@ -45,6 +45,34 @@ export const authenticateUser = async (
   }
 };
 
+// Sign in with Google
+export const signInWithGoogle = async (): Promise<User | null> => {
+  try {
+    const firebaseUser = await authService.signInWithGoogle();
+
+    if (firebaseUser) {
+      // Get user profile from Firestore
+      const userProfile = await userService.getUserProfile(firebaseUser.uid);
+
+      if (userProfile) {
+        return {
+          id: firebaseUser.uid,
+          username: userProfile.name.toLowerCase().replace(/\s+/g, ''),
+          name: userProfile.name,
+          phone: userProfile.phone,
+          email: userProfile.email,
+          role: 'user',
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    throw error;
+  }
+};
+
 // Register new user
 export const registerUser = async (
   name: string,
