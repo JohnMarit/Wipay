@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WiFi Access - Enter Your Token</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .success {
+      background: rgba(76, 175, 80, 0.3);
+    }
+
+    .error {
+      background: rgba(244, 67, 54, 0.3);
+    }
+
+    .info {
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🛰️ WiFi Access</h1>
+    <p>Enter your token to connect</p>
+
+    <form id="tokenForm">
+      <input type="text" id="tokenInput" placeholder="Enter your token code" maxlength="20" required>
+      <input type="tel" id="phoneInput" placeholder="Your phone number" required>
+      <button type="submit">Connect to WiFi</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <div class="info">
+      <p>📱 Check your SMS for the token code</p>
+      <p>⏰ Access expires based on your purchase</p>
+      <p>📞 Need help? Contact: +211-XXX-XXXX</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('tokenForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const token = document.getElementById('tokenInput').value;
+      const phone = document.getElementById('phoneInput').value;
+      const statusDiv = document.getElementById('status');
+
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'status';
+      statusDiv.textContent = 'Validating token...';
+
+      try {
+        // In a real implementation, this would validate against your Firebase database
+        // For now, we'll simulate validation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Simple validation (replace with real validation)
+        if (token.startsWith('wifi_') && token.length >= 8) {
+          statusDiv.className = 'status success';
+          statusDiv.innerHTML = `
+                        ✅ Token Valid!<br>
+                        <strong>WiFi Details:</strong><br>
+                        Network: YourStarlink_WiFi<br>
+                        Password: ${token}<br>
+                        <br>Connect to WiFi now!
+                    `;
+        } else {
+          statusDiv.className = 'status error';
+          statusDiv.textContent = '❌ Invalid token. Please check your SMS and try again.';
+        }
+      } catch (error) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Connection error. Please try again.';
+      }
+    });
+
+    // Auto-focus on token input
+    document.getElementById('tokenInput').focus();
+
+    // Auto-format token input
+    document.getElementById('tokenInput').addEventListener('input', function (e) {
+      e.target.value = e.target.value.toLowerCase();
+    });
+  </script>
+</body>
+
+</html>

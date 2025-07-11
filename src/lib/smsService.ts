@@ -213,28 +213,44 @@ export class SMSService {
     }
   }
 
+  // Send WiFi token via SMS with proper connection instructions
   async sendWiFiToken(
-    recipientPhone: string,
-    wifiNetwork: string,
+    phoneNumber: string,
+    networkName: string,
     username: string,
     password: string,
     duration: string,
     price: number,
     currency: string,
-    expiresAt: string
+    expiryTime: string
   ): Promise<boolean> {
-    const message = `🔐 WiFi Access Token - Wipay
+    const normalizedNumber = this.normalizePhoneNumber(phoneNumber);
 
-📶 Network: ${wifiNetwork}
-👤 Username: ${username}
-🔑 Password: ${password}
-⏰ Duration: ${duration}
-💰 Price: ${price} ${currency}
-⏳ Expires: ${expiresAt}
+    // Create comprehensive WiFi access message
+    const message = `
+🛰️ WIFI ACCESS GRANTED 🛰️
 
-Thank you for using Wipay!`;
+💳 Purchase: ${duration} (${price} ${currency})
+📱 Token ID: ${username}
+⏰ Valid until: ${expiryTime}
 
-    return this.sendSMS(recipientPhone, message);
+📶 TO CONNECT:
+Network: ${networkName}
+Password: [Ask staff for WiFi password]
+
+⚠️ IMPORTANT:
+- Show this SMS to staff for WiFi password
+- Your access expires automatically
+- No refunds for unused time
+
+📞 Need help? Contact staff
+💼 Powered by Wipay
+
+Valid for: ${duration}
+Expires: ${expiryTime}
+    `.trim();
+
+    return this.sendSMS(normalizedNumber, message);
   }
 
   async sendSMS(to: string, message: string): Promise<boolean> {

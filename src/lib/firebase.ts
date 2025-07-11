@@ -90,6 +90,25 @@ export interface UserProfile {
     currency: string;
     prices: { [key: string]: number };
   };
+  subscription?: {
+    planId: string;
+    status: 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing';
+    currentPeriodStart: Date;
+    currentPeriodEnd: Date;
+    tokensUsedThisMonth: number;
+    stripeSubscriptionId?: string;
+    stripeCustomerId?: string;
+  };
+  paymentProfile?: {
+    momoNumber: string;
+    isVerified: boolean;
+    isProfileComplete: boolean;
+    lastSuccessfulPayment?: Date;
+    totalFailedAttempts: number;
+    accountStatus: 'active' | 'suspended' | 'disabled';
+    billingDay: number;
+    nextBillingDate?: Date;
+  };
   createdAt: Date;
 }
 
@@ -137,6 +156,13 @@ export const authService = {
             '12': 350,
             '24': 500,
           },
+        },
+        subscription: {
+          planId: 'free',
+          status: 'active',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+          tokensUsedThisMonth: 0,
         },
         createdAt: new Date(),
       };
@@ -194,6 +220,13 @@ export const authService = {
               '12': 350,
               '24': 500,
             },
+          },
+          subscription: {
+            planId: 'free',
+            status: 'active',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            tokensUsedThisMonth: 0,
           },
           createdAt: new Date(),
         };
@@ -615,6 +648,196 @@ export const userService = {
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to update pricing config: ${errorMsg}`);
+    }
+  },
+
+  // Update subscription
+  async updateSubscription(
+    userId: string,
+    subscription: {
+      planId: string;
+      status: 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing';
+      currentPeriodStart: Date;
+      currentPeriodEnd: Date;
+      tokensUsedThisMonth: number;
+      stripeSubscriptionId?: string;
+      stripeCustomerId?: string;
+    }
+  ): Promise<void> {
+    try {
+      await this.updateUserProfile(userId, { subscription });
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update subscription: ${errorMsg}`);
+    }
+  },
+
+  // Increment token usage for subscription
+  async incrementTokenUsage(userId: string): Promise<void> {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentUsage = userData.subscription?.tokensUsedThisMonth || 0;
+
+        await updateDoc(userDocRef, {
+          'subscription.tokensUsedThisMonth': currentUsage + 1
+        });
+      }
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to increment token usage: ${errorMsg}`);
+    }
+  },
+
+  // Reset monthly token usage (should be called monthly)
+  async resetMonthlyTokenUsage(userId: string): Promise<void> {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, {
+        'subscription.tokensUsedThisMonth': 0
+      });
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to reset token usage: ${errorMsg}`);
+    }
+  },
+
+  // Update payment profile
+  async updatePaymentProfile(
+    userId: string,
+    paymentProfile: {
+      momoNumber: string;
+      isVerified: boolean;
+      isProfileComplete: boolean;
+      lastSuccessfulPayment?: Date;
+      totalFailedAttempts: number;
+      accountStatus: 'active' | 'suspended' | 'disabled';
+      billingDay: number;
+      nextBillingDate?: Date;
+    }
+  ): Promise<void> {
+    try {
+      await this.updateUserProfile(userId, { paymentProfile });
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update payment profile: ${errorMsg}`);
+    }
+  },
+
+  // Complete user profile after login
+  async completeUserProfile(
+    userId: string,
+    profileData: {
+      momoNumber: string;
+      selectedPlan: string;
+    }
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+      const paymentProfile = {
+        momoNumber: profileData.momoNumber,
+        isVerified: false, // Will be verified after first successful payment
+        isProfileComplete: true,
+        totalFailedAttempts: 0,
+        accountStatus: 'active' as const,
+        billingDay: now.getDate(),
+        nextBillingDate: nextMonth,
+      };
+
+      const subscription = {
+        planId: profileData.selectedPlan,
+        status: 'trialing' as const, // Start with trial until first payment
+        currentPeriodStart: now,
+        currentPeriodEnd: nextMonth,
+        tokensUsedThisMonth: 0,
+      };
+
+      await this.updateUserProfile(userId, {
+        paymentProfile,
+        subscription,
+      });
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to complete user profile: ${errorMsg}`);
+    }
+  },
+
+  // Update account status after payment attempt
+  async updateAccountStatus(
+    userId: string,
+    paymentSuccess: boolean,
+    referenceId?: string
+  ): Promise<void> {
+    try {
+      const userProfile = await this.getUserProfile(userId);
+      if (!userProfile?.paymentProfile) {
+        throw new Error('Payment profile not found');
+      }
+
+      const now = new Date();
+      let updates: any = {
+        'paymentProfile.lastSuccessfulPayment': paymentSuccess ? now : userProfile.paymentProfile.lastSuccessfulPayment,
+        'paymentProfile.totalFailedAttempts': paymentSuccess
+          ? 0
+          : userProfile.paymentProfile.totalFailedAttempts + 1,
+      };
+
+      // Update account status based on payment result
+      if (paymentSuccess) {
+        updates['paymentProfile.accountStatus'] = 'active';
+        updates['paymentProfile.isVerified'] = true;
+        updates['subscription.status'] = 'active';
+
+        // Set next billing date
+        const nextBilling = new Date(now.getFullYear(), now.getMonth() + 1, userProfile.paymentProfile.billingDay);
+        updates['paymentProfile.nextBillingDate'] = nextBilling;
+      } else {
+        // Suspend after 3 failed attempts
+        if (userProfile.paymentProfile.totalFailedAttempts + 1 >= 3) {
+          updates['paymentProfile.accountStatus'] = 'suspended';
+          updates['subscription.status'] = 'past_due';
+        }
+      }
+
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, updates);
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update account status: ${errorMsg}`);
+    }
+  },
+
+  // Check if user needs profile completion
+  async needsProfileCompletion(userId: string): Promise<boolean> {
+    try {
+      const userProfile = await this.getUserProfile(userId);
+      return !userProfile?.paymentProfile?.isProfileComplete;
+    } catch (error: unknown) {
+      console.error('Error checking profile completion:', error);
+      return true; // Default to requiring completion
+    }
+  },
+
+  // Get users due for billing (for monthly billing job)
+  async getUsersDueForBilling(): Promise<Array<{ userId: string; paymentProfile: any; subscription: any }>> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // This is a simplified version - in a real implementation,
+      // you'd query for users where nextBillingDate <= today
+      console.log('Getting users due for billing on:', today);
+
+      // For now, return empty array as this would require more complex Firestore queries
+      return [];
+    } catch (error: unknown) {
+      console.error('Error getting users due for billing:', error);
+      return [];
     }
   },
 };
