@@ -120,7 +120,10 @@ export const onAuthStateChange = (callback: (user: User | null) => void) => {
 
     if (firebaseUser) {
       try {
-        console.log('🔍 Getting user profile for Firebase user:', firebaseUser.uid);
+        console.log(
+          '🔍 Getting user profile for Firebase user:',
+          firebaseUser.uid
+        );
         const userProfile = await userService.getUserProfile(firebaseUser.uid);
 
         if (userProfile) {

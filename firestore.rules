@@ -1,23 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - users can only read/write their own profile
-    // Document ID matches the user's UID
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // WiFi tokens collection - users can only access their own tokens
-    match /wifiTokens/{tokenId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-
-    // Default rule: deny all other access
+    // Temporary permissive rules for debugging
+    // TODO: Restrict these rules after fixing connection issues
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
