@@ -1,5 +1,8 @@
+import AdminChatSupport from '@/components/AdminChatSupport';
 import AdminDashboard from '@/components/AdminDashboard';
+import { Button } from '@/components/ui/button';
 import { checkAdminAccess, getAdminRequirements } from '@/lib/adminAccess';
+import { MessageCircle, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +19,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ currentUser }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accessReason, setAccessReason] = useState('');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'support'>('dashboard');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,7 +65,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ currentUser }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
         <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Access Denied
+          </h1>
           <p className="text-gray-600 mb-4">
             You don't have permission to access the admin dashboard.
           </p>
@@ -108,7 +114,35 @@ const AdminPage: React.FC<AdminPageProps> = ({ currentUser }) => {
             <strong>✅ Admin Access Granted</strong> - {accessReason}
           </p>
         </div>
-        <AdminDashboard currentUser={currentUser} />
+
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+          <div className="flex space-x-2 border-b border-gray-200">
+            <Button
+              variant={currentView === 'dashboard' ? 'default' : 'ghost'}
+              onClick={() => setCurrentView('dashboard')}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Dashboard
+            </Button>
+            <Button
+              variant={currentView === 'support' ? 'default' : 'ghost'}
+              onClick={() => setCurrentView('support')}
+              className="flex items-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Support
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        {currentView === 'dashboard' ? (
+          <AdminDashboard currentUser={currentUser} />
+        ) : (
+          <AdminChatSupport currentUser={currentUser} />
+        )}
       </div>
     </div>
   );

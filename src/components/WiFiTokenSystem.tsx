@@ -39,7 +39,7 @@ import { PDFReportGenerator } from '@/lib/pdfGenerator';
 import { createSMSService } from '@/lib/smsService';
 import {
     createSubscriptionService,
-    UserSubscription
+    UserSubscription,
 } from '@/lib/subscription';
 import {
     AlertCircle,
@@ -499,15 +499,19 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     ).size;
 
     // Service breakdown - generate dynamically from pricing config
-    const serviceBreakdown = Object.keys(pricingConfig.prices).map(duration => ({
-      service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
-      count: 0,
-      revenue: 0,
-    }));
+    const serviceBreakdown = Object.keys(pricingConfig.prices).map(
+      duration => ({
+        service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
+        count: 0,
+        revenue: 0,
+      })
+    );
 
     periodTokens.forEach(token => {
-      const serviceItem = serviceBreakdown.find(item =>
-        item.service === `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
+      const serviceItem = serviceBreakdown.find(
+        item =>
+          item.service ===
+          `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
       );
       if (serviceItem) {
         serviceItem.count++;
@@ -516,7 +520,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     });
 
     // Payment method breakdown - generate dynamically from actual data
-    const paymentMethods = new Set(periodTokens.map(token => token.paymentMethod));
+    const paymentMethods = new Set(
+      periodTokens.map(token => token.paymentMethod)
+    );
     const paymentBreakdown = Array.from(paymentMethods).map(method => ({
       method: method === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
       count: 0,
@@ -524,9 +530,11 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     }));
 
     periodTokens.forEach(token => {
-      const methodItem = paymentBreakdown.find(item =>
-        (token.paymentMethod === 'mtn_momo' && item.method === 'MTN Mobile Money') ||
-        (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
+      const methodItem = paymentBreakdown.find(
+        item =>
+          (token.paymentMethod === 'mtn_momo' &&
+            item.method === 'MTN Mobile Money') ||
+          (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
       );
       if (methodItem) {
         methodItem.count++;
@@ -604,15 +612,19 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     ).size;
 
     // Service breakdown - generate dynamically from pricing config
-    const serviceBreakdown = Object.keys(pricingConfig.prices).map(duration => ({
-      service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
-      count: 0,
-      revenue: 0,
-    }));
+    const serviceBreakdown = Object.keys(pricingConfig.prices).map(
+      duration => ({
+        service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
+        count: 0,
+        revenue: 0,
+      })
+    );
 
     periodTokens.forEach(token => {
-      const serviceItem = serviceBreakdown.find(item =>
-        item.service === `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
+      const serviceItem = serviceBreakdown.find(
+        item =>
+          item.service ===
+          `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
       );
       if (serviceItem) {
         serviceItem.count++;
@@ -621,7 +633,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     });
 
     // Payment method breakdown - generate dynamically from actual data
-    const paymentMethods = new Set(periodTokens.map(token => token.paymentMethod));
+    const paymentMethods = new Set(
+      periodTokens.map(token => token.paymentMethod)
+    );
     const paymentBreakdown = Array.from(paymentMethods).map(method => ({
       method: method === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
       count: 0,
@@ -629,9 +643,11 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     }));
 
     periodTokens.forEach(token => {
-      const methodItem = paymentBreakdown.find(item =>
-        (token.paymentMethod === 'mtn_momo' && item.method === 'MTN Mobile Money') ||
-        (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
+      const methodItem = paymentBreakdown.find(
+        item =>
+          (token.paymentMethod === 'mtn_momo' &&
+            item.method === 'MTN Mobile Money') ||
+          (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
       );
       if (methodItem) {
         methodItem.count++;
@@ -807,8 +823,8 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
     // For existing configurations, allow password-only updates
     const isNewConfig = !wifiConfig.isConfigured;
     const hasRequiredFields = isNewConfig
-      ? (wifiConfig.ssid && wifiConfig.adminPassword)
-      : (wifiConfig.ssid || wifiConfig.adminPassword);
+      ? wifiConfig.ssid && wifiConfig.adminPassword
+      : wifiConfig.ssid || wifiConfig.adminPassword;
 
     if (hasRequiredFields) {
       try {
@@ -1043,8 +1059,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
         // Check if real SMS delivery is allowed
         const smsValidation = userSubscription
-          ? subscriptionService.validateAction(userSubscription, 'send_real_sms')
-          : { allowed: false, message: 'No subscription available - using simulation mode' };
+          ? subscriptionService.validateAction(
+              userSubscription,
+              'send_real_sms'
+            )
+          : {
+              allowed: false,
+              message: 'No subscription available - using simulation mode',
+            };
         const canSendRealSMS = smsValidation.allowed;
 
         try {
@@ -1240,7 +1262,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                               🔄 Network Configuration Update
                             </h5>
                             <p className="text-xs text-blue-700">
-                              Your WiFi network is already configured. You can update the password here if you've changed it on your Starlink router.
+                              Your WiFi network is already configured. You can
+                              update the password here if you've changed it on
+                              your Starlink router.
                             </p>
                           </div>
                         )}
@@ -1269,7 +1293,7 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                           <div className="relative">
                             <Input
                               id="adminPassword"
-                              type={showPassword ? "text" : "password"}
+                              type={showPassword ? 'text' : 'password'}
                               value={wifiConfig.adminPassword}
                               onChange={e =>
                                 setWifiConfig(prev => ({
@@ -1297,7 +1321,7 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                           <p className="text-xs text-gray-500 mt-1">
                             {wifiConfig.isConfigured
                               ? "Update this if you've changed your Starlink WiFi password"
-                              : "Enter your current Starlink WiFi password for router integration"}
+                              : 'Enter your current Starlink WiFi password for router integration'}
                           </p>
                         </div>
 
@@ -1309,22 +1333,37 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                             </h5>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">{t.networkName}:</span>
-                                <span className="text-sm font-medium text-gray-900">{wifiConfig.ssid}</span>
+                                <span className="text-sm text-gray-600">
+                                  {t.networkName}:
+                                </span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {wifiConfig.ssid}
+                                </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">{t.passwordSecured}:</span>
-                                <span className="text-sm font-mono text-gray-700">••••••••••••</span>
+                                <span className="text-sm text-gray-600">
+                                  {t.passwordSecured}:
+                                </span>
+                                <span className="text-sm font-mono text-gray-700">
+                                  ••••••••••••
+                                </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">{t.configurationStatus}:</span>
-                                <span className="text-sm font-medium text-green-700">{t.configured}</span>
+                                <span className="text-sm text-gray-600">
+                                  {t.configurationStatus}:
+                                </span>
+                                <span className="text-sm font-medium text-green-700">
+                                  {t.configured}
+                                </span>
                               </div>
                               {configLastUpdated && (
                                 <div className="flex justify-between items-center">
-                                  <span className="text-sm text-gray-600">{t.lastUpdated}:</span>
+                                  <span className="text-sm text-gray-600">
+                                    {t.lastUpdated}:
+                                  </span>
                                   <span className="text-sm text-gray-700">
-                                    {configLastUpdated.toLocaleDateString()} {configLastUpdated.toLocaleTimeString()}
+                                    {configLastUpdated.toLocaleDateString()}{' '}
+                                    {configLastUpdated.toLocaleTimeString()}
                                   </span>
                                 </div>
                               )}

@@ -1,4 +1,14 @@
-import { collection, doc, getDocs, orderBy, query, Timestamp, updateDoc, where, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface AdminUser {
@@ -26,7 +36,12 @@ export interface AdminUser {
 }
 
 export interface UserFilter {
-  subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'unpaid' | 'trialing';
+  subscriptionStatus?:
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'trialing';
   accountStatus?: 'active' | 'suspended' | 'disabled';
   planId?: string;
   hasPaymentProfile?: boolean;
@@ -37,7 +52,12 @@ export interface UserFilter {
 
 export interface BulkAction {
   userIds: string[];
-  action: 'suspend' | 'activate' | 'send_reminder' | 'reset_payment_attempts' | 'update_plan';
+  action:
+    | 'suspend'
+    | 'activate'
+    | 'send_reminder'
+    | 'reset_payment_attempts'
+    | 'update_plan';
   planId?: string;
   message?: string;
 }
@@ -50,17 +70,23 @@ export const adminService = {
 
       // Apply filters
       if (filters?.subscriptionStatus) {
-        q = query(q, where('subscription.status', '==', filters.subscriptionStatus));
+        q = query(
+          q,
+          where('subscription.status', '==', filters.subscriptionStatus)
+        );
       }
 
       if (filters?.accountStatus) {
-        q = query(q, where('paymentProfile.accountStatus', '==', filters.accountStatus));
+        q = query(
+          q,
+          where('paymentProfile.accountStatus', '==', filters.accountStatus)
+        );
       }
 
       const querySnapshot = await getDocs(q);
       const users: AdminUser[] = [];
 
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach(doc => {
         const data = doc.data();
         const user: AdminUser = {
           uid: doc.id,
@@ -99,7 +125,9 @@ export const adminService = {
           const lastPayment = user.paymentProfile?.lastSuccessfulPayment;
           if (!lastPayment) return false;
 
-          const daysSince = Math.floor((Date.now() - lastPayment.getTime()) / (1000 * 60 * 60 * 24));
+          const daysSince = Math.floor(
+            (Date.now() - lastPayment.getTime()) / (1000 * 60 * 60 * 24)
+          );
           if (daysSince < filters.daysSinceLastPayment) {
             return false;
           }
@@ -109,7 +137,9 @@ export const adminService = {
           const expiry = user.subscription?.currentPeriodEnd;
           if (!expiry) return false;
 
-          const daysUntil = Math.floor((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          const daysUntil = Math.floor(
+            (expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          );
           if (daysUntil > filters.daysUntilExpiry) {
             return false;
           }
@@ -144,14 +174,22 @@ export const adminService = {
   },
 
   // Get users due for reminders
-  async getUsersDueForReminders(daysBeforeExpiry: number = 7): Promise<AdminUser[]> {
+  async getUsersDueForReminders(
+    daysBeforeExpiry: number = 7
+  ): Promise<AdminUser[]> {
     const now = new Date();
-    const reminderDate = new Date(now.getTime() + daysBeforeExpiry * 24 * 60 * 60 * 1000);
+    const reminderDate = new Date(
+      now.getTime() + daysBeforeExpiry * 24 * 60 * 60 * 1000
+    );
     const users = await this.getAllUsers();
 
     return users.filter(user => {
       if (!user.subscription?.currentPeriodEnd) return false;
-      if (user.subscription.status !== 'active' && user.subscription.status !== 'trialing') return false;
+      if (
+        user.subscription.status !== 'active' &&
+        user.subscription.status !== 'trialing'
+      )
+        return false;
 
       const expiry = user.subscription.currentPeriodEnd;
       return expiry <= reminderDate && expiry > now;
@@ -159,7 +197,9 @@ export const adminService = {
   },
 
   // Bulk actions
-  async performBulkAction(action: BulkAction): Promise<{ success: number; failed: number }> {
+  async performBulkAction(
+    action: BulkAction
+  ): Promise<{ success: number; failed: number }> {
     const batch = writeBatch(db);
     let success = 0;
     let failed = 0;
@@ -172,27 +212,27 @@ export const adminService = {
           case 'suspend':
             batch.update(userRef, {
               'paymentProfile.accountStatus': 'suspended',
-              'subscription.status': 'past_due'
+              'subscription.status': 'past_due',
             });
             break;
 
           case 'activate':
             batch.update(userRef, {
               'paymentProfile.accountStatus': 'active',
-              'subscription.status': 'active'
+              'subscription.status': 'active',
             });
             break;
 
           case 'reset_payment_attempts':
             batch.update(userRef, {
-              'paymentProfile.totalFailedAttempts': 0
+              'paymentProfile.totalFailedAttempts': 0,
             });
             break;
 
           case 'update_plan':
             if (action.planId) {
               batch.update(userRef, {
-                'subscription.planId': action.planId
+                'subscription.planId': action.planId,
               });
             }
             break;
@@ -200,7 +240,9 @@ export const adminService = {
           case 'send_reminder':
             // This would integrate with your SMS service
             // For now, we'll just log it
-            console.log(`Sending reminder to user ${userId}: ${action.message}`);
+            console.log(
+              `Sending reminder to user ${userId}: ${action.message}`
+            );
             break;
         }
       }
@@ -224,7 +266,7 @@ export const adminService = {
       // Update user record to track reminder sent
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        'lastReminderSent': Timestamp.now()
+        lastReminderSent: Timestamp.now(),
       });
 
       return true;
@@ -248,9 +290,16 @@ export const adminService = {
 
     return {
       total: users.length,
-      active: users.filter(u => u.paymentProfile?.accountStatus === 'active').length,
-      suspended: users.filter(u => u.paymentProfile?.accountStatus === 'suspended').length,
-      expired: users.filter(u => u.subscription?.currentPeriodEnd && u.subscription.currentPeriodEnd < new Date()).length,
+      active: users.filter(u => u.paymentProfile?.accountStatus === 'active')
+        .length,
+      suspended: users.filter(
+        u => u.paymentProfile?.accountStatus === 'suspended'
+      ).length,
+      expired: users.filter(
+        u =>
+          u.subscription?.currentPeriodEnd &&
+          u.subscription.currentPeriodEnd < new Date()
+      ).length,
       trialing: users.filter(u => u.subscription?.status === 'trialing').length,
       withPaymentProfile: users.filter(u => !!u.paymentProfile).length,
       verified: users.filter(u => u.paymentProfile?.isVerified).length,
@@ -265,16 +314,16 @@ export const adminService = {
     averageRevenuePerUser: number;
   }> {
     const users = await this.getAllUsers({
-      subscriptionStatus: 'active'
+      subscriptionStatus: 'active',
     });
 
     // This is a simplified calculation - in a real app you'd track actual payments
     const totalRevenue = users.reduce((sum, user) => {
       const plan = user.subscription?.planId;
       const planPrices: { [key: string]: number } = {
-        'basic': 10,
-        'pro': 25,
-        'enterprise': 50
+        basic: 10,
+        pro: 25,
+        enterprise: 50,
       };
       return sum + (planPrices[plan || 'free'] || 0);
     }, 0);
@@ -285,5 +334,5 @@ export const adminService = {
       activeSubscriptions: users.length,
       averageRevenuePerUser: users.length > 0 ? totalRevenue / users.length : 0,
     };
-  }
+  },
 };

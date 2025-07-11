@@ -23,7 +23,6 @@
     "a11y-check": "echo 'Accessibility check completed - implement with @axe-core/cli'",
     "perf-check": "echo 'Performance check completed - implement with lighthouse-ci'",
     "pre-commit": "npm run lint && npm run type-check && npm run format:check",
-
     "validate-rules": "node scripts/validate-cursor-rules.js",
     "postbuild": "echo 'Build completed successfully!'"
   },

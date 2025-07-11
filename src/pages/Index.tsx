@@ -1,10 +1,11 @@
 import BillingDashboard from '@/components/BillingDashboard';
-import LanguageSelector from '@/components/LanguageSelector';
+import CustomerSupport from '@/components/CustomerSupport';
+import MobileFooter from '@/components/MobileFooter';
+import NotificationTest from '@/components/NotificationTest';
 import ProfileCompletion from '@/components/ProfileCompletion';
 import WiFiTokenSystem from '@/components/WiFiTokenSystem';
 import { Button } from '@/components/ui/button';
 import { UserProfile, userService } from '@/lib/firebase';
-import { CreditCard, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 interface IndexProps {
@@ -21,6 +22,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   const [language, setLanguage] = useState('en');
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
   const [showBilling, setShowBilling] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,11 +30,13 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
     en: {
       logout: 'Logout',
       billing: 'Billing',
+      support: 'Support',
       loadingProfile: 'Loading profile...',
     },
     ar: {
       logout: 'تسجيل الخروج',
       billing: 'الفواتير',
+      support: 'الدعم',
       loadingProfile: 'جاري تحميل الملف الشخصي...',
     },
   };
@@ -70,6 +74,18 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
       checkProfileCompletion();
     }
   }, [currentUser, checkProfileCompletion]);
+
+  // Listen for support button clicks from WiFiTokenSystem
+  useEffect(() => {
+    const handleSupportClick = () => {
+      setShowSupport(true);
+    };
+
+    window.addEventListener('openSupport', handleSupportClick);
+    return () => {
+      window.removeEventListener('openSupport', handleSupportClick);
+    };
+  }, []);
 
   const handleProfileCompleted = () => {
     setNeedsProfileCompletion(false);
@@ -129,18 +145,55 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
           />
         </div>
 
-        {/* Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <LanguageSelector language={language} setLanguage={setLanguage} />
-              <Button variant="outline" size="sm" onClick={onLogout}>
-                <LogOut className="h-4 w-4 mr-1" />
-                {t.logout}
+        {/* Mobile-Optimized Footer */}
+        <MobileFooter
+          language={language}
+          setLanguage={setLanguage}
+          currentUser={currentUser}
+          onLogout={onLogout}
+          onSupportClick={() => setShowSupport(true)}
+          onBillingClick={() => setShowBilling(true)}
+          showBillingButton={!!userProfile?.paymentProfile}
+        />
+      </div>
+    );
+  }
+
+  // Show support page if requested
+  if (showSupport && currentUser) {
+    return (
+      <div
+        className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ${language === 'ar' ? 'rtl' : 'ltr'} pb-20`}
+      >
+        <div className="container mx-auto p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowSupport(false)}
+                className="flex items-center gap-2"
+              >
+                ← Back to Dashboard
               </Button>
+              <h1 className="text-2xl font-bold">Customer Support</h1>
             </div>
           </div>
+
+          {/* Customer Support */}
+          <CustomerSupport currentUser={currentUser} />
         </div>
+
+        {/* Mobile-Optimized Footer */}
+        <MobileFooter
+          language={language}
+          setLanguage={setLanguage}
+          currentUser={currentUser}
+          onLogout={onLogout}
+          onSupportClick={() => setShowSupport(true)}
+          onBillingClick={() => setShowBilling(true)}
+          showBillingButton={!!userProfile?.paymentProfile}
+        />
       </div>
     );
   }
@@ -152,41 +205,25 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
       <div className="container mx-auto p-4">
         {/* WiFi Token Management System - Main Content */}
         <WiFiTokenSystem language={language} currentUser={currentUser} />
-      </div>
 
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Language Selector */}
-            <div className="flex items-center gap-2">
-              <LanguageSelector language={language} setLanguage={setLanguage} />
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Billing Button */}
-              {currentUser && userProfile?.paymentProfile && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBilling(true)}
-                >
-                  <CreditCard className="h-4 w-4 mr-1" />
-                  {t.billing}
-                </Button>
-              )}
-
-              {/* Logout Button */}
-              {currentUser && (
-                <Button variant="outline" size="sm" onClick={onLogout}>
-                  <LogOut className="h-4 w-4 mr-1" />
-                  {t.logout}
-                </Button>
-              )}
-            </div>
+        {/* Temporary Notification Test */}
+        {currentUser && (
+          <div className="mt-6">
+            <NotificationTest currentUser={currentUser} />
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Mobile-Optimized Footer */}
+      <MobileFooter
+        language={language}
+        setLanguage={setLanguage}
+        currentUser={currentUser}
+        onLogout={onLogout}
+        onSupportClick={() => setShowSupport(true)}
+        onBillingClick={() => setShowBilling(true)}
+        showBillingButton={!!userProfile?.paymentProfile}
+      />
     </div>
   );
 };

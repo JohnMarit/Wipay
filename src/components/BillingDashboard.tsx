@@ -1,59 +1,59 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { userService } from '@/lib/firebase';
 import {
-    createBillingManager,
-    createMTNMomoService,
+  createBillingManager,
+  createMTNMomoService,
 } from '@/lib/mtnMomoService';
 import {
-    createSubscriptionService,
-    SUBSCRIPTION_PLANS,
+  createSubscriptionService,
+  SUBSCRIPTION_PLANS,
 } from '@/lib/subscription';
 import {
-    AlertTriangle,
-    ArrowUp,
-    Calendar,
-    Check,
-    CheckCircle,
-    CreditCard,
-    Crown,
-    RefreshCw,
-    Smartphone,
-    Star,
-    TrendingUp,
-    User,
-    Wifi,
-    X,
-    XCircle,
-    Zap,
+  AlertTriangle,
+  ArrowUp,
+  Calendar,
+  Check,
+  CheckCircle,
+  CreditCard,
+  Crown,
+  RefreshCw,
+  Smartphone,
+  Star,
+  TrendingUp,
+  User,
+  Wifi,
+  X,
+  XCircle,
+  Zap,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 

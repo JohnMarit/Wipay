@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,12 +16,12 @@ import { onAuthStateChange, signInWithGoogle, signOutUser } from '@/lib/auth';
 import { authService } from '@/lib/firebase';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-    AlertTriangle,
-    Eye,
-    EyeOff,
-    LogIn,
-    UserPlus,
-    Wifi,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  Wifi,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';

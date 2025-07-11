@@ -1,9 +1,18 @@
 import { userService } from './firebase';
 
+export interface UserProfile {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  createdAt?: Date | string;
+  // Add other relevant fields from your user profile as optional
+}
+
 export interface AdminAccessResult {
   isAdmin: boolean;
   reason: string;
-  userProfile?: any;
+  userProfile?: UserProfile;
 }
 
 /**
@@ -23,26 +32,31 @@ export const checkAdminAccess = async (currentUser: {
     if (!userProfile) {
       return {
         isAdmin: false,
-        reason: 'User profile not found'
+        reason: 'User profile not found',
       };
     }
 
     // Admin access criteria
-    const emailContainsAdmin = currentUser.email.toLowerCase().includes('admin');
+    const emailContainsAdmin = currentUser.email
+      .toLowerCase()
+      .includes('admin');
     const hasAdminRole = currentUser.role === 'admin';
 
     // Check if this is the first user (created more than 24 hours ago)
-    const isFirstUser = userProfile.createdAt &&
-      new Date(userProfile.createdAt).getTime() < Date.now() - (24 * 60 * 60 * 1000);
+    const isFirstUser =
+      userProfile.createdAt &&
+      new Date(userProfile.createdAt).getTime() <
+        Date.now() - 24 * 60 * 60 * 1000;
 
     // Development mode: allow any user with "admin" in email
-    const isDevelopmentAdmin = process.env.NODE_ENV === 'development' && emailContainsAdmin;
+    const isDevelopmentAdmin =
+      process.env.NODE_ENV === 'development' && emailContainsAdmin;
 
     if (emailContainsAdmin) {
       return {
         isAdmin: true,
         reason: 'Email contains "admin"',
-        userProfile
+        userProfile,
       };
     }
 
@@ -50,7 +64,7 @@ export const checkAdminAccess = async (currentUser: {
       return {
         isAdmin: true,
         reason: 'User has admin role',
-        userProfile
+        userProfile,
       };
     }
 
@@ -58,7 +72,7 @@ export const checkAdminAccess = async (currentUser: {
       return {
         isAdmin: true,
         reason: 'First user in system',
-        userProfile
+        userProfile,
       };
     }
 
@@ -66,21 +80,20 @@ export const checkAdminAccess = async (currentUser: {
       return {
         isAdmin: true,
         reason: 'Development admin access',
-        userProfile
+        userProfile,
       };
     }
 
     return {
       isAdmin: false,
       reason: 'No admin criteria met',
-      userProfile
+      userProfile,
     };
-
   } catch (error) {
     console.error('Error checking admin access:', error);
     return {
       isAdmin: false,
-      reason: 'Error checking admin access'
+      reason: 'Error checking admin access',
     };
   }
 };
@@ -93,7 +106,7 @@ export const getAdminRequirements = () => {
     'Email contains "admin" (e.g., admin@wipay.com)',
     'User role is set to "admin"',
     'First user in the system (created more than 24 hours ago)',
-    'Development mode: any user with "admin" in email'
+    'Development mode: any user with "admin" in email',
   ];
 };
 
@@ -113,6 +126,6 @@ export const getSuggestedAdminEmails = (): string[] => {
     'admin@example.com',
     'john.admin@gmail.com',
     'admin.user@company.com',
-    'system.admin@wipay.com'
+    'system.admin@wipay.com',
   ];
 };
