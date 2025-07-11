@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,12 +16,12 @@ import { onAuthStateChange, signOutUser } from '@/lib/auth';
 import { authService } from '@/lib/firebase';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-    AlertTriangle,
-    Eye,
-    EyeOff,
-    LogIn,
-    UserPlus,
-    Wifi,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  Wifi,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -627,7 +627,8 @@ const App = () => {
 
       // Handle specific Firebase errors
       if (errorMsg.includes('auth/operation-not-allowed')) {
-        errorMessage = 'Email/Password authentication is not enabled. Please contact support.';
+        errorMessage =
+          'Email/Password authentication is not enabled. Please contact support.';
       } else if (errorMsg.includes('auth/user-not-found')) {
         errorMessage = t.loginError;
       } else if (errorMsg.includes('auth/wrong-password')) {
@@ -635,7 +636,8 @@ const App = () => {
       } else if (errorMsg.includes('auth/invalid-email')) {
         errorMessage = 'Please enter a valid email address.';
       } else if (errorMsg.includes('auth/user-disabled')) {
-        errorMessage = 'This account has been disabled. Please contact support.';
+        errorMessage =
+          'This account has been disabled. Please contact support.';
       } else if (errorMsg.includes('auth/network-request-failed')) {
         errorMessage = t.networkError;
       } else if (errorMsg.includes('auth/too-many-requests')) {
@@ -699,7 +701,7 @@ const App = () => {
         email: signupForm.email,
         name: signupForm.name,
         phone: signupForm.phone,
-        passwordLength: signupForm.password.length
+        passwordLength: signupForm.password.length,
       });
 
       // Create new user with Firebase
@@ -737,7 +739,8 @@ const App = () => {
 
       // Handle specific Firebase errors
       if (errorMsg.includes('auth/operation-not-allowed')) {
-        errorMessage = 'Email/Password authentication is not enabled. Please contact support.';
+        errorMessage =
+          'Email/Password authentication is not enabled. Please contact support.';
       } else if (errorMsg.includes('auth/email-already-in-use')) {
         errorMessage = t.usernameExists;
       } else if (errorMsg.includes('auth/weak-password')) {

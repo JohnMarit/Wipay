@@ -1,46 +1,50 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
+import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User,
+    createUserWithEmailAndPassword,
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+    User,
 } from 'firebase/auth';
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  updateDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  Timestamp,
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    getFirestore,
+    onSnapshot,
+    orderBy,
+    query,
+    Timestamp,
+    updateDoc,
+    where,
 } from 'firebase/firestore';
 
 // Firebase configuration - uses environment variables for security
+//
+// IMPORTANT: Replace the default values below with your own Firebase project configuration
+// Get your config from: Firebase Console → Project Settings → General → Your apps → Web app
+//
 const firebaseConfig = {
   apiKey:
     import.meta.env.VITE_FIREBASE_API_KEY ||
-    'AIzaSyCwXrQL5Ou1Iu14IAG8g9wb5PZXxBh3O0Q',
+    'YOUR_API_KEY_HERE', // Replace with your Firebase API key
   authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'wipay-sdd.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'wipay-sdd',
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com', // Replace with your project domain
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id', // Replace with your project ID
   storageBucket:
     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    'wipay-sdd.firebasestorage.app',
+    'your-project.firebasestorage.app', // Replace with your storage bucket
   messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '986637401531',
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID', // Replace with your sender ID
   appId:
     import.meta.env.VITE_FIREBASE_APP_ID ||
-    '1:986637401531:web:747b410f0f36734f00189e',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-K2S1TXMG7T',
+    'YOUR_APP_ID', // Replace with your app ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Replace with your measurement ID (optional)
 };
 
 // Initialize Firebase
@@ -374,5 +378,5 @@ export const trackEvent = (
   }
 };
 
-export { auth, db, analytics };
+export { analytics, auth, db };
 export default app;
