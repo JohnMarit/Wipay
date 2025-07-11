@@ -197,11 +197,15 @@ export class WipayDatabase extends Dexie {
 
     // Define schemas
     this.version(1).stores({
-      customers: '++id, customerCode, name, email, phone, location, status, createdAt',
-      services: '++id, customerId, serviceType, planName, speed, price, status, activatedAt',
-      payments: '++id, customerId, amount, method, reference, status, createdAt',
+      customers:
+        '++id, customerCode, name, email, phone, location, status, createdAt',
+      services:
+        '++id, customerId, serviceType, planName, speed, price, status, activatedAt',
+      payments:
+        '++id, customerId, amount, method, reference, status, createdAt',
       bills: '++id, customerId, billNumber, amount, dueDate, status, createdAt',
-      tickets: '++id, customerId, title, priority, status, createdAt, assignedTo'
+      tickets:
+        '++id, customerId, title, priority, status, createdAt, assignedTo',
     });
   }
 
@@ -218,7 +222,10 @@ export class WipayDatabase extends Dexie {
     return await this.customers.get(id);
   }
 
-  async updateCustomer(id: number, changes: Partial<Customer>): Promise<number> {
+  async updateCustomer(
+    id: number,
+    changes: Partial<Customer>
+  ): Promise<number> {
     return await this.customers.update(id, changes);
   }
 
@@ -248,7 +255,10 @@ export class WipayDatabase extends Dexie {
     return await this.payments.where('customerId').equals(customerId).toArray();
   }
 
-  async getPaymentsByDateRange(startDate: Date, endDate: Date): Promise<Payment[]> {
+  async getPaymentsByDateRange(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Payment[]> {
     return await this.payments
       .where('createdAt')
       .between(startDate, endDate)
@@ -299,10 +309,21 @@ export class WipayDatabase extends Dexie {
   }
 
   async getMonthlyRevenue(): Promise<number> {
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0
+    );
 
-    const payments = await this.getPaymentsByDateRange(startOfMonth, endOfMonth);
+    const payments = await this.getPaymentsByDateRange(
+      startOfMonth,
+      endOfMonth
+    );
     return payments
       .filter(payment => payment.status === 'completed')
       .reduce((total, payment) => total + payment.amount, 0);
@@ -320,7 +341,7 @@ export class WipayDatabase extends Dexie {
       this.services.toArray(),
       this.payments.toArray(),
       this.bills.toArray(),
-      this.tickets.toArray()
+      this.tickets.toArray(),
     ]);
 
     return {
@@ -329,37 +350,46 @@ export class WipayDatabase extends Dexie {
       payments,
       bills,
       tickets,
-      exportDate: new Date()
+      exportDate: new Date(),
     };
   }
 
   async importData(data: DatabaseExport): Promise<void> {
-    await this.transaction('rw', this.customers, this.services, this.payments, this.bills, this.tickets, async () => {
-      // Clear existing data
-      await this.customers.clear();
-      await this.services.clear();
-      await this.payments.clear();
-      await this.bills.clear();
-      await this.tickets.clear();
+    await this.transaction(
+      'rw',
+      this.customers,
+      this.services,
+      this.payments,
+      this.bills,
+      this.tickets,
+      async () => {
+        // Clear existing data
+        await this.customers.clear();
+        await this.services.clear();
+        await this.payments.clear();
+        await this.bills.clear();
+        await this.tickets.clear();
 
-      // Import new data
-      await this.customers.bulkAdd(data.customers);
-      await this.services.bulkAdd(data.services);
-      await this.payments.bulkAdd(data.payments);
-      await this.bills.bulkAdd(data.bills);
-      await this.tickets.bulkAdd(data.tickets);
-    });
+        // Import new data
+        await this.customers.bulkAdd(data.customers);
+        await this.services.bulkAdd(data.services);
+        await this.payments.bulkAdd(data.payments);
+        await this.bills.bulkAdd(data.bills);
+        await this.tickets.bulkAdd(data.tickets);
+      }
+    );
   }
 
   // Search methods
   async searchCustomers(query: string): Promise<Customer[]> {
     const lowerQuery = query.toLowerCase();
     return await this.customers
-      .filter(customer =>
-        customer.name.toLowerCase().includes(lowerQuery) ||
-        customer.email.toLowerCase().includes(lowerQuery) ||
-        customer.phone.includes(query) ||
-        customer.customerCode.toLowerCase().includes(lowerQuery)
+      .filter(
+        customer =>
+          customer.name.toLowerCase().includes(lowerQuery) ||
+          customer.email.toLowerCase().includes(lowerQuery) ||
+          customer.phone.includes(query) ||
+          customer.customerCode.toLowerCase().includes(lowerQuery)
       )
       .toArray();
   }
@@ -368,7 +398,7 @@ export class WipayDatabase extends Dexie {
     const [recentPayments, recentBills, recentTickets] = await Promise.all([
       this.payments.orderBy('createdAt').reverse().limit(limit).toArray(),
       this.bills.orderBy('createdAt').reverse().limit(limit).toArray(),
-      this.tickets.orderBy('createdAt').reverse().limit(limit).toArray()
+      this.tickets.orderBy('createdAt').reverse().limit(limit).toArray(),
     ]);
 
     const activities: ActivityItem[] = [
@@ -377,22 +407,22 @@ export class WipayDatabase extends Dexie {
         type: 'payment' as const,
         description: `Payment of ${payment.amount} SSP via ${payment.method}`,
         date: payment.createdAt,
-        customerId: payment.customerId
+        customerId: payment.customerId,
       })),
       ...recentBills.map(bill => ({
         id: `bill-${bill.id}`,
         type: 'bill' as const,
         description: `Bill ${bill.billNumber} generated for ${bill.amount} SSP`,
         date: bill.createdAt,
-        customerId: bill.customerId
+        customerId: bill.customerId,
       })),
       ...recentTickets.map(ticket => ({
         id: `ticket-${ticket.id}`,
         type: 'ticket' as const,
         description: `Ticket created: ${ticket.title}`,
         date: ticket.createdAt,
-        customerId: ticket.customerId
-      }))
+        customerId: ticket.customerId,
+      })),
     ];
 
     return activities

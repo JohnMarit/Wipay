@@ -7,29 +7,24 @@ import ServiceManagement from '@/components/ServiceManagement';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-    AlertTriangle,
-    BarChart3,
-    Bell,
-    CreditCard,
-    DollarSign,
-    Globe,
-    LogOut,
-    Receipt,
-    Settings,
-    TrendingUp,
-    UserPlus,
-    Users,
-    Wifi,
-    WifiOff,
-    Wrench
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  CreditCard,
+  DollarSign,
+  Globe,
+  LogOut,
+  Receipt,
+  Settings,
+  TrendingUp,
+  UserPlus,
+  Users,
+  Wifi,
+  WifiOff,
+  Wrench,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

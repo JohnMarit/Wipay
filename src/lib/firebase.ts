@@ -2,46 +2,52 @@
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import {
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  User,
+    createUserWithEmailAndPassword,
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+    User,
 } from 'firebase/auth';
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  getFirestore,
-  onSnapshot,
-  orderBy,
-  query,
-  Timestamp,
-  updateDoc,
-  where,
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    getFirestore,
+    onSnapshot,
+    orderBy,
+    query,
+    Timestamp,
+    updateDoc,
+    where,
 } from 'firebase/firestore';
 
 // Firebase configuration - uses environment variables for security
 //
-// IMPORTANT: Replace the default values below with your own Firebase project configuration
-// Get your config from: Firebase Console → Project Settings → General → Your apps → Web app
+// 🚨 URGENT: Replace the values below with YOUR actual Firebase project configuration
+//
+// To get your config:
+// 1. Go to https://console.firebase.google.com
+// 2. Select your project (or create one named "wipay-yourname")
+// 3. Click Settings ⚙️ → Project settings
+// 4. Scroll to "Your apps" → Click Web app icon </>
+// 5. Copy the firebaseConfig object and replace the values below
 //
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'YOUR_API_KEY_HERE', // Replace with your Firebase API key
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'REPLACE_WITH_YOUR_API_KEY', // 🔴 Replace this
   authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com', // Replace with your project domain
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id', // Replace with your project ID
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com', // 🔴 Replace this
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id', // 🔴 Replace this
   storageBucket:
     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    'your-project.firebasestorage.app', // Replace with your storage bucket
+    'your-project.firebasestorage.app', // 🔴 Replace this
   messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID', // Replace with your sender ID
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID', // Replace with your app ID
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID', // 🔴 Replace this
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID', // 🔴 Replace this
   measurementId:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Replace with your measurement ID (optional)
+    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Optional
 };
 
 // Initialize Firebase
