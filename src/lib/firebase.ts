@@ -2,26 +2,26 @@
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import {
-    createUserWithEmailAndPassword,
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    signOut,
-    User,
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  User,
 } from 'firebase/auth';
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    getFirestore,
-    onSnapshot,
-    orderBy,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 
 // Firebase configuration - uses environment variables for security
@@ -32,7 +32,9 @@ import {
 // Domain: wipay-john.firebaseapp.com
 //
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBL_qAkFLrWp0NIhJ-dmRHDqMvz1B8iSMA',
+  apiKey:
+    import.meta.env.VITE_FIREBASE_API_KEY ||
+    'AIzaSyBL_qAkFLrWp0NIhJ-dmRHDqMvz1B8iSMA',
   authDomain:
     import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'wipay-john.firebaseapp.com',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'wipay-john',
@@ -41,9 +43,10 @@ const firebaseConfig = {
     'wipay-john.firebasestorage.app',
   messagingSenderId:
     import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '633048699728',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:633048699728:web:29233b4a8e99d2fb581255',
-  measurementId:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XXXXXXXXXX', // Optional
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    '1:633048699728:web:29233b4a8e99d2fb581255',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XXXXXXXXXX', // Optional
 };
 
 // Initialize Firebase
