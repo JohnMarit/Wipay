@@ -1,25 +1,14 @@
-import BillingModule from '@/components/BillingModule';
-import CustomerManagement from '@/components/CustomerManagement';
 import LanguageSelector from '@/components/LanguageSelector';
-import PaymentTracking from '@/components/PaymentTracking';
-import ReportsAnalytics from '@/components/ReportsAnalytics';
-import ServiceManagement from '@/components/ServiceManagement';
 import WiFiTokenSystem from '@/components/WiFiTokenSystem';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  AlertTriangle,
-  BarChart3,
-  CreditCard,
-  Globe,
-  LogOut,
-  Receipt,
-  TrendingUp,
-  Users,
-  Wifi,
-  WifiOff,
+    AlertTriangle,
+    Globe,
+    LogOut,
+    Wifi,
+    WifiOff,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -34,7 +23,6 @@ interface IndexProps {
 }
 
 const Index = ({ currentUser, onLogout }: IndexProps) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [language, setLanguage] = useState('en');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -59,12 +47,6 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   const translations = {
     en: {
       title: 'Wipay',
-      dashboard: 'Dashboard',
-      customers: 'Customers',
-      billing: 'Billing',
-      services: 'Services',
-      payments: 'Payments',
-      reports: 'Reports',
       offlineMode: 'Offline Mode',
       onlineStatus: 'Online',
       lastSync: 'Last Sync',
@@ -73,12 +55,6 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
     },
     ar: {
       title: 'Wipay',
-      dashboard: 'لوحة التحكم',
-      customers: 'العملاء',
-      billing: 'الفواتير',
-      services: 'الخدمات',
-      payments: 'المدفوعات',
-      reports: 'التقارير',
       offlineMode: 'وضع عدم الاتصال',
       onlineStatus: 'متصل',
       lastSync: 'آخر مزامنة',
@@ -169,59 +145,12 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              {t.dashboard}
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {t.customers}
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              {t.billing}
-            </TabsTrigger>
-            <TabsTrigger value="services" className="flex items-center gap-2">
-              <Wifi className="h-4 w-4" />
-              {t.services}
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              {t.payments}
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              {t.reports}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Enhanced Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
-            <WiFiTokenSystem language={language} />
-          </TabsContent>
-
-          <TabsContent value="customers">
-            <CustomerManagement language={language} />
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <BillingModule language={language} />
-          </TabsContent>
-
-          <TabsContent value="services">
-            <ServiceManagement language={language} />
-          </TabsContent>
-
-          <TabsContent value="payments">
-            <PaymentTracking language={language} />
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <ReportsAnalytics language={language} />
-          </TabsContent>
-        </Tabs>
+        {/* WiFi Token Management System - Original Dashboard */}
+        <WiFiTokenSystem
+          language={language}
+          currentUser={currentUser}
+          onLogout={onLogout}
+        />
       </div>
     </div>
   );

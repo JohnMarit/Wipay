@@ -1,59 +1,58 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { tokenService, UserProfile, userService } from '@/lib/firebase';
 import { PDFReportGenerator } from '@/lib/pdfGenerator';
 import {
-  AlertCircle,
-  Banknote,
-  BarChart3,
-  Calendar,
-  CalendarDays,
-  Clock,
-  DollarSign,
-  FileText,
-  History,
-  LogOut,
-  Plus,
-  QrCode,
-  Send,
-  Settings,
-  Smartphone,
-  User,
-  Wifi,
+    AlertCircle,
+    Banknote,
+    BarChart3,
+    Calendar,
+    CalendarDays,
+    Clock,
+    DollarSign,
+    FileText,
+    History,
+    Plus,
+    QrCode,
+    Send,
+    Settings,
+    Smartphone,
+    User,
+    Wifi
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -1286,13 +1285,7 @@ const WiFiTokenSystem = ({
                   </DialogContent>
                 </Dialog>
 
-                {/* Logout Button */}
-                {onLogout && (
-                  <Button variant="outline" onClick={onLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t.logout}
-                  </Button>
-                )}
+
               </div>
             </div>
           </CardHeader>
