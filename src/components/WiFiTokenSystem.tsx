@@ -1,66 +1,65 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Wifi,
-  Smartphone,
-  Banknote,
-  Clock,
-  Send,
-  Settings,
-  History,
-  Plus,
-  QrCode,
-  LogOut,
-  User,
-  AlertCircle,
-  DollarSign,
-  FileText,
-  Calendar,
-  BarChart3,
-  CalendarDays,
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    tokenService,
+    UserProfile,
+    userService
+} from '@/lib/firebase';
 import { PDFReportGenerator } from '@/lib/pdfGenerator';
 import {
-  tokenService,
-  userService,
-  WiFiToken as FirebaseWiFiToken,
-  UserProfile,
-} from '@/lib/firebase';
+    AlertCircle,
+    Banknote,
+    BarChart3,
+    Calendar,
+    CalendarDays,
+    Clock,
+    DollarSign,
+    FileText,
+    History,
+    LogOut,
+    Plus,
+    QrCode,
+    Send,
+    Settings,
+    Smartphone,
+    User,
+    Wifi,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface WiFiTokenSystemProps {
   language: string;
@@ -1057,9 +1056,7 @@ const WiFiTokenSystem = ({
                               <SelectValue placeholder={t.selectCurrency} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="SSP">
-                                South Sudanese Pound (SSP)
-                              </SelectItem>
+                              <SelectItem value="SSP">SSP</SelectItem>
                               <SelectItem value="USD">
                                 US Dollar (USD)
                               </SelectItem>

@@ -184,202 +184,222 @@ export interface NotificationLog {
 }
 
 // Database class
-export class ISPDatabase extends Dexie {
+export class WipayDatabase extends Dexie {
+  // Define tables
   customers!: Table<Customer>;
-  invoices!: Table<Invoice>;
+  services!: Table<Service>;
   payments!: Table<Payment>;
-  servicePlans!: Table<ServicePlan>;
-  equipment!: Table<Equipment>;
-  serviceRequests!: Table<ServiceRequest>;
-  usageRecords!: Table<UsageRecord>;
-  notificationLogs!: Table<NotificationLog>;
+  bills!: Table<Bill>;
+  tickets!: Table<Ticket>;
 
   constructor() {
-    super('ISPBillingDB');
+    super('WipayBillingDB');
 
+    // Define schemas
     this.version(1).stores({
-      customers:
-        '++id, customerId, name, phone, email, status, planType, syncStatus, updatedAt',
-      invoices:
-        '++id, invoiceId, customerId, status, dueDate, syncStatus, updatedAt',
-      payments:
-        '++id, paymentId, customerId, invoiceId, method, status, date, syncStatus, updatedAt',
-      servicePlans: '++id, planId, name, isActive, price',
-      equipment:
-        '++id, equipmentId, type, serialNumber, status, customerId, syncStatus, updatedAt',
-      serviceRequests:
-        '++id, requestId, customerId, type, status, assignedTechnician, syncStatus, updatedAt',
-      usageRecords: '++id, customerId, month, year, syncStatus, updatedAt',
-      notificationLogs: '++id, customerId, type, category, sentDate, status',
+      customers: '++id, customerCode, name, email, phone, location, status, createdAt',
+      services: '++id, customerId, serviceType, planName, speed, price, status, activatedAt',
+      payments: '++id, customerId, amount, method, reference, status, createdAt',
+      bills: '++id, customerId, billNumber, amount, dueDate, status, createdAt',
+      tickets: '++id, customerId, title, priority, status, createdAt, assignedTo'
     });
   }
 
-  // Sync methods for offline capability
-  async getUnsyncedRecords(): Promise<{
-    customers: Customer[];
-    invoices: Invoice[];
-    payments: Payment[];
-    equipment: Equipment[];
-    serviceRequests: ServiceRequest[];
-    usageRecords: UsageRecord[];
-  }> {
+  // Customer methods
+  async addCustomer(customer: Omit<Customer, 'id'>): Promise<number> {
+    return await this.customers.add(customer);
+  }
+
+  async getCustomers(): Promise<Customer[]> {
+    return await this.customers.toArray();
+  }
+
+  async getCustomerById(id: number): Promise<Customer | undefined> {
+    return await this.customers.get(id);
+  }
+
+  async updateCustomer(id: number, changes: Partial<Customer>): Promise<number> {
+    return await this.customers.update(id, changes);
+  }
+
+  async deleteCustomer(id: number): Promise<void> {
+    await this.customers.delete(id);
+  }
+
+  // Service methods
+  async addService(service: Omit<Service, 'id'>): Promise<number> {
+    return await this.services.add(service);
+  }
+
+  async getServicesByCustomer(customerId: number): Promise<Service[]> {
+    return await this.services.where('customerId').equals(customerId).toArray();
+  }
+
+  async updateService(id: number, changes: Partial<Service>): Promise<number> {
+    return await this.services.update(id, changes);
+  }
+
+  // Payment methods
+  async addPayment(payment: Omit<Payment, 'id'>): Promise<number> {
+    return await this.payments.add(payment);
+  }
+
+  async getPaymentsByCustomer(customerId: number): Promise<Payment[]> {
+    return await this.payments.where('customerId').equals(customerId).toArray();
+  }
+
+  async getPaymentsByDateRange(startDate: Date, endDate: Date): Promise<Payment[]> {
+    return await this.payments
+      .where('createdAt')
+      .between(startDate, endDate)
+      .toArray();
+  }
+
+  // Bill methods
+  async addBill(bill: Omit<Bill, 'id'>): Promise<number> {
+    return await this.bills.add(bill);
+  }
+
+  async getBillsByCustomer(customerId: number): Promise<Bill[]> {
+    return await this.bills.where('customerId').equals(customerId).toArray();
+  }
+
+  async getOverdueBills(): Promise<Bill[]> {
+    const today = new Date();
+    return await this.bills
+      .where('dueDate')
+      .below(today)
+      .and(bill => bill.status !== 'paid')
+      .toArray();
+  }
+
+  // Ticket methods
+  async addTicket(ticket: Omit<Ticket, 'id'>): Promise<number> {
+    return await this.tickets.add(ticket);
+  }
+
+  async getTicketsByCustomer(customerId: number): Promise<Ticket[]> {
+    return await this.tickets.where('customerId').equals(customerId).toArray();
+  }
+
+  async getOpenTickets(): Promise<Ticket[]> {
+    return await this.tickets
+      .where('status')
+      .anyOf(['open', 'in-progress'])
+      .toArray();
+  }
+
+  // Analytics methods
+  async getCustomerCount(): Promise<number> {
+    return await this.customers.count();
+  }
+
+  async getActiveServicesCount(): Promise<number> {
+    return await this.services.where('status').equals('active').count();
+  }
+
+  async getMonthlyRevenue(): Promise<number> {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+    const payments = await this.getPaymentsByDateRange(startOfMonth, endOfMonth);
+    return payments
+      .filter(payment => payment.status === 'completed')
+      .reduce((total, payment) => total + payment.amount, 0);
+  }
+
+  async getPendingPaymentsTotal(): Promise<number> {
+    const bills = await this.bills.where('status').equals('pending').toArray();
+    return bills.reduce((total, bill) => total + bill.amount, 0);
+  }
+
+  // Data export/backup methods
+  async exportData(): Promise<DatabaseExport> {
+    const [customers, services, payments, bills, tickets] = await Promise.all([
+      this.customers.toArray(),
+      this.services.toArray(),
+      this.payments.toArray(),
+      this.bills.toArray(),
+      this.tickets.toArray()
+    ]);
+
     return {
-      customers: await this.customers
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
-      invoices: await this.invoices
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
-      payments: await this.payments
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
-      equipment: await this.equipment
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
-      serviceRequests: await this.serviceRequests
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
-      usageRecords: await this.usageRecords
-        .where('syncStatus')
-        .equals('pending')
-        .toArray(),
+      customers,
+      services,
+      payments,
+      bills,
+      tickets,
+      exportDate: new Date()
     };
   }
 
-  async markAsSynced(table: string, id: number): Promise<void> {
-    const tableRef = this[table as keyof this] as Table;
-    await tableRef.update(id, { syncStatus: 'synced', updatedAt: new Date() });
+  async importData(data: DatabaseExport): Promise<void> {
+    await this.transaction('rw', this.customers, this.services, this.payments, this.bills, this.tickets, async () => {
+      // Clear existing data
+      await this.customers.clear();
+      await this.services.clear();
+      await this.payments.clear();
+      await this.bills.clear();
+      await this.tickets.clear();
+
+      // Import new data
+      await this.customers.bulkAdd(data.customers);
+      await this.services.bulkAdd(data.services);
+      await this.payments.bulkAdd(data.payments);
+      await this.bills.bulkAdd(data.bills);
+      await this.tickets.bulkAdd(data.tickets);
+    });
   }
 
-  async markAsFailed(table: string, id: number): Promise<void> {
-    const tableRef = this[table as keyof this] as Table;
-    await tableRef.update(id, { syncStatus: 'failed', updatedAt: new Date() });
-  }
-
-  // Utility methods
-  async getCustomerBalance(customerId: string): Promise<number> {
-    const customer = await this.customers
-      .where('customerId')
-      .equals(customerId)
-      .first();
-    return customer?.balance || 0;
-  }
-
-  async getOverdueInvoices(): Promise<Invoice[]> {
-    const today = new Date().toISOString().split('T')[0];
-    return await this.invoices
-      .where('status')
-      .equals('sent')
-      .and(invoice => invoice.dueDate < today)
+  // Search methods
+  async searchCustomers(query: string): Promise<Customer[]> {
+    const lowerQuery = query.toLowerCase();
+    return await this.customers
+      .filter(customer =>
+        customer.name.toLowerCase().includes(lowerQuery) ||
+        customer.email.toLowerCase().includes(lowerQuery) ||
+        customer.phone.includes(query) ||
+        customer.customerCode.toLowerCase().includes(lowerQuery)
+      )
       .toArray();
   }
 
-  async getCustomerUsage(
-    customerId: string,
-    year: number
-  ): Promise<UsageRecord[]> {
-    return await this.usageRecords
-      .where(['customerId', 'year'])
-      .equals([customerId, year])
-      .toArray();
-  }
+  async getRecentActivity(limit: number = 10): Promise<ActivityItem[]> {
+    const [recentPayments, recentBills, recentTickets] = await Promise.all([
+      this.payments.orderBy('createdAt').reverse().limit(limit).toArray(),
+      this.bills.orderBy('createdAt').reverse().limit(limit).toArray(),
+      this.tickets.orderBy('createdAt').reverse().limit(limit).toArray()
+    ]);
 
-  async getEquipmentByCustomer(customerId: string): Promise<Equipment[]> {
-    return await this.equipment
-      .where('customerId')
-      .equals(customerId)
-      .toArray();
-  }
+    const activities: ActivityItem[] = [
+      ...recentPayments.map(payment => ({
+        id: `payment-${payment.id}`,
+        type: 'payment' as const,
+        description: `Payment of ${payment.amount} SSP via ${payment.method}`,
+        date: payment.createdAt,
+        customerId: payment.customerId
+      })),
+      ...recentBills.map(bill => ({
+        id: `bill-${bill.id}`,
+        type: 'bill' as const,
+        description: `Bill ${bill.billNumber} generated for ${bill.amount} SSP`,
+        date: bill.createdAt,
+        customerId: bill.customerId
+      })),
+      ...recentTickets.map(ticket => ({
+        id: `ticket-${ticket.id}`,
+        type: 'ticket' as const,
+        description: `Ticket created: ${ticket.title}`,
+        date: ticket.createdAt,
+        customerId: ticket.customerId
+      }))
+    ];
 
-  async getActiveServiceRequests(): Promise<ServiceRequest[]> {
-    return await this.serviceRequests
-      .where('status')
-      .anyOf(['open', 'assigned', 'in_progress'])
-      .toArray();
-  }
-
-  // Initialize default data
-  async initializeDefaultData(): Promise<void> {
-    const planCount = await this.servicePlans.count();
-    if (planCount === 0) {
-      await this.servicePlans.bulkAdd([
-        {
-          planId: 'BASIC_5M',
-          name: 'Basic Plan',
-          description: 'Perfect for basic browsing and email',
-          speed: '5 Mbps',
-          speedMbps: 5,
-          price: 100,
-          currency: 'SSP',
-          type: 'unlimited',
-          fupLimit: 50,
-          fupSpeed: 1,
-          isActive: true,
-          installationFee: 200,
-          equipmentFee: 150,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          planId: 'STANDARD_10M',
-          name: 'Standard Plan',
-          description: 'Great for streaming and small business',
-          speed: '10 Mbps',
-          speedMbps: 10,
-          price: 150,
-          currency: 'SSP',
-          type: 'unlimited',
-          fupLimit: 100,
-          fupSpeed: 2,
-          isActive: true,
-          installationFee: 200,
-          equipmentFee: 150,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          planId: 'PREMIUM_20M',
-          name: 'Premium Plan',
-          description: 'High-speed for gaming and video calls',
-          speed: '20 Mbps',
-          speedMbps: 20,
-          price: 250,
-          currency: 'SSP',
-          type: 'unlimited',
-          fupLimit: 200,
-          fupSpeed: 5,
-          isActive: true,
-          installationFee: 200,
-          equipmentFee: 150,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          planId: 'BUSINESS_50M',
-          name: 'Business Plan',
-          description: 'Enterprise-grade connectivity',
-          speed: '50 Mbps',
-          speedMbps: 50,
-          price: 500,
-          currency: 'SSP',
-          type: 'unlimited',
-          fupLimit: 500,
-          fupSpeed: 10,
-          isActive: true,
-          installationFee: 300,
-          equipmentFee: 250,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
-    }
+    return activities
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, limit);
   }
 }
 
-// Create and export database instance
-export const db = new ISPDatabase();
+// Create database instance
+export const db = new WipayDatabase();

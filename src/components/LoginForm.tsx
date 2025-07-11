@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
-import { Globe, Lock, User } from 'lucide-react';
-import { authenticateUser } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import { authenticateUser } from '@/lib/auth';
+import { Globe, Lock, User } from 'lucide-react';
+import { useState } from 'react';
 
 interface LoginFormProps {
   onLogin: (userData: {
@@ -40,34 +40,46 @@ const LoginForm = ({ onLogin, language, setLanguage }: LoginFormProps) => {
 
   const translations = {
     en: {
-      title: 'South Sudan ISP Management System',
-      subtitle: 'Secure Login Portal',
+      title: 'Wipay',
+      subtitle: 'WiFi Token Management System',
+      loginToAccount: 'Login to your account',
+      signupToAccount: 'Create new account',
       username: 'Username',
       password: 'Password',
       login: 'Login',
+      signup: 'Sign Up',
       signingIn: 'Signing in...',
-      demoAccounts: 'Demo Accounts',
-      admin: 'Administrator',
-      billing: 'Billing Manager',
-      support: 'Customer Service',
-      technician: 'Field Technician',
-      loginFailed: 'Login failed',
-      invalidCredentials: 'Invalid username or password',
+      signingUp: 'Creating account...',
+      loginError: 'Invalid credentials',
+      signupError: 'Failed to create account',
+      networkError: 'Network error. Please check your connection.',
+      enterUsername: 'Enter your username',
+      enterPassword: 'Enter your password',
+      selectLanguage: 'Select Language',
+      switchToSignup: "Don't have an account? Sign up",
+      switchToLogin: 'Already have an account? Login',
+      description: 'Complete WiFi token management for your business',
     },
     ar: {
-      title: 'نظام إدارة مزود خدمة الإنترنت - جنوب السودان',
-      subtitle: 'بوابة الدخول الآمنة',
+      title: 'Wipay',
+      subtitle: 'نظام إدارة رموز الواي فاي',
+      loginToAccount: 'تسجيل الدخول إلى حسابك',
+      signupToAccount: 'إنشاء حساب جديد',
       username: 'اسم المستخدم',
       password: 'كلمة المرور',
       login: 'تسجيل الدخول',
+      signup: 'إنشاء حساب',
       signingIn: 'جاري تسجيل الدخول...',
-      demoAccounts: 'حسابات تجريبية',
-      admin: 'مدير النظام',
-      billing: 'مدير الفوترة',
-      support: 'خدمة العملاء',
-      technician: 'فني ميداني',
-      loginFailed: 'فشل تسجيل الدخول',
-      invalidCredentials: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+      signingUp: 'جاري إنشاء الحساب...',
+      loginError: 'بيانات الاعتماد غير صحيحة',
+      signupError: 'فشل في إنشاء الحساب',
+      networkError: 'خطأ في الشبكة. يرجى التحقق من اتصالك.',
+      enterUsername: 'أدخل اسم المستخدم',
+      enterPassword: 'أدخل كلمة المرور',
+      selectLanguage: 'اختر اللغة',
+      switchToSignup: 'ليس لديك حساب؟ أنشئ حساباً',
+      switchToLogin: 'لديك حساب بالفعل؟ سجل دخولك',
+      description: 'إدارة شاملة لرموز الواي فاي لعملك',
     },
   };
 

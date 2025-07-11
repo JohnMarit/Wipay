@@ -2,26 +2,26 @@
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
 import {
-    createUserWithEmailAndPassword,
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    signOut,
-    User,
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  User,
 } from 'firebase/auth';
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    getFirestore,
-    onSnapshot,
-    orderBy,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 
 // Firebase configuration - uses environment variables for security
@@ -30,9 +30,7 @@ import {
 // Get your config from: Firebase Console → Project Settings → General → Your apps → Web app
 //
 const firebaseConfig = {
-  apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY ||
-    'YOUR_API_KEY_HERE', // Replace with your Firebase API key
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'YOUR_API_KEY_HERE', // Replace with your Firebase API key
   authDomain:
     import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com', // Replace with your project domain
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id', // Replace with your project ID
@@ -41,10 +39,9 @@ const firebaseConfig = {
     'your-project.firebasestorage.app', // Replace with your storage bucket
   messagingSenderId:
     import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID', // Replace with your sender ID
-  appId:
-    import.meta.env.VITE_FIREBASE_APP_ID ||
-    'YOUR_APP_ID', // Replace with your app ID
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Replace with your measurement ID (optional)
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID', // Replace with your app ID
+  measurementId:
+    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Replace with your measurement ID (optional)
 };
 
 // Initialize Firebase

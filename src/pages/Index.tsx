@@ -1,40 +1,37 @@
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  Users,
-  CreditCard,
-  Wifi,
-  TrendingUp,
-  DollarSign,
-  AlertTriangle,
-  Globe,
-  Phone,
-  Settings,
-  BarChart3,
-  UserPlus,
-  Receipt,
-  Wrench,
-  WifiOff,
-  LogOut,
-  Bell,
-  Shield,
-} from 'lucide-react';
-import CustomerManagement from '@/components/CustomerManagement';
 import BillingModule from '@/components/BillingModule';
-import ServiceManagement from '@/components/ServiceManagement';
+import CustomerManagement from '@/components/CustomerManagement';
+import LanguageSelector from '@/components/LanguageSelector';
 import PaymentTracking from '@/components/PaymentTracking';
 import ReportsAnalytics from '@/components/ReportsAnalytics';
-import LanguageSelector from '@/components/LanguageSelector';
+import ServiceManagement from '@/components/ServiceManagement';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    AlertTriangle,
+    BarChart3,
+    Bell,
+    CreditCard,
+    DollarSign,
+    Globe,
+    LogOut,
+    Receipt,
+    Settings,
+    TrendingUp,
+    UserPlus,
+    Users,
+    Wifi,
+    WifiOff,
+    Wrench
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface IndexProps {
   currentUser?: {
@@ -52,7 +49,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  // Monitor online/offline status for South Sudan's intermittent connectivity
+  // Monitor online/offline status for reliable connectivity
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -69,7 +66,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
     };
   }, []);
 
-  // Enhanced sample data with South Sudan specific information
+  // Enhanced sample data with business-specific information
   const dashboardStats = {
     totalCustomers: 247,
     activeServices: 198,
@@ -129,7 +126,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
 
   const translations = {
     en: {
-      title: 'South Sudan ISP Management System',
+      title: 'Wipay',
       dashboard: 'Dashboard',
       customers: 'Customers',
       billing: 'Billing',
@@ -160,7 +157,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
       logout: 'Logout',
     },
     ar: {
-      title: 'نظام إدارة مزود خدمة الإنترنت - جنوب السودان',
+      title: 'Wipay',
       dashboard: 'لوحة التحكم',
       customers: 'العملاء',
       billing: 'الفواتير',
@@ -258,7 +255,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
           </div>
         </div>
 
-        {/* System Alerts for South Sudan specific issues */}
+        {/* System Alerts */}
         {!isOnline && (
           <div className="mb-6">
             <Card className="border-yellow-200 bg-yellow-50">
@@ -304,7 +301,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
 
           {/* Enhanced Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
-            {/* Enhanced Stats Cards with South Sudan specific metrics */}
+            {/* Enhanced Stats Cards with business metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -381,7 +378,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
               </Card>
             </div>
 
-            {/* Payment Methods Distribution (South Sudan specific) */}
+            {/* Payment Methods Distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
               <Card>
                 <CardHeader>

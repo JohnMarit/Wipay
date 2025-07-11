@@ -1,50 +1,46 @@
-# Wipay - WiFi Token Distribution System
+# Wipay - WiFi Token Management System
 
-A modern React-based WiFi token distribution system with Firebase backend for cafes, hotels, and businesses in South Sudan.
+A modern React-based WiFi token distribution system with Firebase backend for cafes, hotels, and businesses worldwide.
 
-## 🚀 Features
+## 🌟 Features
 
-### Frontend Features
-- **Multi-language Support** (English/Arabic)
-- **Responsive Design** - Works on mobile, tablet, and desktop
-- **Real-time Dashboard** - Live statistics and token management
-- **PDF Report Generation** - Weekly, monthly, yearly reports with custom date ranges
-- **Blue-themed UI** - Professional blue color scheme throughout
+### WiFi Token Management
+- **Token Generation**: Create secure WiFi tokens with customizable durations
+- **Token Distribution**: Distribute tokens via SMS, email, or printed receipts
+- **Token Validation**: Real-time token verification and activation
+- **Expiry Management**: Automatic token expiration and cleanup
 
-### Backend Features (Firebase)
-- **User Authentication** - Secure email/password authentication
-- **Real-time Database** - Firestore for storing tokens and user data
-- **Data Security** - Firestore security rules for data protection
-- **Cloud Hosting** - Scalable Firebase hosting
-- **Analytics** - Built-in Firebase Analytics
+### Customer Management
+- **Customer Database**: Comprehensive customer information management
+- **Purchase History**: Track customer token purchases and usage patterns
+- **Customer Analytics**: Insights into customer behavior and preferences
+- **Loyalty Programs**: Built-in support for customer loyalty and discounts
 
-### Business Features
-- **WiFi Token Generation** - Create time-based access tokens
-- **Payment Tracking** - Cash and MTN MoMo payment methods
-- **Custom Pricing** - Configurable pricing per duration
-- **User Management** - Track customers and usage patterns
-- **Revenue Analytics** - Detailed financial reporting
+### Payment Integration
+- **Multiple Payment Methods**: Support for mobile money, cash, and bank transfers
+- **Receipt Generation**: Automatic receipt generation for all transactions
+- **Payment Tracking**: Real-time payment status monitoring
+- **Revenue Analytics**: Detailed revenue reporting and analytics
 
-## 🛠️ Technologies
+### Business Intelligence
+- **Usage Analytics**: Track WiFi usage patterns and peak times
+- **Revenue Reports**: Comprehensive financial reporting
+- **Customer Insights**: Customer behavior and purchasing patterns
+- **Performance Metrics**: System performance and uptime monitoring
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Firebase (Auth, Firestore, Analytics)
-- **PDF**: jsPDF for report generation
-- **Build Tool**: Vite
-- **Testing**: React Testing Library, Vitest
+## 🚀 Quick Start
 
-## 📋 Prerequisites
-
-- Node.js 18+ and npm
+### Prerequisites
+- Node.js 18 or higher
 - Firebase account
 - Modern web browser
 
-## 🔧 Installation
+### Installation
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/your-username/wipay.git
-   cd wipay/wipay
+   cd wipay
    ```
 
 2. **Install dependencies**
@@ -53,216 +49,190 @@ A modern React-based WiFi token distribution system with Firebase backend for ca
    ```
 
 3. **Firebase Setup**
+   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com)
+   - Enable Authentication with Email/Password
+   - Enable Firestore Database
+   - Copy your Firebase configuration
 
-   Follow the detailed guide in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to:
-   - Create a Firebase project
-   - Enable Authentication and Firestore
-   - Get your Firebase configuration
-   - Set up security rules
-
-4. **Environment Configuration**
-
-   Create a `.env` file in the `wipay` directory:
-   ```env
-   # Your Firebase Configuration
-   VITE_FIREBASE_API_KEY=your_api_key_here
-   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-
-   # Optional Settings
-   VITE_DEBUG_MODE=true
+4. **Configure Firebase**
+   Update `src/lib/firebase.ts` with your Firebase configuration:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "your-api-key",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project-id",
+     storageBucket: "your-project.firebasestorage.app",
+     messagingSenderId: "your-sender-id",
+     appId: "your-app-id"
+   };
    ```
 
-5. **Start the development server**
+5. **Start development server**
    ```bash
-npm run dev
-```
+   npm run dev
+   ```
 
 6. **Open your browser**
-   ```
-   http://localhost:5173
-   ```
+   Navigate to `http://localhost:5173`
 
-## 🏗️ Project Structure
+## 🔧 Configuration
 
-```
-wipay/
-├── src/
-│   ├── components/
-│   │   ├── ui/              # shadcn/ui components
-│   │   ├── WiFiTokenSystem.tsx  # Main token system
-│   │   └── ...
-│   ├── lib/
-│   │   ├── firebase.ts      # Firebase configuration
-│   │   ├── auth.ts          # Authentication helpers
-│   │   ├── pdfGenerator.ts  # PDF report generation
-│   │   └── utils.ts         # Utility functions
-│   ├── pages/
-│   │   ├── Index.tsx        # Main dashboard
-│   │   └── NotFound.tsx     # 404 page
-│   └── App.tsx              # Main app component
-├── firestore.rules          # Firestore security rules
-├── FIREBASE_SETUP.md        # Firebase setup guide
-└── README.md                # This file
+### Environment Variables
+Create a `.env` file in the root directory:
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app-id
 ```
 
-## 🔐 Security Features
+### Currency Configuration
+The system supports multiple currencies. Default is SSP, but you can configure others in the settings.
 
-- **Firebase Authentication** - Secure user registration and login
-- **Firestore Security Rules** - Data isolation per user
-- **Environment Variables** - Secure configuration management
-- **Data Validation** - Input sanitization and validation
-- **Session Management** - Automatic token refresh and logout
+### Payment Methods
+Configure available payment methods in the admin panel:
+- Mobile Money (MTN, Orange, Airtel)
+- Bank Transfers
+- Cash Payments
+- Credit/Debit Cards
 
 ## 📱 Usage
 
-### Initial Setup
+### For Business Owners
+1. **Setup**: Create your account and configure your business settings
+2. **Token Pricing**: Set up token pricing for different durations
+3. **Payment Methods**: Configure your preferred payment methods
+4. **Start Selling**: Begin selling WiFi tokens to customers
 
-1. **Create Account**: Register with email, password, name, and phone
-2. **Configure WiFi**: Set up your WiFi network name (SSID)
-3. **Set Pricing**: Configure token prices for different durations
-4. **Generate Tokens**: Start creating WiFi access tokens for customers
+### For Customers
+1. **Purchase**: Buy WiFi tokens through various payment methods
+2. **Receive**: Get token credentials via SMS, email, or receipt
+3. **Connect**: Use provided credentials to connect to WiFi
+4. **Enjoy**: Access internet for the purchased duration
 
-### Daily Operations
+## 🏗️ Architecture
 
-1. **Generate Tokens**: Create tokens for customers with payment tracking
-2. **Monitor Dashboard**: View real-time statistics and active users
-3. **Generate Reports**: Create PDF reports for financial analysis
-4. **Manage Tokens**: View, deactivate, or resend token details
+### Frontend
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **shadcn/ui** for UI components
+- **Lucide React** for icons
+- **Vite** for build tooling
 
-### Report Generation
+### Backend
+- **Firebase Authentication** for user management
+- **Firestore Database** for data storage
+- **Firebase Hosting** for deployment
+- **Firebase Functions** for serverless operations
 
-- **Quick Reports**: Weekly, Monthly, Yearly with one click
-- **Custom Reports**: Choose specific date ranges
-- **PDF Export**: Professional reports with revenue breakdown
-- **Real-time Data**: Reports based on actual token transactions
-
-## 🎨 UI/UX Features
-
-- **Blue Color Scheme**: Professional blue palette throughout
-- **Responsive Design**: Mobile-first approach with tablet/desktop optimization
-- **Multi-language**: English and Arabic support with RTL layout
-- **Accessibility**: WCAG 2.1 AA compliant with screen reader support
-- **Modern Components**: shadcn/ui components with Tailwind CSS
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-
-# Code Quality
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript checks
-npm test             # Run tests
-
-# Firebase
-npm run deploy       # Deploy to Firebase Hosting
-```
-
-### Adding New Features
-
-1. Follow the existing component structure
-2. Use TypeScript for type safety
-3. Implement responsive design
-4. Add proper error handling
-5. Update Firebase security rules if needed
+### Key Components
+- **WiFiTokenSystem**: Core token management functionality
+- **CustomerManagement**: Customer database and analytics
+- **PaymentTracking**: Payment processing and tracking
+- **ReportsAnalytics**: Business intelligence and reporting
+- **BillingModule**: Invoice and billing management
 
 ## 🚀 Deployment
 
-### Firebase Hosting
-
-1. **Build the project**
+### Vercel (Recommended)
+1. **Push to GitHub**
    ```bash
-   npm run build
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
    ```
 
-2. **Deploy to Firebase**
+2. **Deploy to Vercel**
+   - Connect your GitHub repository to Vercel
+   - Configure environment variables
+   - Deploy automatically on push
+
+### Firebase Hosting
+1. **Install Firebase CLI**
    ```bash
    npm install -g firebase-tools
+   ```
+
+2. **Login and initialize**
+   ```bash
    firebase login
    firebase init hosting
+   ```
+
+3. **Build and deploy**
+   ```bash
+   npm run build
    firebase deploy
    ```
 
-### Other Platforms
+## 🔒 Security Features
 
-The built files in `dist/` can be deployed to:
-- Vercel
-- Netlify
-- AWS S3 + CloudFront
-- Any static hosting service
+- **Firebase Authentication**: Secure user authentication
+- **Role-based Access**: Different access levels for different users
+- **Data Encryption**: All sensitive data is encrypted
+- **Secure Tokens**: Cryptographically secure WiFi tokens
+- **Audit Logging**: Complete audit trail of all operations
 
-## 🔍 Troubleshooting
+## 🌍 Internationalization
 
-### Common Issues
+The system supports multiple languages:
+- **English** (Default)
+- **Arabic** (RTL support)
+- Easily extensible for additional languages
 
-1. **Firebase Connection Errors**
-   - Check your `.env` file configuration
-   - Verify Firebase project settings
-   - Ensure network connectivity
+## 📊 Analytics & Reporting
 
-2. **Authentication Issues**
-   - Verify Firebase Auth is enabled
-   - Check email/password provider is activated
-   - Clear browser cache and cookies
+### Business Metrics
+- Daily/Monthly revenue
+- Token usage patterns
+- Customer acquisition trends
+- Payment method preferences
 
-3. **Build Errors**
-   - Run `npm install` to ensure dependencies
-   - Check TypeScript errors with `npm run type-check`
-   - Verify environment variables are set
+### Customer Analytics
+- Purchase frequency
+- Average spend per customer
+- Usage duration patterns
+- Geographic distribution
 
-### Debug Mode
-
-Enable debug mode for detailed logging:
-```env
-VITE_DEBUG_MODE=true
-```
-
-## 📊 Analytics
-
-The system includes built-in analytics for:
-- User registration and authentication
-- Token generation patterns
-- Revenue tracking
-- Feature usage statistics
+### System Performance
+- Token generation speed
+- Payment processing times
+- System uptime monitoring
+- Error rate tracking
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Setup
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-For support and questions:
-- Create an issue on GitHub
-- Check the [Firebase Setup Guide](./FIREBASE_SETUP.md)
-- Review the troubleshooting section
+- **Documentation**: Comprehensive guides and API documentation
+- **Community**: Join our community forums
+- **Issues**: Report bugs and request features on GitHub
+- **Email**: Contact support for priority assistance
 
-## 🌟 Acknowledgments
+## 🙏 Acknowledgments
 
-- Built with React and Firebase
-- UI components by shadcn/ui
-- Icons by Lucide React
-- PDF generation by jsPDF
+- **Firebase Team** for excellent backend services
+- **Vercel Team** for seamless deployment platform
+- **shadcn** for beautiful UI components
+- **Tailwind CSS** for utility-first CSS framework
 
 ---
 
-**Made with ❤️ for South Sudan's digital transformation**
+**Made with ❤️ for businesses worldwide**
 
 
