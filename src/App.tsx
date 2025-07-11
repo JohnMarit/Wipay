@@ -369,9 +369,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showConfirmPassword ? (
@@ -612,21 +610,39 @@ const App = () => {
         ? loginForm.username
         : `${loginForm.username}@wipay.local`; // Fallback for username
 
+      console.log('🚀 Starting Firebase login process...', { email });
+
       await authService.signIn(email, loginForm.password);
+
+      console.log('✅ Firebase login successful!');
 
       setLoginForm({ username: '', password: '', isLoading: false, error: '' });
     } catch (error: unknown) {
+      console.error('❌ Firebase login error:', error);
+
       let errorMessage = t.loginError;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
 
-      if (errorMsg.includes('user-not-found')) {
+      console.log('🔍 Detailed error message:', errorMsg);
+
+      // Handle specific Firebase errors
+      if (errorMsg.includes('auth/operation-not-allowed')) {
+        errorMessage = 'Email/Password authentication is not enabled. Please contact support.';
+      } else if (errorMsg.includes('auth/user-not-found')) {
         errorMessage = t.loginError;
-      } else if (errorMsg.includes('wrong-password')) {
+      } else if (errorMsg.includes('auth/wrong-password')) {
         errorMessage = t.loginError;
-      } else if (errorMsg.includes('network')) {
+      } else if (errorMsg.includes('auth/invalid-email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (errorMsg.includes('auth/user-disabled')) {
+        errorMessage = 'This account has been disabled. Please contact support.';
+      } else if (errorMsg.includes('auth/network-request-failed')) {
         errorMessage = t.networkError;
-      } else if (errorMsg.includes('too-many-requests')) {
+      } else if (errorMsg.includes('auth/too-many-requests')) {
         errorMessage = 'Too many failed attempts. Please try again later.';
+      } else {
+        // Show the actual error for debugging
+        errorMessage = `${t.loginError}: ${errorMsg}`;
       }
 
       setLoginForm(prev => ({
@@ -679,6 +695,13 @@ const App = () => {
         return;
       }
 
+      console.log('🚀 Starting Firebase signup process...', {
+        email: signupForm.email,
+        name: signupForm.name,
+        phone: signupForm.phone,
+        passwordLength: signupForm.password.length
+      });
+
       // Create new user with Firebase
       await authService.signUp(
         signupForm.email,
@@ -686,6 +709,8 @@ const App = () => {
         signupForm.name,
         signupForm.phone
       );
+
+      console.log('✅ Firebase signup successful!');
 
       setSignupForm({
         username: '',
@@ -703,15 +728,29 @@ const App = () => {
         description: `Welcome ${signupForm.name}! You can now set up your WiFi network.`,
       });
     } catch (error: unknown) {
+      console.error('❌ Firebase signup error:', error);
+
       let errorMessage = t.signupError;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
 
-      if (errorMsg.includes('email-already-in-use')) {
+      console.log('🔍 Detailed error message:', errorMsg);
+
+      // Handle specific Firebase errors
+      if (errorMsg.includes('auth/operation-not-allowed')) {
+        errorMessage = 'Email/Password authentication is not enabled. Please contact support.';
+      } else if (errorMsg.includes('auth/email-already-in-use')) {
         errorMessage = t.usernameExists;
-      } else if (errorMsg.includes('weak-password')) {
+      } else if (errorMsg.includes('auth/weak-password')) {
         errorMessage = t.passwordLength;
-      } else if (errorMsg.includes('network')) {
+      } else if (errorMsg.includes('auth/invalid-email')) {
+        errorMessage = t.invalidEmail;
+      } else if (errorMsg.includes('auth/network-request-failed')) {
         errorMessage = t.networkError;
+      } else if (errorMsg.includes('auth/too-many-requests')) {
+        errorMessage = 'Too many requests. Please try again later.';
+      } else {
+        // Show the actual error for debugging
+        errorMessage = `${t.signupError}: ${errorMsg}`;
       }
 
       setSignupForm(prev => ({
@@ -765,30 +804,35 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<LoginComponent
-              language={language}
-              setLanguage={setLanguage}
-              isSignupMode={isSignupMode}
-              setIsSignupMode={setIsSignupMode}
-              loginForm={loginForm}
-              setLoginForm={setLoginForm}
-              signupForm={signupForm}
-              setSignupForm={setSignupForm}
-              showPassword={showPassword}
-              setShowPassword={setShowPassword}
-              showConfirmPassword={showConfirmPassword}
-              setShowConfirmPassword={setShowConfirmPassword}
-              handleLogin={handleLogin}
-              handleSignup={handleSignup}
-              handleNameChange={handleNameChange}
-              handleEmailChange={handleEmailChange}
-              handlePhoneChange={handlePhoneChange}
-              handlePasswordChange={handlePasswordChange}
-              handleConfirmPasswordChange={handleConfirmPasswordChange}
-              handleUsernameChange={handleUsernameChange}
-              handleLoginPasswordChange={handleLoginPasswordChange}
-              t={t}
-            />} />
+            <Route
+              path="/login"
+              element={
+                <LoginComponent
+                  language={language}
+                  setLanguage={setLanguage}
+                  isSignupMode={isSignupMode}
+                  setIsSignupMode={setIsSignupMode}
+                  loginForm={loginForm}
+                  setLoginForm={setLoginForm}
+                  signupForm={signupForm}
+                  setSignupForm={setSignupForm}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  showConfirmPassword={showConfirmPassword}
+                  setShowConfirmPassword={setShowConfirmPassword}
+                  handleLogin={handleLogin}
+                  handleSignup={handleSignup}
+                  handleNameChange={handleNameChange}
+                  handleEmailChange={handleEmailChange}
+                  handlePhoneChange={handlePhoneChange}
+                  handlePasswordChange={handlePasswordChange}
+                  handleConfirmPasswordChange={handleConfirmPasswordChange}
+                  handleUsernameChange={handleUsernameChange}
+                  handleLoginPasswordChange={handleLoginPasswordChange}
+                  t={t}
+                />
+              }
+            />
             <Route
               path="/"
               element={
@@ -824,30 +868,36 @@ const App = () => {
             />
             <Route
               path="*"
-              element={isAuthenticated ? <NotFound /> : <LoginComponent
-                language={language}
-                setLanguage={setLanguage}
-                isSignupMode={isSignupMode}
-                setIsSignupMode={setIsSignupMode}
-                loginForm={loginForm}
-                setLoginForm={setLoginForm}
-                signupForm={signupForm}
-                setSignupForm={setSignupForm}
-                showPassword={showPassword}
-                setShowPassword={setShowPassword}
-                showConfirmPassword={showConfirmPassword}
-                setShowConfirmPassword={setShowConfirmPassword}
-                handleLogin={handleLogin}
-                handleSignup={handleSignup}
-                handleNameChange={handleNameChange}
-                handleEmailChange={handleEmailChange}
-                handlePhoneChange={handlePhoneChange}
-                handlePasswordChange={handlePasswordChange}
-                handleConfirmPasswordChange={handleConfirmPasswordChange}
-                handleUsernameChange={handleUsernameChange}
-                handleLoginPasswordChange={handleLoginPasswordChange}
-                t={t}
-              />}
+              element={
+                isAuthenticated ? (
+                  <NotFound />
+                ) : (
+                  <LoginComponent
+                    language={language}
+                    setLanguage={setLanguage}
+                    isSignupMode={isSignupMode}
+                    setIsSignupMode={setIsSignupMode}
+                    loginForm={loginForm}
+                    setLoginForm={setLoginForm}
+                    signupForm={signupForm}
+                    setSignupForm={setSignupForm}
+                    showPassword={showPassword}
+                    setShowPassword={setShowPassword}
+                    showConfirmPassword={showConfirmPassword}
+                    setShowConfirmPassword={setShowConfirmPassword}
+                    handleLogin={handleLogin}
+                    handleSignup={handleSignup}
+                    handleNameChange={handleNameChange}
+                    handleEmailChange={handleEmailChange}
+                    handlePhoneChange={handlePhoneChange}
+                    handlePasswordChange={handlePasswordChange}
+                    handleConfirmPasswordChange={handleConfirmPasswordChange}
+                    handleUsernameChange={handleUsernameChange}
+                    handleLoginPasswordChange={handleLoginPasswordChange}
+                    t={t}
+                  />
+                )
+              }
             />
           </Routes>
         </BrowserRouter>
