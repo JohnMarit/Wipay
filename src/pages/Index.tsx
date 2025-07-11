@@ -1,6 +1,5 @@
 import LanguageSelector from '@/components/LanguageSelector';
 import WiFiTokenSystem from '@/components/WiFiTokenSystem';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
@@ -34,11 +33,8 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
       className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ${language === 'ar' ? 'rtl' : 'ltr'} pb-20`}
     >
       <div className="container mx-auto p-4">
-                {/* WiFi Token Management System - Main Content */}
-        <WiFiTokenSystem
-          language={language}
-          currentUser={currentUser}
-        />
+        {/* WiFi Token Management System - Main Content */}
+        <WiFiTokenSystem language={language} currentUser={currentUser} />
       </div>
 
       {/* Bottom Navigation Bar */}
@@ -50,28 +46,12 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
               <LanguageSelector language={language} setLanguage={setLanguage} />
             </div>
 
-            {/* User Info and Logout */}
+            {/* Logout Button */}
             {currentUser && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-sm">
-                      {currentUser.name
-                        .split(' ')
-                        .map((n: string) => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">{currentUser.name}</p>
-                    <p className="text-xs text-gray-500">{currentUser.phone}</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={onLogout}>
-                  <LogOut className="h-4 w-4 mr-1" />
-                  {t.logout}
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={onLogout}>
+                <LogOut className="h-4 w-4 mr-1" />
+                {t.logout}
+              </Button>
             )}
           </div>
         </div>
