@@ -26,28 +26,24 @@ import {
 
 // Firebase configuration - uses environment variables for security
 //
-// 🚨 URGENT: Replace the values below with YOUR actual Firebase project configuration
+// ✅ CONFIGURED: Real Firebase project configuration added
 //
-// To get your config:
-// 1. Go to https://console.firebase.google.com
-// 2. Select your project (or create one named "wipay-yourname")
-// 3. Click Settings ⚙️ → Project settings
-// 4. Scroll to "Your apps" → Click Web app icon </>
-// 5. Copy the firebaseConfig object and replace the values below
+// Project: wipay-john
+// Domain: wipay-john.firebaseapp.com
 //
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'REPLACE_WITH_YOUR_API_KEY', // 🔴 Replace this
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBL_qAkFLrWp0NIhJ-dmRHDqMvz1B8iSMA',
   authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com', // 🔴 Replace this
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id', // 🔴 Replace this
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'wipay-john.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'wipay-john',
   storageBucket:
     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    'your-project.firebasestorage.app', // 🔴 Replace this
+    'wipay-john.firebasestorage.app',
   messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID', // 🔴 Replace this
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID', // 🔴 Replace this
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '633048699728',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:633048699728:web:29233b4a8e99d2fb581255',
   measurementId:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'YOUR_MEASUREMENT_ID', // Optional
+    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XXXXXXXXXX', // Optional
 };
 
 // Initialize Firebase
