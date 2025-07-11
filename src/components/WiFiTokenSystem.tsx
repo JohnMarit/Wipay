@@ -1,36 +1,36 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -38,22 +38,22 @@ import { tokenService, UserProfile, userService } from '@/lib/firebase';
 import { PDFReportGenerator } from '@/lib/pdfGenerator';
 import { createSMSService } from '@/lib/smsService';
 import {
-    AlertCircle,
-    Banknote,
-    BarChart3,
-    Calendar,
-    CalendarDays,
-    Clock,
-    DollarSign,
-    FileText,
-    History,
-    Plus,
-    QrCode,
-    Send,
-    Settings,
-    Smartphone,
-    User,
-    Wifi,
+  AlertCircle,
+  Banknote,
+  BarChart3,
+  Calendar,
+  CalendarDays,
+  Clock,
+  DollarSign,
+  FileText,
+  History,
+  Plus,
+  QrCode,
+  Send,
+  Settings,
+  Smartphone,
+  User,
+  Wifi,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -815,7 +815,8 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       console.error('SMS test error:', error);
       toast({
         title: 'SMS Test Error',
-        description: 'Error occurred while testing SMS. Check console for details.',
+        description:
+          'Error occurred while testing SMS. Check console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -1046,9 +1047,7 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                         <TabsTrigger value="pricing">
                           {t.pricingConfig}
                         </TabsTrigger>
-                        <TabsTrigger value="sms">
-                          SMS Test
-                        </TabsTrigger>
+                        <TabsTrigger value="sms">SMS Test</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="network" className="space-y-4">
@@ -1221,11 +1220,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                         <div className="space-y-4">
                           <h4 className="font-medium">SMS Provider Test</h4>
                           <p className="text-sm text-gray-600">
-                            Test your SMS configuration to ensure WiFi tokens can be sent to customers.
+                            Test your SMS configuration to ensure WiFi tokens
+                            can be sent to customers.
                           </p>
 
                           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <h5 className="font-medium text-blue-800 mb-2">Current SMS Provider</h5>
+                            <h5 className="font-medium text-blue-800 mb-2">
+                              Current SMS Provider
+                            </h5>
                             <p className="text-sm text-blue-700">
                               {(() => {
                                 const smsService = createSMSService();
@@ -1236,16 +1238,21 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
                           <div className="space-y-3">
                             <div>
-                              <Label htmlFor="testPhone">Test Phone Number</Label>
+                              <Label htmlFor="testPhone">
+                                Test Phone Number
+                              </Label>
                               <Input
                                 id="testPhone"
                                 type="tel"
                                 value={testPhoneNumber}
-                                onChange={e => setTestPhoneNumber(e.target.value)}
+                                onChange={e =>
+                                  setTestPhoneNumber(e.target.value)
+                                }
                                 placeholder="+211123456789 or 0123456789"
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Enter a phone number to receive a test SMS. Include country code or use local format.
+                                Enter a phone number to receive a test SMS.
+                                Include country code or use local format.
                               </p>
                             </div>
 
@@ -1269,9 +1276,12 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                           </div>
 
                           <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <h5 className="font-medium text-yellow-800 mb-2">SMS Configuration</h5>
+                            <h5 className="font-medium text-yellow-800 mb-2">
+                              SMS Configuration
+                            </h5>
                             <p className="text-sm text-yellow-700 mb-2">
-                              To enable real SMS sending, configure these environment variables:
+                              To enable real SMS sending, configure these
+                              environment variables:
                             </p>
                             <div className="text-xs font-mono text-yellow-600 space-y-1">
                               <div>VITE_SMS_PROVIDER=twilio</div>

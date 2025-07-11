@@ -39,7 +39,7 @@ class TwilioProvider implements SMSProvider {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${btoa(`${this.accountSid}:${this.authToken}`)}`,
+          Authorization: `Basic ${btoa(`${this.accountSid}:${this.authToken}`)}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: body,
@@ -84,7 +84,7 @@ class AfricasTalkingProvider implements SMSProvider {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'apiKey': this.apiKey,
+          apiKey: this.apiKey,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: body,
@@ -127,7 +127,7 @@ class SouthSudanLocalProvider implements SMSProvider {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -167,7 +167,11 @@ export class SMSService {
     try {
       switch (this.config.provider) {
         case 'twilio':
-          if (this.config.apiKey && this.config.apiSecret && this.config.senderId) {
+          if (
+            this.config.apiKey &&
+            this.config.apiSecret &&
+            this.config.senderId
+          ) {
             this.provider = new TwilioProvider(
               this.config.apiKey,
               this.config.apiSecret,
@@ -186,7 +190,11 @@ export class SMSService {
           break;
 
         case 'local_ss':
-          if (this.config.apiKey && this.config.senderId && this.config.baseUrl) {
+          if (
+            this.config.apiKey &&
+            this.config.senderId &&
+            this.config.baseUrl
+          ) {
             this.provider = new SouthSudanLocalProvider(
               this.config.apiKey,
               this.config.senderId,
@@ -196,7 +204,9 @@ export class SMSService {
           break;
 
         default:
-          console.warn('⚠️ No SMS provider configured, falling back to simulation');
+          console.warn(
+            '⚠️ No SMS provider configured, falling back to simulation'
+          );
       }
     } catch (error) {
       console.error('❌ Error initializing SMS provider:', error);
@@ -244,7 +254,9 @@ Thank you for using Wipay!`;
     }
 
     try {
-      console.log(`📤 Sending SMS via ${this.provider.name} to ${normalizedPhone}`);
+      console.log(
+        `📤 Sending SMS via ${this.provider.name} to ${normalizedPhone}`
+      );
       const success = await this.provider.sendSMS(normalizedPhone, message);
 
       if (success) {
@@ -291,7 +303,8 @@ Thank you for using Wipay!`;
 
   // Test SMS functionality
   async testSMS(testNumber: string): Promise<boolean> {
-    const testMessage = '🧪 Test SMS from Wipay WiFi Token System. If you receive this, SMS is working correctly!';
+    const testMessage =
+      '🧪 Test SMS from Wipay WiFi Token System. If you receive this, SMS is working correctly!';
     return this.sendSMS(testNumber, testMessage);
   }
 }
@@ -299,7 +312,8 @@ Thank you for using Wipay!`;
 // Factory function to create SMS service with environment variables
 export function createSMSService(): SMSService {
   const config: SMSConfig = {
-    provider: (import.meta.env.VITE_SMS_PROVIDER as SMSConfig['provider']) || 'custom',
+    provider:
+      (import.meta.env.VITE_SMS_PROVIDER as SMSConfig['provider']) || 'custom',
     apiKey: import.meta.env.VITE_SMS_API_KEY,
     apiSecret: import.meta.env.VITE_SMS_API_SECRET,
     senderId: import.meta.env.VITE_SMS_SENDER_ID,
