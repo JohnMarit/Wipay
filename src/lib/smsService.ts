@@ -273,9 +273,9 @@ Thank you for using Wipay!`;
   }
 
   private isValidPhoneNumber(phone: string): boolean {
-    // Basic phone number validation
-    const phoneRegex = /^\+?[1-9]\d{6,14}$/;
-    return phoneRegex.test(phone.replace(/\s/g, ''));
+    // Basic phone number validation - more permissive for local numbers
+    const phoneRegex = /^\+?[0-9]{7,15}$/;
+    return phoneRegex.test(phone.replace(/[\s\-()]/g, ''));
   }
 
   private normalizePhoneNumber(phone: string): string {
@@ -285,11 +285,17 @@ Thank you for using Wipay!`;
     // Add South Sudan country code if no country code present
     if (!normalized.startsWith('+')) {
       if (normalized.startsWith('0')) {
-        normalized = '+211' + normalized.substring(1); // South Sudan
-      } else if (normalized.length <= 10) {
-        normalized = '+211' + normalized; // Assume South Sudan
-      } else {
+        // Remove leading 0 and add South Sudan country code
+        normalized = '+211' + normalized.substring(1);
+      } else if (normalized.length >= 7 && normalized.length <= 10) {
+        // Assume South Sudan for numbers between 7-10 digits
+        normalized = '+211' + normalized;
+      } else if (normalized.length > 10) {
+        // Assume it already has country code without +
         normalized = '+' + normalized;
+      } else {
+        // For shorter numbers, still try South Sudan
+        normalized = '+211' + normalized;
       }
     }
 
