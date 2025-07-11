@@ -271,8 +271,13 @@ export const tokenService = {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
 
       // If the error is about missing index, fall back to a simpler query
-      if (errorMsg.includes('requires an index') || errorMsg.includes('indexes')) {
-        console.warn('⚠️ Composite index not available, using fallback query. Please create the index for better performance.');
+      if (
+        errorMsg.includes('requires an index') ||
+        errorMsg.includes('indexes')
+      ) {
+        console.warn(
+          '⚠️ Composite index not available, using fallback query. Please create the index for better performance.'
+        );
 
         try {
           // Fallback: Query without ordering, then sort in memory
@@ -293,10 +298,17 @@ export const tokenService = {
           });
 
           // Sort in memory by createdAt descending
-          return tokens.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          return tokens.sort(
+            (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+          );
         } catch (fallbackError: unknown) {
-          const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : 'Unknown error';
-          throw new Error(`Failed to get tokens (fallback failed): ${fallbackErrorMsg}`);
+          const fallbackErrorMsg =
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : 'Unknown error';
+          throw new Error(
+            `Failed to get tokens (fallback failed): ${fallbackErrorMsg}`
+          );
         }
       }
 
@@ -334,8 +346,13 @@ export const tokenService = {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
 
       // If the error is about missing index, fall back to a simpler query
-      if (errorMsg.includes('requires an index') || errorMsg.includes('indexes')) {
-        console.warn('⚠️ Composite index not available for date range query, using fallback query.');
+      if (
+        errorMsg.includes('requires an index') ||
+        errorMsg.includes('indexes')
+      ) {
+        console.warn(
+          '⚠️ Composite index not available for date range query, using fallback query.'
+        );
 
         try {
           // Fallback: Query without ordering, then filter and sort in memory
@@ -357,11 +374,19 @@ export const tokenService = {
 
           // Filter by date range and sort in memory
           return tokens
-            .filter(token => token.createdAt >= startDate && token.createdAt <= endDate)
+            .filter(
+              token =>
+                token.createdAt >= startDate && token.createdAt <= endDate
+            )
             .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         } catch (fallbackError: unknown) {
-          const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : 'Unknown error';
-          throw new Error(`Failed to get tokens for date range (fallback failed): ${fallbackErrorMsg}`);
+          const fallbackErrorMsg =
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : 'Unknown error';
+          throw new Error(
+            `Failed to get tokens for date range (fallback failed): ${fallbackErrorMsg}`
+          );
         }
       }
 
@@ -400,47 +425,58 @@ export const tokenService = {
         orderBy('createdAt', 'desc')
       );
 
-      return onSnapshot(q, querySnapshot => {
-        const tokens = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt.toDate(),
-            expiresAt: data.expiresAt.toDate(),
-          } as WiFiToken;
-        });
-        callback(tokens);
-      }, (error) => {
-        // If the error is about missing index, fall back to a simpler query
-        if (error.message.includes('requires an index') || error.message.includes('indexes')) {
-          console.warn('⚠️ Composite index not available for real-time query, using fallback query.');
-
-          // Fallback: Query without ordering, then sort in callback
-          const fallbackQuery = query(
-            collection(db, 'wifiTokens'),
-            where('userId', '==', userId)
-          );
-
-          return onSnapshot(fallbackQuery, querySnapshot => {
-            const tokens = querySnapshot.docs.map(doc => {
-              const data = doc.data();
-              return {
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt.toDate(),
-                expiresAt: data.expiresAt.toDate(),
-              } as WiFiToken;
-            });
-
-            // Sort in memory by createdAt descending
-            const sortedTokens = tokens.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-            callback(sortedTokens);
+      return onSnapshot(
+        q,
+        querySnapshot => {
+          const tokens = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt.toDate(),
+              expiresAt: data.expiresAt.toDate(),
+            } as WiFiToken;
           });
-        } else {
-          console.error('Error in real-time token listener:', error);
+          callback(tokens);
+        },
+        error => {
+          // If the error is about missing index, fall back to a simpler query
+          if (
+            error.message.includes('requires an index') ||
+            error.message.includes('indexes')
+          ) {
+            console.warn(
+              '⚠️ Composite index not available for real-time query, using fallback query.'
+            );
+
+            // Fallback: Query without ordering, then sort in callback
+            const fallbackQuery = query(
+              collection(db, 'wifiTokens'),
+              where('userId', '==', userId)
+            );
+
+            return onSnapshot(fallbackQuery, querySnapshot => {
+              const tokens = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  ...data,
+                  createdAt: data.createdAt.toDate(),
+                  expiresAt: data.expiresAt.toDate(),
+                } as WiFiToken;
+              });
+
+              // Sort in memory by createdAt descending
+              const sortedTokens = tokens.sort(
+                (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+              );
+              callback(sortedTokens);
+            });
+          } else {
+            console.error('Error in real-time token listener:', error);
+          }
         }
-      });
+      );
     } catch (error) {
       console.error('Error setting up real-time token listener:', error);
 
@@ -462,7 +498,9 @@ export const tokenService = {
         });
 
         // Sort in memory by createdAt descending
-        const sortedTokens = tokens.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        const sortedTokens = tokens.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        );
         callback(sortedTokens);
       });
     }
