@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,14 +16,14 @@ import { onAuthStateChange, signOutUser } from '@/lib/auth';
 import { authService } from '@/lib/firebase';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-  AlertTriangle,
-  Eye,
-  EyeOff,
-  LogIn,
-  UserPlus,
-  Wifi,
+    AlertTriangle,
+    Eye,
+    EyeOff,
+    LogIn,
+    UserPlus,
+    Wifi,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
@@ -69,6 +69,35 @@ const App = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Memoized input change handlers to prevent re-creation on every render
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignupForm(prev => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignupForm(prev => ({ ...prev, email: e.target.value }));
+  }, []);
+
+  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignupForm(prev => ({ ...prev, phone: e.target.value }));
+  }, []);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignupForm(prev => ({ ...prev, password: e.target.value }));
+  }, []);
+
+  const handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }));
+  }, []);
+
+  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginForm(prev => ({ ...prev, username: e.target.value }));
+  }, []);
+
+  const handleLoginPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginForm(prev => ({ ...prev, password: e.target.value }));
+  }, []);
 
   const translations = {
     en: {
@@ -396,12 +425,7 @@ const App = () => {
                     id="username"
                     type="email"
                     value={loginForm.username}
-                    onChange={e =>
-                      setLoginForm(prev => ({
-                        ...prev,
-                        username: e.target.value,
-                      }))
-                    }
+                    onChange={handleUsernameChange}
                     placeholder={t.enterUsername}
                     required
                     disabled={loginForm.isLoading}
@@ -416,12 +440,7 @@ const App = () => {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       value={loginForm.password}
-                      onChange={e =>
-                        setLoginForm(prev => ({
-                          ...prev,
-                          password: e.target.value,
-                        }))
-                      }
+                      onChange={handleLoginPasswordChange}
                       placeholder={t.enterPassword}
                       required
                       disabled={loginForm.isLoading}
@@ -483,9 +502,7 @@ const App = () => {
                     id="fullName"
                     type="text"
                     value={signupForm.name}
-                    onChange={e =>
-                      setSignupForm(prev => ({ ...prev, name: e.target.value }))
-                    }
+                    onChange={handleNameChange}
                     placeholder={t.enterFullName}
                     required
                     disabled={signupForm.isLoading}
@@ -499,12 +516,7 @@ const App = () => {
                     id="email"
                     type="email"
                     value={signupForm.email}
-                    onChange={e =>
-                      setSignupForm(prev => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
+                    onChange={handleEmailChange}
                     placeholder={t.enterEmail}
                     required
                     disabled={signupForm.isLoading}
@@ -518,12 +530,7 @@ const App = () => {
                     id="phone"
                     type="tel"
                     value={signupForm.phone}
-                    onChange={e =>
-                      setSignupForm(prev => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
+                    onChange={handlePhoneChange}
                     placeholder={t.enterPhone}
                     required
                     disabled={signupForm.isLoading}
@@ -538,12 +545,7 @@ const App = () => {
                       id="signupPassword"
                       type={showPassword ? 'text' : 'password'}
                       value={signupForm.password}
-                      onChange={e =>
-                        setSignupForm(prev => ({
-                          ...prev,
-                          password: e.target.value,
-                        }))
-                      }
+                      onChange={handlePasswordChange}
                       placeholder={t.enterPassword}
                       required
                       minLength={6}
@@ -571,12 +573,7 @@ const App = () => {
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={signupForm.confirmPassword}
-                      onChange={e =>
-                        setSignupForm(prev => ({
-                          ...prev,
-                          confirmPassword: e.target.value,
-                        }))
-                      }
+                      onChange={handleConfirmPasswordChange}
                       placeholder={t.enterConfirmPassword}
                       required
                       minLength={6}
@@ -652,7 +649,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<LoginComponent />} />
+                        <Route path="/login" element={<LoginComponent />} />
             <Route
               path="/"
               element={
