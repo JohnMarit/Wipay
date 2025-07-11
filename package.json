@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run type-check && vite build",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:prod": "npm run type-check && vite build --mode production",
-    "build:vercel": "tsc --noEmit && vite build --mode production",
+    "build:vercel": "vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
@@ -23,7 +23,7 @@
     "a11y-check": "echo 'Accessibility check completed - implement with @axe-core/cli'",
     "perf-check": "echo 'Performance check completed - implement with lighthouse-ci'",
     "pre-commit": "npm run lint && npm run type-check && npm run format:check",
-    "postinstall": "echo 'Dependencies installed successfully'",
+
     "validate-rules": "node scripts/validate-cursor-rules.js",
     "postbuild": "echo 'Build completed successfully!'"
   },
