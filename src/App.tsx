@@ -39,6 +39,383 @@ interface User {
   email: string;
 }
 
+// Login component props interface
+interface LoginComponentProps {
+  language: string;
+  setLanguage: (lang: string) => void;
+  isSignupMode: boolean;
+  setIsSignupMode: (mode: boolean) => void;
+  loginForm: {
+    username: string;
+    password: string;
+    isLoading: boolean;
+    error: string;
+  };
+  signupForm: {
+    username: string;
+    password: string;
+    confirmPassword: string;
+    name: string;
+    phone: string;
+    email: string;
+    isLoading: boolean;
+    error: string;
+  };
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (show: boolean) => void;
+  handleLogin: (e: React.FormEvent) => void;
+  handleSignup: (e: React.FormEvent) => void;
+  handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handlePhoneChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handlePasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleConfirmPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleUsernameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleLoginPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  t: {
+    title: string;
+    loginSubtitle: string;
+    signupSubtitle: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+    fullName: string;
+    phoneNumber: string;
+    emailAddress: string;
+    login: string;
+    signup: string;
+    signingIn: string;
+    signingUp: string;
+    loginError: string;
+    signupError: string;
+    passwordMismatch: string;
+    usernameExists: string;
+    invalidPhone: string;
+    invalidEmail: string;
+    accountCreated: string;
+    enterUsername: string;
+    enterPassword: string;
+    enterConfirmPassword: string;
+    enterFullName: string;
+    enterPhone: string;
+    enterEmail: string;
+    selectLanguage: string;
+    switchToSignup: string;
+    switchToLogin: string;
+    createAccount: string;
+    loginToAccount: string;
+    passwordLength: string;
+    networkError: string;
+    unknownError: string;
+  };
+}
+
+// LoginComponent moved outside App to prevent re-creation on every render
+const LoginComponent: React.FC<LoginComponentProps> = ({
+  language,
+  setLanguage,
+  isSignupMode,
+  setIsSignupMode,
+  loginForm,
+  signupForm,
+  showPassword,
+  setShowPassword,
+  showConfirmPassword,
+  setShowConfirmPassword,
+  handleLogin,
+  handleSignup,
+  handleNameChange,
+  handleEmailChange,
+  handlePhoneChange,
+  handlePasswordChange,
+  handleConfirmPasswordChange,
+  handleUsernameChange,
+  handleLoginPasswordChange,
+  t,
+}) => (
+  <div
+    className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}
+  >
+    <div className="w-full max-w-md space-y-6">
+      {/* Language Selector */}
+      <div className="flex justify-center">
+        <select
+          value={language}
+          onChange={e => setLanguage(e.target.value)}
+          className="p-2 border rounded bg-white"
+        >
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+
+      {/* Login/Signup Card */}
+      <Card className="shadow-lg">
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-3 bg-blue-600 rounded-full">
+              <Wifi className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <CardTitle className="text-xl">{t.title}</CardTitle>
+            <CardDescription>
+              {isSignupMode ? t.signupSubtitle : t.loginSubtitle}
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Toggle between Login and Signup */}
+          <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => setIsSignupMode(false)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                !isSignupMode
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LogIn className="h-4 w-4" />
+              {t.loginToAccount}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSignupMode(true)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                isSignupMode
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <UserPlus className="h-4 w-4" />
+              {t.createAccount}
+            </button>
+          </div>
+
+          {/* Login Form */}
+          {!isSignupMode && (
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Error Display */}
+              {loginForm.error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  <AlertTriangle className="h-4 w-4" />
+                  {loginForm.error}
+                </div>
+              )}
+
+              {/* Username/Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="username">{t.username}</Label>
+                <Input
+                  id="username"
+                  type="email"
+                  value={loginForm.username}
+                  onChange={handleUsernameChange}
+                  placeholder={t.enterUsername}
+                  required
+                  disabled={loginForm.isLoading}
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">{t.password}</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginForm.password}
+                    onChange={handleLoginPasswordChange}
+                    placeholder={t.enterPassword}
+                    required
+                    disabled={loginForm.isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Login Button */}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  loginForm.isLoading ||
+                  !loginForm.username ||
+                  !loginForm.password
+                }
+              >
+                {loginForm.isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {t.signingIn}
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    {t.login}
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
+
+          {/* Signup Form */}
+          {isSignupMode && (
+            <form onSubmit={handleSignup} className="space-y-4">
+              {/* Error Display */}
+              {signupForm.error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  <AlertTriangle className="h-4 w-4" />
+                  {signupForm.error}
+                </div>
+              )}
+
+              {/* Full Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">{t.fullName}</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={signupForm.name}
+                  onChange={handleNameChange}
+                  placeholder={t.enterFullName}
+                  required
+                  disabled={signupForm.isLoading}
+                />
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">{t.emailAddress}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={signupForm.email}
+                  onChange={handleEmailChange}
+                  placeholder={t.enterEmail}
+                  required
+                  disabled={signupForm.isLoading}
+                />
+              </div>
+
+              {/* Phone Field */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t.phoneNumber}</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={signupForm.phone}
+                  onChange={handlePhoneChange}
+                  placeholder={t.enterPhone}
+                  required
+                  disabled={signupForm.isLoading}
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="signupPassword">{t.password}</Label>
+                <div className="relative">
+                  <Input
+                    id="signupPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    value={signupForm.password}
+                    onChange={handlePasswordChange}
+                    placeholder={t.enterPassword}
+                    required
+                    minLength={6}
+                    disabled={signupForm.isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">{t.confirmPassword}</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={signupForm.confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    placeholder={t.enterConfirmPassword}
+                    required
+                    minLength={6}
+                    disabled={signupForm.isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Signup Button */}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  signupForm.isLoading ||
+                  !signupForm.name ||
+                  !signupForm.email ||
+                  !signupForm.phone ||
+                  !signupForm.password ||
+                  !signupForm.confirmPassword
+                }
+              >
+                {signupForm.isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {t.signingUp}
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {t.signup}
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -71,33 +448,54 @@ const App = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Memoized input change handlers to prevent re-creation on every render
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm(prev => ({ ...prev, name: e.target.value }));
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSignupForm(prev => ({ ...prev, name: e.target.value }));
+    },
+    []
+  );
 
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm(prev => ({ ...prev, email: e.target.value }));
-  }, []);
+  const handleEmailChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSignupForm(prev => ({ ...prev, email: e.target.value }));
+    },
+    []
+  );
 
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm(prev => ({ ...prev, phone: e.target.value }));
-  }, []);
+  const handlePhoneChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSignupForm(prev => ({ ...prev, phone: e.target.value }));
+    },
+    []
+  );
 
-  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm(prev => ({ ...prev, password: e.target.value }));
-  }, []);
+  const handlePasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSignupForm(prev => ({ ...prev, password: e.target.value }));
+    },
+    []
+  );
 
-  const handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }));
-  }, []);
+  const handleConfirmPasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }));
+    },
+    []
+  );
 
-  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoginForm(prev => ({ ...prev, username: e.target.value }));
-  }, []);
+  const handleUsernameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLoginForm(prev => ({ ...prev, username: e.target.value }));
+    },
+    []
+  );
 
-  const handleLoginPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoginForm(prev => ({ ...prev, password: e.target.value }));
-  }, []);
+  const handleLoginPasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLoginForm(prev => ({ ...prev, password: e.target.value }));
+    },
+    []
+  );
 
   const translations = {
     en: {
@@ -346,288 +744,6 @@ const App = () => {
     }
   };
 
-  const LoginComponent = () => (
-    <div
-      className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}
-    >
-      <div className="w-full max-w-md space-y-6">
-        {/* Language Selector */}
-        <div className="flex justify-center">
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            className="p-2 border rounded bg-white"
-          >
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-          </select>
-        </div>
-
-        {/* Login/Signup Card */}
-        <Card className="shadow-lg">
-          <CardHeader className="text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="p-3 bg-blue-600 rounded-full">
-                <Wifi className="h-8 w-8 text-white" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <CardTitle className="text-xl">{t.title}</CardTitle>
-              <CardDescription>
-                {isSignupMode ? t.signupSubtitle : t.loginSubtitle}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Toggle between Login and Signup */}
-            <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
-              <button
-                type="button"
-                onClick={() => setIsSignupMode(false)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  !isSignupMode
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <LogIn className="h-4 w-4" />
-                {t.loginToAccount}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsSignupMode(true)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  isSignupMode
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <UserPlus className="h-4 w-4" />
-                {t.createAccount}
-              </button>
-            </div>
-
-            {/* Login Form */}
-            {!isSignupMode && (
-              <form onSubmit={handleLogin} className="space-y-4">
-                {/* Error Display */}
-                {loginForm.error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                    <AlertTriangle className="h-4 w-4" />
-                    {loginForm.error}
-                  </div>
-                )}
-
-                {/* Username/Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="username">{t.username}</Label>
-                  <Input
-                    id="username"
-                    type="email"
-                    value={loginForm.username}
-                    onChange={handleUsernameChange}
-                    placeholder={t.enterUsername}
-                    required
-                    disabled={loginForm.isLoading}
-                  />
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="password">{t.password}</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={loginForm.password}
-                      onChange={handleLoginPasswordChange}
-                      placeholder={t.enterPassword}
-                      required
-                      disabled={loginForm.isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Login Button */}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    loginForm.isLoading ||
-                    !loginForm.username ||
-                    !loginForm.password
-                  }
-                >
-                  {loginForm.isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {t.signingIn}
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="h-4 w-4 mr-2" />
-                      {t.login}
-                    </>
-                  )}
-                </Button>
-              </form>
-            )}
-
-            {/* Signup Form */}
-            {isSignupMode && (
-              <form onSubmit={handleSignup} className="space-y-4">
-                {/* Error Display */}
-                {signupForm.error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                    <AlertTriangle className="h-4 w-4" />
-                    {signupForm.error}
-                  </div>
-                )}
-
-                {/* Full Name Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">{t.fullName}</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={signupForm.name}
-                    onChange={handleNameChange}
-                    placeholder={t.enterFullName}
-                    required
-                    disabled={signupForm.isLoading}
-                  />
-                </div>
-
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t.emailAddress}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={signupForm.email}
-                    onChange={handleEmailChange}
-                    placeholder={t.enterEmail}
-                    required
-                    disabled={signupForm.isLoading}
-                  />
-                </div>
-
-                {/* Phone Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="phone">{t.phoneNumber}</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={signupForm.phone}
-                    onChange={handlePhoneChange}
-                    placeholder={t.enterPhone}
-                    required
-                    disabled={signupForm.isLoading}
-                  />
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t.password}</Label>
-                  <div className="relative">
-                    <Input
-                      id="signupPassword"
-                      type={showPassword ? 'text' : 'password'}
-                      value={signupForm.password}
-                      onChange={handlePasswordChange}
-                      placeholder={t.enterPassword}
-                      required
-                      minLength={6}
-                      disabled={signupForm.isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Confirm Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t.confirmPassword}</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={signupForm.confirmPassword}
-                      onChange={handleConfirmPasswordChange}
-                      placeholder={t.enterConfirmPassword}
-                      required
-                      minLength={6}
-                      disabled={signupForm.isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Signup Button */}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    signupForm.isLoading ||
-                    !signupForm.name ||
-                    !signupForm.email ||
-                    !signupForm.phone ||
-                    !signupForm.password ||
-                    !signupForm.confirmPassword
-                  }
-                >
-                  {signupForm.isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {t.signingUp}
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      {t.signup}
-                    </>
-                  )}
-                </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
@@ -649,20 +765,89 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-                        <Route path="/login" element={<LoginComponent />} />
+            <Route path="/login" element={<LoginComponent
+              language={language}
+              setLanguage={setLanguage}
+              isSignupMode={isSignupMode}
+              setIsSignupMode={setIsSignupMode}
+              loginForm={loginForm}
+              setLoginForm={setLoginForm}
+              signupForm={signupForm}
+              setSignupForm={setSignupForm}
+              showPassword={showPassword}
+              setShowPassword={setShowPassword}
+              showConfirmPassword={showConfirmPassword}
+              setShowConfirmPassword={setShowConfirmPassword}
+              handleLogin={handleLogin}
+              handleSignup={handleSignup}
+              handleNameChange={handleNameChange}
+              handleEmailChange={handleEmailChange}
+              handlePhoneChange={handlePhoneChange}
+              handlePasswordChange={handlePasswordChange}
+              handleConfirmPasswordChange={handleConfirmPasswordChange}
+              handleUsernameChange={handleUsernameChange}
+              handleLoginPasswordChange={handleLoginPasswordChange}
+              t={t}
+            />} />
             <Route
               path="/"
               element={
                 isAuthenticated ? (
                   <Index currentUser={currentUser} onLogout={handleLogout} />
                 ) : (
-                  <LoginComponent />
+                  <LoginComponent
+                    language={language}
+                    setLanguage={setLanguage}
+                    isSignupMode={isSignupMode}
+                    setIsSignupMode={setIsSignupMode}
+                    loginForm={loginForm}
+                    setLoginForm={setLoginForm}
+                    signupForm={signupForm}
+                    setSignupForm={setSignupForm}
+                    showPassword={showPassword}
+                    setShowPassword={setShowPassword}
+                    showConfirmPassword={showConfirmPassword}
+                    setShowConfirmPassword={setShowConfirmPassword}
+                    handleLogin={handleLogin}
+                    handleSignup={handleSignup}
+                    handleNameChange={handleNameChange}
+                    handleEmailChange={handleEmailChange}
+                    handlePhoneChange={handlePhoneChange}
+                    handlePasswordChange={handlePasswordChange}
+                    handleConfirmPasswordChange={handleConfirmPasswordChange}
+                    handleUsernameChange={handleUsernameChange}
+                    handleLoginPasswordChange={handleLoginPasswordChange}
+                    t={t}
+                  />
                 )
               }
             />
             <Route
               path="*"
-              element={isAuthenticated ? <NotFound /> : <LoginComponent />}
+              element={isAuthenticated ? <NotFound /> : <LoginComponent
+                language={language}
+                setLanguage={setLanguage}
+                isSignupMode={isSignupMode}
+                setIsSignupMode={setIsSignupMode}
+                loginForm={loginForm}
+                setLoginForm={setLoginForm}
+                signupForm={signupForm}
+                setSignupForm={setSignupForm}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+                showConfirmPassword={showConfirmPassword}
+                setShowConfirmPassword={setShowConfirmPassword}
+                handleLogin={handleLogin}
+                handleSignup={handleSignup}
+                handleNameChange={handleNameChange}
+                handleEmailChange={handleEmailChange}
+                handlePhoneChange={handlePhoneChange}
+                handlePasswordChange={handlePasswordChange}
+                handleConfirmPasswordChange={handleConfirmPasswordChange}
+                handleUsernameChange={handleUsernameChange}
+                handleLoginPasswordChange={handleLoginPasswordChange}
+                t={t}
+              />}
             />
           </Routes>
         </BrowserRouter>
