@@ -52,7 +52,7 @@ import {
     Settings,
     Smartphone,
     User,
-    Wifi
+    Wifi,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -64,7 +64,6 @@ interface WiFiTokenSystemProps {
     email: string;
     phone: string;
   };
-  onLogout?: () => void;
 }
 
 interface WiFiToken {
@@ -109,7 +108,6 @@ interface ReportData {
 const WiFiTokenSystem = ({
   language,
   currentUser,
-  onLogout,
 }: WiFiTokenSystemProps) => {
   const { toast } = useToast();
   const [wifiConfig, setWifiConfig] = useState({
@@ -1284,8 +1282,6 @@ const WiFiTokenSystem = ({
                     </div>
                   </DialogContent>
                 </Dialog>
-
-
               </div>
             </div>
           </CardHeader>
