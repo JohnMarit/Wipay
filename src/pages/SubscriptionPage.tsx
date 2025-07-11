@@ -1,6 +1,12 @@
 import SubscriptionManagement from '@/components/SubscriptionManagement';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { userService } from '@/lib/firebase';
 import { createMockSubscription, UserSubscription } from '@/lib/subscription';
 import { ArrowLeft, Settings } from 'lucide-react';
@@ -17,7 +23,8 @@ interface SubscriptionPageProps {
 }
 
 const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
-  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+  const [userSubscription, setUserSubscription] =
+    useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -44,7 +51,10 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
           setUserSubscription(subscription);
         } else {
           // Create default free subscription if none exists
-          const defaultSubscription = createMockSubscription(currentUser.id, 'free');
+          const defaultSubscription = createMockSubscription(
+            currentUser.id,
+            'free'
+          );
           setUserSubscription(defaultSubscription);
 
           // Save default subscription to Firebase
@@ -59,7 +69,10 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
       } catch (error) {
         console.error('Error loading user subscription:', error);
         // Fallback to free subscription
-        const fallbackSubscription = createMockSubscription(currentUser.id, 'free');
+        const fallbackSubscription = createMockSubscription(
+          currentUser.id,
+          'free'
+        );
         setUserSubscription(fallbackSubscription);
       } finally {
         setLoading(false);
@@ -69,7 +82,9 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
     loadUserSubscription();
   }, [currentUser.id]);
 
-  const handleSubscriptionChange = async (updatedSubscription: UserSubscription) => {
+  const handleSubscriptionChange = async (
+    updatedSubscription: UserSubscription
+  ) => {
     try {
       // Update Firebase
       await userService.updateSubscription(currentUser.id, {
@@ -96,7 +111,9 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-center space-x-2">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="text-lg font-medium">Loading subscription...</span>
+              <span className="text-lg font-medium">
+                Loading subscription...
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -110,8 +127,12 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ currentUser }) => {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-lg font-medium text-red-600">Failed to load subscription</p>
-              <p className="text-sm text-gray-600 mt-2">Please refresh the page or contact support</p>
+              <p className="text-lg font-medium text-red-600">
+                Failed to load subscription
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                Please refresh the page or contact support
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -29,8 +29,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { userService } from '@/lib/firebase';
-import { createBillingManager, createMTNMomoService } from '@/lib/mtnMomoService';
-import { createSubscriptionService, SUBSCRIPTION_PLANS } from '@/lib/subscription';
+import {
+    createBillingManager,
+    createMTNMomoService,
+} from '@/lib/mtnMomoService';
+import {
+    createSubscriptionService,
+    SUBSCRIPTION_PLANS,
+} from '@/lib/subscription';
 import {
     AlertTriangle,
     ArrowUp,
@@ -49,7 +55,7 @@ import {
     XCircle,
     Zap,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface BillingDashboardProps {
   currentUser: {
@@ -58,8 +64,26 @@ interface BillingDashboardProps {
     email: string;
     phone: string;
   };
-  userProfile: any; // Contains paymentProfile and subscription info
-  onPlanChanged?: () => void; // Callback when plan is changed
+  userProfile: {
+    paymentProfile?: {
+      momoNumber?: string;
+      accountHolderName?: string;
+      isVerified?: boolean;
+      accountStatus?: string;
+      nextBillingDate?: Date;
+      totalFailedAttempts?: number;
+      billingDay?: number;
+      lastSuccessfulPayment?: Date;
+    };
+    subscription?: {
+      planId?: string;
+      tokensUsedThisMonth?: number;
+      status?: string;
+      currentPeriodStart?: Date;
+      currentPeriodEnd?: Date;
+    };
+  } | null;
+  onPlanChanged?: () => void;
 }
 
 interface PaymentHistory {
@@ -89,73 +113,69 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
   const [showVerifyPayment, setShowVerifyPayment] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [momoPin, setMomoPin] = useState('');
-  const [verificationStep, setVerificationStep] = useState<'pin' | 'confirming' | 'success' | 'failed'>('pin');
+  const [verificationStep, setVerificationStep] = useState<
+    'pin' | 'confirming' | 'success' | 'failed'
+  >('pin');
   const { toast } = useToast();
 
   const mtnMomoService = createMTNMomoService();
   const billingManager = createBillingManager();
   const subscriptionService = createSubscriptionService();
 
-  const currentPlan = SUBSCRIPTION_PLANS.find(p => p.id === userProfile?.subscription?.planId);
+  const currentPlan = SUBSCRIPTION_PLANS.find(
+    p => p.id === userProfile?.subscription?.planId
+  );
   const paymentProfile = userProfile?.paymentProfile;
   const subscription = userProfile?.subscription;
 
   // Calculate token usage progress
-  const tokenUsageProgress = currentPlan?.features.tokensPerMonth === -1
-    ? 0
-    : ((subscription?.tokensUsedThisMonth || 0) / (currentPlan?.features.tokensPerMonth || 1)) * 100;
+  const tokenUsageProgress =
+    currentPlan?.features.tokensPerMonth === -1
+      ? 0
+      : ((subscription?.tokensUsedThisMonth || 0) /
+          (currentPlan?.features.tokensPerMonth || 1)) *
+        100;
 
-  const tokensRemaining = currentPlan?.features.tokensPerMonth === -1
-    ? -1
-    : Math.max(0, (currentPlan?.features.tokensPerMonth || 0) - (subscription?.tokensUsedThisMonth || 0));
+  const tokensRemaining =
+    currentPlan?.features.tokensPerMonth === -1
+      ? -1
+      : Math.max(
+          0,
+          (currentPlan?.features.tokensPerMonth || 0) -
+            (subscription?.tokensUsedThisMonth || 0)
+        );
 
-  const isTokensExhausted = tokensRemaining === 0 && currentPlan?.features.tokensPerMonth !== -1;
+  const isTokensExhausted =
+    tokensRemaining === 0 && currentPlan?.features.tokensPerMonth !== -1;
+
+  const loadPaymentHistory = useCallback(() => {
+    // TODO: In real implementation, load actual payment history from Firebase
+    // For now, show empty state until real payment data exists
+
+    setLoading(true);
+
+    // Simulate API call delay
+    setTimeout(() => {
+      // Load actual payment records from Firebase when available
+      // For now, start with empty array - real payments will populate this
+      setPaymentHistory([]);
+      setLoading(false);
+    }, 500);
+  }, []);
 
   useEffect(() => {
     loadPaymentHistory();
-  }, []);
+  }, [loadPaymentHistory]);
 
   // Populate form with existing payment method details when dialog opens
   useEffect(() => {
     if (showUpdateMomo && paymentProfile) {
-      setNewAccountHolderName(paymentProfile.accountHolderName || currentUser.name);
+      setNewAccountHolderName(
+        paymentProfile.accountHolderName || currentUser.name
+      );
       setNewMomoNumber(paymentProfile.momoNumber || '');
     }
   }, [showUpdateMomo, paymentProfile, currentUser.name]);
-
-  const loadPaymentHistory = () => {
-    // Mock payment history - in real implementation, load from Firebase
-    const mockHistory: PaymentHistory[] = [
-      {
-        id: '1',
-        date: new Date('2024-01-15'),
-        amount: currentPlan?.price || 2500,
-        status: 'successful',
-        planName: `${currentPlan?.name || 'Basic Plan'} - ${currentUser.name}`,
-        referenceId: 'wipay_12345',
-      },
-      {
-        id: '2',
-        date: new Date('2024-02-15'),
-        amount: currentPlan?.price || 2500,
-        status: 'failed',
-        planName: `${currentPlan?.name || 'Basic Plan'} - ${currentUser.name}`,
-        referenceId: 'wipay_67890',
-        failureReason: 'Insufficient funds',
-      },
-      {
-        id: '3',
-        date: new Date('2024-03-15'),
-        amount: currentPlan?.price || 2500,
-        status: 'pending',
-        planName: `${currentPlan?.name || 'Basic Plan'} - ${currentUser.name}`,
-        referenceId: 'wipay_24680',
-      },
-    ];
-
-    setPaymentHistory(mockHistory);
-    setLoading(false);
-  };
 
   const handleRetryPayment = async () => {
     if (!currentPlan || !paymentProfile) return;
@@ -176,7 +196,11 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
       );
 
       if (paymentResult.success) {
-        await userService.updateAccountStatus(currentUser.id, true, paymentResult.referenceId);
+        await userService.updateAccountStatus(
+          currentUser.id,
+          true,
+          paymentResult.referenceId
+        );
 
         toast({
           title: 'Payment Successful! 🎉',
@@ -191,7 +215,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
         toast({
           title: 'Payment Failed',
-          description: paymentResult.error || 'Payment could not be processed. Please check your MTN MoMo balance.',
+          description:
+            paymentResult.error ||
+            'Payment could not be processed. Please check your MTN MoMo balance.',
           variant: 'destructive',
         });
       }
@@ -215,7 +241,11 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
     const isUpgrade = newPlan.price > (currentPlan?.price || 0);
     const isDowngrade = newPlan.price < (currentPlan?.price || 0);
-    const changeType = isUpgrade ? 'upgrade' : isDowngrade ? 'downgrade' : 'switch';
+    const changeType = isUpgrade
+      ? 'upgrade'
+      : isDowngrade
+        ? 'downgrade'
+        : 'switch';
 
     setUpgradeLoading(true);
     try {
@@ -237,7 +267,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
         if (!paymentResult.success) {
           toast({
             title: `${changeType === 'upgrade' ? 'Upgrade' : changeType === 'downgrade' ? 'Downgrade' : 'Plan Change'} Failed`,
-            description: paymentResult.error || 'Payment could not be processed.',
+            description:
+              paymentResult.error || 'Payment could not be processed.',
             variant: 'destructive',
           });
           return;
@@ -246,7 +277,11 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
       // Update subscription plan
       const now = new Date();
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, paymentProfile.billingDay);
+      const nextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        paymentProfile.billingDay
+      );
 
       await userService.updateSubscription(currentUser.id, {
         planId: newPlan.id,
@@ -301,7 +336,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
     }
 
     try {
-      const normalizedNumber = mtnMomoService.normalizeMomoNumber(newMomoNumber);
+      const normalizedNumber =
+        mtnMomoService.normalizeMomoNumber(newMomoNumber);
 
       await userService.updatePaymentProfile(currentUser.id, {
         ...paymentProfile,
@@ -347,7 +383,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mock verification - in real implementation, this would call MTN MoMo API
-      const isDevelopmentMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isDevelopmentMode =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
 
       if (isDevelopmentMode) {
         // 90% success rate in mock mode
@@ -470,7 +508,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Development Mode Alert */}
-      {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+      {(window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1') && (
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -480,7 +519,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   Development Mode Active
                 </h4>
                 <p className="text-sm text-blue-700">
-                  You're running in development mode. Payment transactions and verification will be simulated and won't charge real money.
+                  You're running in development mode. Payment transactions and
+                  verification will be simulated and won't charge real money.
                 </p>
               </div>
             </div>
@@ -495,11 +535,10 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div className="flex-1">
-                <h4 className="font-medium text-red-800">
-                  Tokens Exhausted
-                </h4>
+                <h4 className="font-medium text-red-800">Tokens Exhausted</h4>
                 <p className="text-sm text-red-700">
-                  You've used all your monthly tokens. Upgrade your plan to generate more tokens.
+                  You've used all your monthly tokens. Upgrade your plan to
+                  generate more tokens.
                 </p>
               </div>
               <Button
@@ -531,7 +570,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   <span className="font-medium">{currentPlan?.name}</span>
                 </div>
                 <span className="text-2xl font-bold">
-                  {currentPlan?.price === 0 ? 'Free' : `${currentPlan?.price} SSP`}
+                  {currentPlan?.price === 0
+                    ? 'Free'
+                    : `${currentPlan?.price} SSP`}
                 </span>
               </div>
 
@@ -539,7 +580,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Token Usage</span>
-                  <span className={`font-medium ${isTokensExhausted ? 'text-red-600' : 'text-gray-600'}`}>
+                  <span
+                    className={`font-medium ${isTokensExhausted ? 'text-red-600' : 'text-gray-600'}`}
+                  >
                     {currentPlan?.features.tokensPerMonth === -1
                       ? `${subscription?.tokensUsedThisMonth || 0} used`
                       : `${subscription?.tokensUsedThisMonth || 0} / ${currentPlan?.features.tokensPerMonth}`}
@@ -553,15 +596,17 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   {tokensRemaining === -1
                     ? 'Unlimited tokens remaining'
                     : isTokensExhausted
-                    ? 'No tokens remaining - upgrade to continue'
-                    : `${tokensRemaining} tokens remaining this month`}
+                      ? 'No tokens remaining - upgrade to continue'
+                      : `${tokensRemaining} tokens remaining this month`}
                 </div>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Status:</span>
-                  <span className={`font-medium ${getAccountStatusColor(paymentProfile?.accountStatus)}`}>
+                  <span
+                    className={`font-medium ${getAccountStatusColor(paymentProfile?.accountStatus)}`}
+                  >
                     {paymentProfile?.accountStatus || 'Unknown'}
                   </span>
                 </div>
@@ -570,16 +615,22 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   <div className="flex justify-between">
                     <span>Next Billing:</span>
                     <span className="font-medium">
-                      {new Date(paymentProfile.nextBillingDate).toLocaleDateString()}
+                      {new Date(
+                        paymentProfile.nextBillingDate
+                      ).toLocaleDateString()}
                     </span>
                   </div>
                 )}
 
                 <div className="flex justify-between">
                   <span>Failed Attempts:</span>
-                  <span className={`font-medium ${
-                    paymentProfile?.totalFailedAttempts >= 2 ? 'text-red-600' : 'text-gray-600'
-                  }`}>
+                  <span
+                    className={`font-medium ${
+                      paymentProfile?.totalFailedAttempts >= 2
+                        ? 'text-red-600'
+                        : 'text-gray-600'
+                    }`}
+                  >
                     {paymentProfile?.totalFailedAttempts || 0}
                   </span>
                 </div>
@@ -587,7 +638,10 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
               {/* Plan Management Buttons */}
               <div className="flex gap-2">
-                <Dialog open={showPlanUpgrade} onOpenChange={setShowPlanUpgrade}>
+                <Dialog
+                  open={showPlanUpgrade}
+                  onOpenChange={setShowPlanUpgrade}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1">
                       <TrendingUp className="h-4 w-4 mr-2" />
@@ -598,21 +652,28 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     <DialogHeader>
                       <DialogTitle>Change Your Plan</DialogTitle>
                       <DialogDescription>
-                        Choose a different subscription plan. Click the "Upgrade/Downgrade" button on any plan to change immediately, or select a plan and click "Confirm Change" below. Changes take effect immediately and your tokens will be reset.
+                        Choose a different subscription plan. Click the
+                        "Upgrade/Downgrade" button on any plan to change
+                        immediately, or select a plan and click "Confirm Change"
+                        below. Changes take effect immediately and your tokens
+                        will be reset.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {getUpgradeablePlans().map((plan) => (
+                      {getUpgradeablePlans().map(plan => (
                         <Card
                           key={plan.id}
                           className={`relative cursor-pointer transition-all duration-200 ${
                             plan.id === selectedUpgradePlan
                               ? 'ring-2 ring-blue-600 border-blue-600'
                               : plan.id === currentPlan?.id
-                              ? 'ring-2 ring-gray-400 border-gray-400 opacity-60'
-                              : 'hover:shadow-lg'
+                                ? 'ring-2 ring-gray-400 border-gray-400 opacity-60'
+                                : 'hover:shadow-lg'
                           } ${plan.popular ? 'ring-2 ring-purple-600' : ''}`}
-                          onClick={() => plan.id !== currentPlan?.id && setSelectedUpgradePlan(plan.id)}
+                          onClick={() =>
+                            plan.id !== currentPlan?.id &&
+                            setSelectedUpgradePlan(plan.id)
+                          }
                         >
                           {plan.id === currentPlan?.id && (
                             <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
@@ -632,7 +693,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                             <div className="flex justify-center mb-2">
                               {getPlanIcon(plan.id)}
                             </div>
-                            <CardTitle className="text-lg">{plan.name}</CardTitle>
+                            <CardTitle className="text-lg">
+                              {plan.name}
+                            </CardTitle>
                             <CardDescription>
                               {plan.price === 0 ? (
                                 <span className="text-2xl font-bold text-green-600">
@@ -688,9 +751,13 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                             {plan.id !== currentPlan?.id && (
                               <Button
                                 className="w-full mt-4"
-                                variant={plan.id === selectedUpgradePlan ? 'default' : 'outline'}
+                                variant={
+                                  plan.id === selectedUpgradePlan
+                                    ? 'default'
+                                    : 'outline'
+                                }
                                 disabled={upgradeLoading}
-                                onClick={async (e) => {
+                                onClick={async e => {
                                   e.stopPropagation(); // Prevent card click
                                   setSelectedUpgradePlan(plan.id);
 
@@ -698,9 +765,15 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                                   if (!paymentProfile) return;
 
                                   const newPlan = plan;
-                                  const isUpgrade = newPlan.price > (currentPlan?.price || 0);
-                                  const isDowngrade = newPlan.price < (currentPlan?.price || 0);
-                                  const changeType = isUpgrade ? 'upgrade' : isDowngrade ? 'downgrade' : 'switch';
+                                  const isUpgrade =
+                                    newPlan.price > (currentPlan?.price || 0);
+                                  const isDowngrade =
+                                    newPlan.price < (currentPlan?.price || 0);
+                                  const changeType = isUpgrade
+                                    ? 'upgrade'
+                                    : isDowngrade
+                                      ? 'downgrade'
+                                      : 'switch';
 
                                   setUpgradeLoading(true);
                                   try {
@@ -711,18 +784,21 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
                                     // Process payment for new plan (only if it's a paid plan)
                                     if (newPlan.price > 0) {
-                                      const paymentResult = await billingManager.processSubscriptionPayment(
-                                        currentUser.id,
-                                        `sub_${currentUser.id}`,
-                                        newPlan.price,
-                                        paymentProfile.momoNumber,
-                                        newPlan.name
-                                      );
+                                      const paymentResult =
+                                        await billingManager.processSubscriptionPayment(
+                                          currentUser.id,
+                                          `sub_${currentUser.id}`,
+                                          newPlan.price,
+                                          paymentProfile.momoNumber,
+                                          newPlan.name
+                                        );
 
                                       if (!paymentResult.success) {
                                         toast({
                                           title: `${changeType === 'upgrade' ? 'Upgrade' : changeType === 'downgrade' ? 'Downgrade' : 'Plan Change'} Failed`,
-                                          description: paymentResult.error || 'Payment could not be processed.',
+                                          description:
+                                            paymentResult.error ||
+                                            'Payment could not be processed.',
                                           variant: 'destructive',
                                         });
                                         setUpgradeLoading(false);
@@ -732,19 +808,29 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
                                     // Update subscription plan
                                     const now = new Date();
-                                    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, paymentProfile.billingDay);
+                                    const nextMonth = new Date(
+                                      now.getFullYear(),
+                                      now.getMonth() + 1,
+                                      paymentProfile.billingDay
+                                    );
 
-                                    await userService.updateSubscription(currentUser.id, {
-                                      planId: newPlan.id,
-                                      status: 'active',
-                                      currentPeriodStart: now,
-                                      currentPeriodEnd: nextMonth,
-                                      tokensUsedThisMonth: 0, // Reset tokens on plan change
-                                    });
+                                    await userService.updateSubscription(
+                                      currentUser.id,
+                                      {
+                                        planId: newPlan.id,
+                                        status: 'active',
+                                        currentPeriodStart: now,
+                                        currentPeriodEnd: nextMonth,
+                                        tokensUsedThisMonth: 0, // Reset tokens on plan change
+                                      }
+                                    );
 
                                     // Update payment profile if payment was successful
                                     if (newPlan.price > 0) {
-                                      await userService.updateAccountStatus(currentUser.id, true);
+                                      await userService.updateAccountStatus(
+                                        currentUser.id,
+                                        true
+                                      );
                                     }
 
                                     toast({
@@ -756,10 +842,14 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                                     setSelectedUpgradePlan('');
                                     onPlanChanged?.();
                                   } catch (error) {
-                                    console.error('Error changing plan:', error);
+                                    console.error(
+                                      'Error changing plan:',
+                                      error
+                                    );
                                     toast({
                                       title: 'Plan Change Failed',
-                                      description: 'Failed to change your plan. Please try again.',
+                                      description:
+                                        'Failed to change your plan. Please try again.',
                                       variant: 'destructive',
                                     });
                                   } finally {
@@ -767,13 +857,16 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                                   }
                                 }}
                               >
-                                {upgradeLoading && selectedUpgradePlan === plan.id ? (
+                                {upgradeLoading &&
+                                selectedUpgradePlan === plan.id ? (
                                   <>
                                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                                     Processing...
                                   </>
+                                ) : plan.price < (currentPlan?.price || 0) ? (
+                                  'Downgrade'
                                 ) : (
-                                  plan.price < (currentPlan?.price || 0) ? 'Downgrade' : 'Upgrade'
+                                  'Upgrade'
                                 )}
                               </Button>
                             )}
@@ -784,7 +877,10 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
                     {selectedUpgradePlan && (
                       <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={() => setShowPlanUpgrade(false)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowPlanUpgrade(false)}
+                        >
                           Cancel
                         </Button>
                         <Button
@@ -813,7 +909,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     <span className="font-medium">Account Suspended</span>
                   </div>
                   <p className="text-sm text-red-700 mt-1">
-                    Your account has been suspended due to failed payments. Please retry payment to reactivate.
+                    Your account has been suspended due to failed payments.
+                    Please retry payment to reactivate.
                   </p>
                 </div>
               )}
@@ -833,7 +930,11 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <div className="flex items-center justify-between">
                 <span>MTN Mobile Money</span>
                 <div className="flex items-center gap-2">
-                  <Badge variant={paymentProfile?.isVerified ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={
+                      paymentProfile?.isVerified ? 'default' : 'secondary'
+                    }
+                  >
                     {paymentProfile?.isVerified ? (
                       <div className="flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" />
@@ -854,7 +955,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-600" />
                     <div>
-                      <span className="text-sm font-medium text-gray-700">Account Holder:</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Account Holder:
+                      </span>
                       <div className="font-medium">
                         {paymentProfile?.accountHolderName || currentUser.name}
                       </div>
@@ -863,7 +966,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <Smartphone className="h-4 w-4 text-gray-600" />
                     <div>
-                      <span className="text-sm font-medium text-gray-700">MTN MoMo Number:</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        MTN MoMo Number:
+                      </span>
                       <div className="font-mono text-lg font-medium">
                         {paymentProfile?.momoNumber || 'No number set'}
                       </div>
@@ -873,8 +978,12 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-gray-600" />
                       <div>
-                        <span className="text-sm font-medium text-gray-700">Email:</span>
-                        <div className="text-sm text-gray-600">{currentUser.email}</div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Email:
+                        </span>
+                        <div className="text-sm text-gray-600">
+                          {currentUser.email}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -884,33 +993,46 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     <div className="flex items-center gap-2 pt-2 border-t">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <div>
-                        <span className="text-sm font-medium text-green-700">Payment Method Verified</span>
-                        <div className="text-xs text-green-600">Ready for automatic payments</div>
+                        <span className="text-sm font-medium text-green-700">
+                          Payment Method Verified
+                        </span>
+                        <div className="text-xs text-green-600">
+                          Ready for automatic payments
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {!paymentProfile?.isVerified && paymentProfile?.momoNumber && (
-                    <div className="flex items-center gap-2 pt-2 border-t">
-                      <AlertTriangle className="h-4 w-4 text-orange-600" />
-                      <div>
-                        <span className="text-sm font-medium text-orange-700">Verification Required</span>
-                        <div className="text-xs text-orange-600">Click "Verify Payment" to confirm your MTN MoMo account</div>
+                  {!paymentProfile?.isVerified &&
+                    paymentProfile?.momoNumber && (
+                      <div className="flex items-center gap-2 pt-2 border-t">
+                        <AlertTriangle className="h-4 w-4 text-orange-600" />
+                        <div>
+                          <span className="text-sm font-medium text-orange-700">
+                            Verification Required
+                          </span>
+                          <div className="text-xs text-orange-600">
+                            Click "Verify Payment" to confirm your MTN MoMo
+                            account
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Dialog open={showUpdateMomo} onOpenChange={(open) => {
-                  setShowUpdateMomo(open);
-                  if (!open) {
-                    // Reset form when dialog closes
-                    setNewMomoNumber('');
-                    setNewAccountHolderName('');
-                  }
-                }}>
+                <Dialog
+                  open={showUpdateMomo}
+                  onOpenChange={open => {
+                    setShowUpdateMomo(open);
+                    if (!open) {
+                      // Reset form when dialog closes
+                      setNewMomoNumber('');
+                      setNewAccountHolderName('');
+                    }
+                  }}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1">
                       <Smartphone className="h-4 w-4 mr-2" />
@@ -921,7 +1043,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     <DialogHeader>
                       <DialogTitle>Update Payment Method</DialogTitle>
                       <DialogDescription>
-                        Update your payment method details. Both the account holder name and MTN MoMo number are required.
+                        Update your payment method details. Both the account
+                        holder name and MTN MoMo number are required.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -931,18 +1054,24 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                           <span className="font-medium">Important</span>
                         </div>
                         <p className="text-sm text-blue-700 mt-1">
-                          The account holder name must exactly match the name registered with your MTN MoMo account to avoid payment failures.
+                          The account holder name must exactly match the name
+                          registered with your MTN MoMo account to avoid payment
+                          failures.
                         </p>
                       </div>
 
                       <div>
-                        <Label htmlFor="newAccountHolderName">Account Holder Name</Label>
+                        <Label htmlFor="newAccountHolderName">
+                          Account Holder Name
+                        </Label>
                         <Input
                           id="newAccountHolderName"
                           type="text"
                           placeholder="e.g., John Doe"
                           value={newAccountHolderName}
-                          onChange={(e) => setNewAccountHolderName(e.target.value)}
+                          onChange={e =>
+                            setNewAccountHolderName(e.target.value)
+                          }
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           Enter the full name as registered with MTN MoMo.
@@ -956,22 +1085,35 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                           type="tel"
                           placeholder="e.g., 0912345678"
                           value={newMomoNumber}
-                          onChange={(e) => setNewMomoNumber(e.target.value)}
+                          onChange={e => setNewMomoNumber(e.target.value)}
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          This number should be registered under: <strong>{newAccountHolderName || 'the account holder name above'}</strong>
+                          This number should be registered under:{' '}
+                          <strong>
+                            {newAccountHolderName ||
+                              'the account holder name above'}
+                          </strong>
                         </p>
                       </div>
 
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => {
-                          setShowUpdateMomo(false);
-                          setNewMomoNumber('');
-                          setNewAccountHolderName('');
-                        }}>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowUpdateMomo(false);
+                            setNewMomoNumber('');
+                            setNewAccountHolderName('');
+                          }}
+                        >
                           Cancel
                         </Button>
-                        <Button onClick={handleUpdateMomoNumber} disabled={!newAccountHolderName.trim() || !newMomoNumber.trim()}>
+                        <Button
+                          onClick={handleUpdateMomoNumber}
+                          disabled={
+                            !newAccountHolderName.trim() ||
+                            !newMomoNumber.trim()
+                          }
+                        >
                           Update Payment Method
                         </Button>
                       </div>
@@ -981,13 +1123,16 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
                 {/* Verify Payment Button */}
                 {paymentProfile?.momoNumber && !paymentProfile?.isVerified && (
-                  <Dialog open={showVerifyPayment} onOpenChange={(open) => {
-                    setShowVerifyPayment(open);
-                    if (!open) {
-                      setMomoPin('');
-                      setVerificationStep('pin');
-                    }
-                  }}>
+                  <Dialog
+                    open={showVerifyPayment}
+                    onOpenChange={open => {
+                      setShowVerifyPayment(open);
+                      if (!open) {
+                        setMomoPin('');
+                        setVerificationStep('pin');
+                      }
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" className="flex-1">
                         <CheckCircle className="h-4 w-4 mr-2" />
@@ -1007,12 +1152,21 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         <div className="p-3 bg-gray-50 border rounded-lg">
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Account Holder:</span>
-                              <span className="font-medium">{paymentProfile?.accountHolderName || currentUser.name}</span>
+                              <span className="text-gray-600">
+                                Account Holder:
+                              </span>
+                              <span className="font-medium">
+                                {paymentProfile?.accountHolderName ||
+                                  currentUser.name}
+                              </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">MTN MoMo Number:</span>
-                              <span className="font-mono font-medium">{paymentProfile?.momoNumber}</span>
+                              <span className="text-gray-600">
+                                MTN MoMo Number:
+                              </span>
+                              <span className="font-mono font-medium">
+                                {paymentProfile?.momoNumber}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1026,7 +1180,7 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                               type="password"
                               placeholder="Enter your 4-digit PIN"
                               value={momoPin}
-                              onChange={(e) => {
+                              onChange={e => {
                                 const value = e.target.value.replace(/\D/g, ''); // Only allow digits
                                 setMomoPin(value);
                               }}
@@ -1035,7 +1189,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                               autoComplete="off"
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Enter the 4-digit PIN you use for MTN MoMo transactions
+                              Enter the 4-digit PIN you use for MTN MoMo
+                              transactions
                             </p>
                           </div>
                         )}
@@ -1044,23 +1199,34 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         {verificationStep === 'confirming' && (
                           <div className="text-center py-4">
                             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                            <p className="text-sm text-gray-600">Verifying with MTN MoMo...</p>
+                            <p className="text-sm text-gray-600">
+                              Verifying with MTN MoMo...
+                            </p>
                           </div>
                         )}
 
                         {verificationStep === 'success' && (
                           <div className="text-center py-4">
                             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                            <p className="text-sm text-green-600 font-medium">Payment Method Verified!</p>
-                            <p className="text-xs text-gray-500 mt-1">Your MTN MoMo account is now verified and ready for payments.</p>
+                            <p className="text-sm text-green-600 font-medium">
+                              Payment Method Verified!
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Your MTN MoMo account is now verified and ready
+                              for payments.
+                            </p>
                           </div>
                         )}
 
                         {verificationStep === 'failed' && (
                           <div className="text-center py-4">
                             <XCircle className="h-8 w-8 mx-auto mb-2 text-red-600" />
-                            <p className="text-sm text-red-600 font-medium">Verification Failed</p>
-                            <p className="text-xs text-gray-500 mt-1">Please check your PIN and try again.</p>
+                            <p className="text-sm text-red-600 font-medium">
+                              Verification Failed
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Please check your PIN and try again.
+                            </p>
                           </div>
                         )}
 
@@ -1068,7 +1234,10 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         <div className="flex justify-end gap-2">
                           {verificationStep === 'pin' && (
                             <>
-                              <Button variant="outline" onClick={() => setShowVerifyPayment(false)}>
+                              <Button
+                                variant="outline"
+                                onClick={() => setShowVerifyPayment(false)}
+                              >
                                 Cancel
                               </Button>
                               <Button
@@ -1082,7 +1251,10 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
                           {verificationStep === 'failed' && (
                             <>
-                              <Button variant="outline" onClick={() => setShowVerifyPayment(false)}>
+                              <Button
+                                variant="outline"
+                                onClick={() => setShowVerifyPayment(false)}
+                              >
                                 Cancel
                               </Button>
                               <Button
@@ -1144,7 +1316,9 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
             <TabsContent value="history" className="space-y-4">
               {loading ? (
-                <div className="text-center py-4">Loading payment history...</div>
+                <div className="text-center py-4">
+                  Loading payment history...
+                </div>
               ) : paymentHistory.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No payment history available
@@ -1162,7 +1336,7 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paymentHistory.map((payment) => (
+                    {paymentHistory.map(payment => (
                       <TableRow key={payment.id}>
                         <TableCell>
                           {payment.date.toLocaleDateString()}
@@ -1170,7 +1344,8 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">
-                              {paymentProfile?.accountHolderName || currentUser.name}
+                              {paymentProfile?.accountHolderName ||
+                                currentUser.name}
                             </div>
                             <div className="text-sm text-gray-600 font-mono">
                               {paymentProfile?.momoNumber || 'No number set'}
@@ -1183,16 +1358,19 @@ const BillingDashboard: React.FC<BillingDashboardProps> = ({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium">{payment.amount} SSP</span>
+                          <span className="font-medium">
+                            {payment.amount} SSP
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             {getStatusBadge(payment.status)}
-                            {payment.status === 'failed' && payment.failureReason && (
-                              <div className="text-xs text-red-600">
-                                {payment.failureReason}
-                              </div>
-                            )}
+                            {payment.status === 'failed' &&
+                              payment.failureReason && (
+                                <div className="text-xs text-red-600">
+                                  {payment.failureReason}
+                                </div>
+                              )}
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">

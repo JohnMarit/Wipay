@@ -1,27 +1,30 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { userService } from '@/lib/firebase';
-import { createBillingManager, createMTNMomoService } from '@/lib/mtnMomoService';
+import {
+  createBillingManager,
+  createMTNMomoService,
+} from '@/lib/mtnMomoService';
 import { SUBSCRIPTION_PLANS } from '@/lib/subscription';
 import {
-    Check,
-    CreditCard,
-    Smartphone,
-    Star,
-    User,
-    Wifi,
-    X,
+  Check,
+  CreditCard,
+  Smartphone,
+  Star,
+  User,
+  Wifi,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -49,7 +52,9 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
   const mtnMomoService = createMTNMomoService();
   const billingManager = createBillingManager();
 
-  const selectedPlanDetails = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlan);
+  const selectedPlanDetails = SUBSCRIPTION_PLANS.find(
+    p => p.id === selectedPlan
+  );
 
   const validateMomoNumber = (): boolean => {
     if (!momoNumber.trim()) {
@@ -64,7 +69,8 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
     if (!mtnMomoService.validateMomoNumber(momoNumber)) {
       toast({
         title: 'Invalid MTN MoMo Number',
-        description: 'Please enter a valid MTN Mobile Money number (e.g., 0912345678)',
+        description:
+          'Please enter a valid MTN Mobile Money number (e.g., 0912345678)',
         variant: 'destructive',
       });
       return false;
@@ -111,7 +117,11 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
 
         if (paymentResult.success) {
           // Update account status as paid
-          await userService.updateAccountStatus(currentUser.id, true, paymentResult.referenceId);
+          await userService.updateAccountStatus(
+            currentUser.id,
+            true,
+            paymentResult.referenceId
+          );
 
           toast({
             title: 'Payment Successful! 🎉',
@@ -123,7 +133,9 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
 
           toast({
             title: 'Payment Failed',
-            description: paymentResult.error || 'Payment could not be processed. You can retry from your profile settings.',
+            description:
+              paymentResult.error ||
+              'Payment could not be processed. You can retry from your profile settings.',
             variant: 'destructive',
           });
         }
@@ -131,7 +143,8 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
         // Free plan - no payment needed
         toast({
           title: 'Profile Completed! 🎉',
-          description: 'Welcome to Wipay! You can start generating WiFi tokens right away.',
+          description:
+            'Welcome to Wipay! You can start generating WiFi tokens right away.',
         });
       }
 
@@ -141,7 +154,8 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
       console.error('Error completing profile:', error);
       toast({
         title: 'Profile Completion Failed',
-        description: 'Please try again or contact support if the issue persists.',
+        description:
+          'Please try again or contact support if the issue persists.',
         variant: 'destructive',
       });
     } finally {
@@ -178,9 +192,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
                   Just a few steps to get started with Wipay
                 </CardDescription>
               </div>
-              <div className="text-sm text-gray-600">
-                Step {step} of 2
-              </div>
+              <div className="text-sm text-gray-600">Step {step} of 2</div>
             </div>
             <Progress value={(step / 2) * 100} className="mt-4" />
           </CardHeader>
@@ -210,11 +222,12 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
                   type="tel"
                   placeholder="e.g., 0912345678"
                   value={momoNumber}
-                  onChange={(e) => setMomoNumber(e.target.value)}
+                  onChange={e => setMomoNumber(e.target.value)}
                   className="text-lg"
                 />
                 <p className="text-sm text-gray-600">
-                  Enter your MTN MoMo number (starts with 091, 092, 095, 096, 097, or 098)
+                  Enter your MTN MoMo number (starts with 091, 092, 095, 096,
+                  097, or 098)
                 </p>
               </div>
 
@@ -245,7 +258,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {SUBSCRIPTION_PLANS.map((plan) => (
+                {SUBSCRIPTION_PLANS.map(plan => (
                   <Card
                     key={plan.id}
                     className={`relative cursor-pointer transition-all duration-200 ${
@@ -364,11 +377,15 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
                   {paymentLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {selectedPlanDetails?.price === 0 ? 'Setting up...' : 'Processing Payment...'}
+                      {selectedPlanDetails?.price === 0
+                        ? 'Setting up...'
+                        : 'Processing Payment...'}
                     </>
                   ) : (
                     <>
-                      {selectedPlanDetails?.price === 0 ? 'Complete Setup' : 'Pay & Complete'}
+                      {selectedPlanDetails?.price === 0
+                        ? 'Complete Setup'
+                        : 'Pay & Complete'}
                     </>
                   )}
                 </Button>

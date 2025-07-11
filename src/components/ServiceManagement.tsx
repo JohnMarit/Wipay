@@ -1,30 +1,22 @@
-import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Wifi, Router, Activity, Settings, Zap, Signal } from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Activity, Router, Settings, Signal, Wifi, Zap } from 'lucide-react';
 
 interface ServiceManagementProps {
   language: string;
@@ -138,36 +130,7 @@ const ServiceManagement = ({ language }: ServiceManagementProps) => {
 
   // Sample equipment data
   const equipment = [
-    {
-      id: 1,
-      type: t.router,
-      model: 'TP-Link Archer C7',
-      serialNumber: 'TPL-AC7-001',
-      customer: 'Ahmed Hassan Mohamed',
-      status: 'online',
-      lastSeen: '2 minutes ago',
-      location: 'Juba, Central Equatoria',
-    },
-    {
-      id: 2,
-      type: t.modem,
-      model: 'Huawei HG8245H',
-      serialNumber: 'HW-HG8245-002',
-      customer: 'Mary John Deng',
-      status: 'online',
-      lastSeen: '5 minutes ago',
-      location: 'Wau, Western Bahr el Ghazal',
-    },
-    {
-      id: 3,
-      type: t.accessPoint,
-      model: 'Ubiquiti UniFi AP',
-      serialNumber: 'UB-UAP-003',
-      customer: 'Peter Garang Mabior',
-      status: 'offline',
-      lastSeen: '2 hours ago',
-      location: 'Malakal, Upper Nile',
-    },
+    // Equipment data will be loaded from actual device management system
   ];
 
   // Sample bandwidth usage data

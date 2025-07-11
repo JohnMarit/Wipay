@@ -1,39 +1,39 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import {
-    createSubscriptionService,
-    SUBSCRIPTION_PLANS,
-    UserSubscription
+  createSubscriptionService,
+  SUBSCRIPTION_PLANS,
+  UserSubscription,
 } from '@/lib/subscription';
 import {
-    Calendar,
-    Check,
-    CreditCard,
-    Crown,
-    MessageCircle,
-    Settings,
-    Star,
-    TrendingUp,
-    Wifi,
-    X,
-    Zap
+  Calendar,
+  Check,
+  CreditCard,
+  Crown,
+  MessageCircle,
+  Settings,
+  Star,
+  TrendingUp,
+  Wifi,
+  X,
+  Zap,
 } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -59,7 +59,8 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
   const subscriptionService = createSubscriptionService();
 
   const currentPlan = subscriptionService.getPlan(userSubscription.planId);
-  const remainingTokens = subscriptionService.getRemainingTokens(userSubscription);
+  const remainingTokens =
+    subscriptionService.getRemainingTokens(userSubscription);
 
   const handlePlanUpgrade = async (planId: string) => {
     if (planId === userSubscription.planId) {
@@ -218,7 +219,10 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
               </div>
             </div>
             <div className="flex gap-2">
-              <Dialog open={showPlanSelector} onOpenChange={setShowPlanSelector}>
+              <Dialog
+                open={showPlanSelector}
+                onOpenChange={setShowPlanSelector}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <TrendingUp className="h-4 w-4 mr-2" />
@@ -233,7 +237,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {SUBSCRIPTION_PLANS.map((plan) => (
+                    {SUBSCRIPTION_PLANS.map(plan => (
                       <Card
                         key={plan.id}
                         className={`relative cursor-pointer transition-all duration-200 ${
@@ -347,8 +351,8 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                             {plan.id === userSubscription.planId
                               ? 'Current Plan'
                               : plan.price === 0
-                              ? 'Downgrade'
-                              : 'Upgrade'}
+                                ? 'Downgrade'
+                                : 'Upgrade'}
                           </Button>
                         </CardContent>
                       </Card>
@@ -385,9 +389,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({
                 value={
                   currentPlan?.features.tokensPerMonth === -1
                     ? 0
-                    : (userSubscription.tokensUsedThisMonth /
-                        currentPlan?.features.tokensPerMonth!) *
-                      100
+                    : currentPlan?.features.tokensPerMonth
+                      ? (userSubscription.tokensUsedThisMonth /
+                          currentPlan.features.tokensPerMonth) *
+                        100
+                      : 0
                 }
                 className="h-2"
               />

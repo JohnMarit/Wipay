@@ -1,53 +1,48 @@
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Search,
-  UserPlus,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  MapPin,
-  CreditCard,
-  History,
-  AlertTriangle,
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    Edit,
+    MapPin,
+    Phone,
+    Search,
+    UserPlus
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface EnhancedCustomerManagementProps {
   language: string;
@@ -218,46 +213,7 @@ const EnhancedCustomerManagement = ({
 
   // Sample enhanced customer data
   const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: 1,
-      customerId: 'CUST-2024-001',
-      name: 'Ahmed Hassan Mohamed',
-      phone: '+211 912 345 678',
-      secondaryPhone: '+211 925 123 456',
-      email: 'ahmed.hassan@email.com',
-      address: 'Hai Malakal, Block 15',
-      city: 'Juba',
-      state: 'Central Equatoria',
-      nationalId: 'SS12345678901',
-      plan: 'Standard Plan (10 Mbps)',
-      planType: 'postpaid',
-      status: 'active',
-      joinDate: '2024-01-15',
-      lastPayment: '2024-01-20',
-      balance: -50,
-      creditLimit: 300,
-      installationDate: '2024-01-16',
-      riskLevel: 'low',
-      notes: 'Reliable customer, always pays on time',
-    },
-    {
-      id: 2,
-      customerId: 'CUST-2024-002',
-      name: 'Mary John Deng',
-      phone: '+211 923 456 789',
-      email: 'mary.john@email.com',
-      address: 'Hai Jebel, Street 12',
-      city: 'Wau',
-      state: 'Western Bahr el Ghazal',
-      plan: 'Basic Plan (5 Mbps)',
-      planType: 'prepaid',
-      status: 'active',
-      joinDate: '2024-02-20',
-      balance: 25,
-      installationDate: '2024-02-22',
-      riskLevel: 'low',
-      notes: 'Prepaid customer, good payment history',
-    },
+    // Customer data will be loaded from actual database
   ]);
 
   const [newCustomer, setNewCustomer] = useState({

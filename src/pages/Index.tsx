@@ -3,9 +3,9 @@ import LanguageSelector from '@/components/LanguageSelector';
 import ProfileCompletion from '@/components/ProfileCompletion';
 import WiFiTokenSystem from '@/components/WiFiTokenSystem';
 import { Button } from '@/components/ui/button';
-import { userService } from '@/lib/firebase';
+import { UserProfile, userService } from '@/lib/firebase';
 import { CreditCard, LogOut } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface IndexProps {
   currentUser?: {
@@ -21,7 +21,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   const [language, setLanguage] = useState('en');
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
   const [showBilling, setShowBilling] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const translations = {
@@ -39,23 +39,21 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
 
   const t = translations[language as keyof typeof translations];
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      checkProfileCompletion();
-    }
-  }, [currentUser]);
+  const checkProfileCompletion = useCallback(async () => {
+    if (!currentUser?.id) return;
 
-  const checkProfileCompletion = async () => {
     try {
       setLoading(true);
 
       // Check if user needs profile completion
-      const needsCompletion = await userService.needsProfileCompletion(currentUser!.id);
+      const needsCompletion = await userService.needsProfileCompletion(
+        currentUser.id
+      );
       setNeedsProfileCompletion(needsCompletion);
 
       // Load user profile for billing info
       if (!needsCompletion) {
-        const profile = await userService.getUserProfile(currentUser!.id);
+        const profile = await userService.getUserProfile(currentUser.id);
         setUserProfile(profile);
       }
     } catch (error) {
@@ -65,7 +63,13 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      checkProfileCompletion();
+    }
+  }, [currentUser, checkProfileCompletion]);
 
   const handleProfileCompleted = () => {
     setNeedsProfileCompletion(false);
@@ -96,7 +100,9 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   // Show billing dashboard if requested
   if (showBilling && currentUser && userProfile) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ${language === 'ar' ? 'rtl' : 'ltr'} pb-20`}>
+      <div
+        className={`min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ${language === 'ar' ? 'rtl' : 'ltr'} pb-20`}
+      >
         <div className="container mx-auto p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

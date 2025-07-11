@@ -1,48 +1,48 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import {
-  AlertCircle,
-  Bell,
-  Calculator,
-  Calendar,
-  Clock,
-  DollarSign,
-  FileText,
-  Receipt,
+    AlertCircle,
+    Bell,
+    Calculator,
+    Calendar,
+    Clock,
+    DollarSign,
+    FileText,
+    Receipt,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -209,50 +209,11 @@ const EnhancedBillingModule = ({ language }: EnhancedBillingModuleProps) => {
   };
 
   const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: 'INV-2024-001',
-      customer: 'Ahmed Hassan Mohamed',
-      planType: 'postpaid',
-      baseAmount: 150,
-      installationFee: 0,
-      equipmentFee: 0,
-      vatAmount: 27,
-      totalAmount: 177,
-      dueDate: '2024-02-29',
-      status: 'pending',
-      generatedDate: '2024-01-30',
-      remindersSent: 1,
-      daysOverdue: 0,
-    },
-    {
-      id: 'INV-2024-002',
-      customer: 'Mary John Deng',
-      planType: 'prepaid',
-      baseAmount: 100,
-      installationFee: 200,
-      equipmentFee: 150,
-      vatAmount: 81,
-      totalAmount: 531,
-      dueDate: '2024-01-31',
-      status: 'overdue',
-      generatedDate: '2024-01-01',
-      remindersSent: 3,
-      daysOverdue: 15,
-    },
+    // Invoices will be loaded from actual billing data
   ]);
 
   const customers = [
-    {
-      name: 'Ahmed Hassan Mohamed',
-      planType: 'postpaid',
-      phone: '+211912345678',
-    },
-    { name: 'Mary John Deng', planType: 'prepaid', phone: '+211923456789' },
-    {
-      name: 'Peter Garang Mabior',
-      planType: 'postpaid',
-      phone: '+211934567890',
-    },
+    // Customer data will be loaded dynamically
   ];
 
   const calculateTotalAmount = () => {

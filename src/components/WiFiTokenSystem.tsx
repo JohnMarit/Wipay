@@ -38,7 +38,6 @@ import { tokenService, UserProfile, userService } from '@/lib/firebase';
 import { PDFReportGenerator } from '@/lib/pdfGenerator';
 import { createSMSService } from '@/lib/smsService';
 import {
-    createMockSubscription,
     createSubscriptionService,
     UserSubscription
 } from '@/lib/subscription';
@@ -53,6 +52,8 @@ import {
     Clock,
     CreditCard,
     DollarSign,
+    Eye,
+    EyeOff,
     FileText,
     History,
     Plus,
@@ -119,23 +120,25 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
   const [wifiConfig, setWifiConfig] = useState({
     ssid: '',
     adminPassword: '',
-    momoNumber: '',
     isConfigured: false,
   });
 
+  const [configLastUpdated, setConfigLastUpdated] = useState<Date | null>(null);
+
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>({
-    currency: 'SSP',
+    currency: 'USD',
     prices: {
-      '1': 50,
-      '3': 120,
-      '6': 200,
-      '12': 350,
-      '24': 500,
+      '1': 0,
+      '3': 0,
+      '6': 0,
+      '12': 0,
+      '24': 0,
     },
   });
 
   const [showWifiSetup, setShowWifiSetup] = useState(false);
   const [setupTab, setSetupTab] = useState('network');
+  const [showPassword, setShowPassword] = useState(false);
   const [showReportPreview, setShowReportPreview] = useState(false);
   const [previewData, setPreviewData] = useState<ReportData | null>(null);
   const [previewType, setPreviewType] = useState<'week' | 'month' | 'year'>(
@@ -163,7 +166,8 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Subscription state
-  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+  const [userSubscription, setUserSubscription] =
+    useState<UserSubscription | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const subscriptionService = createSubscriptionService();
 
@@ -185,9 +189,13 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
           setWifiConfig({
             ssid: profile.wifiConfig.ssid || '',
             adminPassword: '', // Don't store sensitive data in state
-            momoNumber: '', // Don't store sensitive data in state
             isConfigured: profile.wifiConfig.isConfigured || false,
           });
+
+          // Set last updated time from profile creation or a dedicated field
+          if (profile.wifiConfig.isConfigured) {
+            setConfigLastUpdated(profile.createdAt);
+          }
         }
 
         // Set pricing configuration from Firebase
@@ -213,7 +221,17 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
           setUserSubscription(subscription);
         } else {
           // Create default free subscription if none exists
-          const defaultSubscription = createMockSubscription(currentUser.id, 'free');
+          const defaultSubscription: UserSubscription = {
+            id: `sub_${currentUser.id}`,
+            userId: currentUser.id,
+            planId: 'free',
+            status: 'active',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            tokensUsedThisMonth: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
           setUserSubscription(defaultSubscription);
 
           // Save default subscription to Firebase
@@ -275,7 +293,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       pricingConfig: 'Token Pricing',
       ssid: 'WiFi Network Name (SSID)',
       adminPassword: 'Admin WiFi Password',
-      momoNumber: 'Your MTN MoMo Number',
+      updatePassword: 'Update WiFi Password',
+      currentPassword: 'Current WiFi Password',
+      savedConfiguration: 'Saved Configuration',
+      networkName: 'Network Name',
+      passwordSecured: 'Password (Secured)',
+      lastUpdated: 'Last Updated',
+      configurationStatus: 'Configuration Status',
+      configured: 'Configured',
       currency: 'Currency',
       tokenPricing: 'Set Token Prices',
       oneHourPrice: '1 Hour Price',
@@ -320,7 +345,6 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       pricingSaved: 'Pricing configuration saved',
       enterSSID: 'Enter WiFi network name',
       enterAdminPassword: 'Enter admin password',
-      enterMomoNumber: 'Enter MTN MoMo number',
       enterRecipientPhone: "Enter recipient's phone",
       enterPrice: 'Enter price',
       selectDuration: 'Select access duration',
@@ -362,7 +386,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       pricingConfig: 'تسعير الرموز',
       ssid: 'اسم شبكة الواي فاي',
       adminPassword: 'كلمة مرور المدير',
-      momoNumber: 'رقم إم تي إن موبايل موني',
+      updatePassword: 'تحديث كلمة مرور الواي فاي',
+      currentPassword: 'كلمة مرور الواي فاي الحالية',
+      savedConfiguration: 'تكوين حفظ',
+      networkName: 'اسم الشبكة',
+      passwordSecured: 'كلمة المرور (مغلق)',
+      lastUpdated: 'آخر تحديث',
+      configurationStatus: 'حالة التكوين',
+      configured: 'مكون',
       currency: 'العملة',
       tokenPricing: 'تحديد أسعار الرموز',
       oneHourPrice: 'سعر الساعة الواحدة',
@@ -407,7 +438,6 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       pricingSaved: 'تم حفظ تكوين التسعير',
       enterSSID: 'أدخل اسم شبكة الواي فاي',
       enterAdminPassword: 'أدخل كلمة مرور المدير',
-      enterMomoNumber: 'أدخل رقم موبايل موني',
       enterRecipientPhone: 'أدخل رقم هاتف المستلم',
       enterPrice: 'أدخل السعر',
       selectDuration: 'اختر مدة الوصول',
@@ -468,40 +498,40 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       periodTokens.map(token => token.recipientPhone)
     ).size;
 
-    // Service breakdown
-    const serviceBreakdown = [
-      { service: '1 Hour WiFi', count: 0, revenue: 0 },
-      { service: '3 Hours WiFi', count: 0, revenue: 0 },
-      { service: '6 Hours WiFi', count: 0, revenue: 0 },
-      { service: '12 Hours WiFi', count: 0, revenue: 0 },
-      { service: '24 Hours WiFi', count: 0, revenue: 0 },
-    ];
+    // Service breakdown - generate dynamically from pricing config
+    const serviceBreakdown = Object.keys(pricingConfig.prices).map(duration => ({
+      service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
+      count: 0,
+      revenue: 0,
+    }));
 
     periodTokens.forEach(token => {
-      const serviceIndex =
-        token.duration === 1
-          ? 0
-          : token.duration === 3
-            ? 1
-            : token.duration === 6
-              ? 2
-              : token.duration === 12
-                ? 3
-                : 4;
-      serviceBreakdown[serviceIndex].count++;
-      serviceBreakdown[serviceIndex].revenue += token.price;
+      const serviceItem = serviceBreakdown.find(item =>
+        item.service === `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
+      );
+      if (serviceItem) {
+        serviceItem.count++;
+        serviceItem.revenue += token.price;
+      }
     });
 
-    // Payment method breakdown
-    const paymentBreakdown = [
-      { method: 'MTN Mobile Money', count: 0, revenue: 0 },
-      { method: 'Cash Payment', count: 0, revenue: 0 },
-    ];
+    // Payment method breakdown - generate dynamically from actual data
+    const paymentMethods = new Set(periodTokens.map(token => token.paymentMethod));
+    const paymentBreakdown = Array.from(paymentMethods).map(method => ({
+      method: method === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
+      count: 0,
+      revenue: 0,
+    }));
 
     periodTokens.forEach(token => {
-      const methodIndex = token.paymentMethod === 'mtn_momo' ? 0 : 1;
-      paymentBreakdown[methodIndex].count++;
-      paymentBreakdown[methodIndex].revenue += token.price;
+      const methodItem = paymentBreakdown.find(item =>
+        (token.paymentMethod === 'mtn_momo' && item.method === 'MTN Mobile Money') ||
+        (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
+      );
+      if (methodItem) {
+        methodItem.count++;
+        methodItem.revenue += token.price;
+      }
     });
 
     // Recent transactions (all within the date range)
@@ -573,40 +603,40 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
       periodTokens.map(token => token.recipientPhone)
     ).size;
 
-    // Service breakdown
-    const serviceBreakdown = [
-      { service: '1 Hour WiFi', count: 0, revenue: 0 },
-      { service: '3 Hours WiFi', count: 0, revenue: 0 },
-      { service: '6 Hours WiFi', count: 0, revenue: 0 },
-      { service: '12 Hours WiFi', count: 0, revenue: 0 },
-      { service: '24 Hours WiFi', count: 0, revenue: 0 },
-    ];
+    // Service breakdown - generate dynamically from pricing config
+    const serviceBreakdown = Object.keys(pricingConfig.prices).map(duration => ({
+      service: `${duration} Hour${parseInt(duration) > 1 ? 's' : ''} WiFi`,
+      count: 0,
+      revenue: 0,
+    }));
 
     periodTokens.forEach(token => {
-      const serviceIndex =
-        token.duration === 1
-          ? 0
-          : token.duration === 3
-            ? 1
-            : token.duration === 6
-              ? 2
-              : token.duration === 12
-                ? 3
-                : 4;
-      serviceBreakdown[serviceIndex].count++;
-      serviceBreakdown[serviceIndex].revenue += token.price;
+      const serviceItem = serviceBreakdown.find(item =>
+        item.service === `${token.duration} Hour${token.duration > 1 ? 's' : ''} WiFi`
+      );
+      if (serviceItem) {
+        serviceItem.count++;
+        serviceItem.revenue += token.price;
+      }
     });
 
-    // Payment method breakdown
-    const paymentBreakdown = [
-      { method: 'MTN Mobile Money', count: 0, revenue: 0 },
-      { method: 'Cash Payment', count: 0, revenue: 0 },
-    ];
+    // Payment method breakdown - generate dynamically from actual data
+    const paymentMethods = new Set(periodTokens.map(token => token.paymentMethod));
+    const paymentBreakdown = Array.from(paymentMethods).map(method => ({
+      method: method === 'mtn_momo' ? 'MTN Mobile Money' : 'Cash Payment',
+      count: 0,
+      revenue: 0,
+    }));
 
     periodTokens.forEach(token => {
-      const methodIndex = token.paymentMethod === 'mtn_momo' ? 0 : 1;
-      paymentBreakdown[methodIndex].count++;
-      paymentBreakdown[methodIndex].revenue += token.price;
+      const methodItem = paymentBreakdown.find(item =>
+        (token.paymentMethod === 'mtn_momo' && item.method === 'MTN Mobile Money') ||
+        (token.paymentMethod !== 'mtn_momo' && item.method === 'Cash Payment')
+      );
+      if (methodItem) {
+        methodItem.count++;
+        methodItem.revenue += token.price;
+      }
     });
 
     // Recent transactions (last 10)
@@ -773,7 +803,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
   // Handle WiFi configuration save
   const handleSaveConfig = async () => {
-    if (wifiConfig.ssid && wifiConfig.adminPassword && wifiConfig.momoNumber) {
+    // For new configurations, require both SSID and password
+    // For existing configurations, allow password-only updates
+    const isNewConfig = !wifiConfig.isConfigured;
+    const hasRequiredFields = isNewConfig
+      ? (wifiConfig.ssid && wifiConfig.adminPassword)
+      : (wifiConfig.ssid || wifiConfig.adminPassword);
+
+    if (hasRequiredFields) {
       try {
         if (!currentUser?.id) {
           toast({
@@ -795,15 +832,18 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
         setWifiConfig({
           ssid: wifiConfig.ssid,
-          adminPassword: wifiConfig.adminPassword,
-          momoNumber: wifiConfig.momoNumber,
+          adminPassword: '', // Clear password for security
           isConfigured: true,
         });
+        setConfigLastUpdated(new Date());
+        setShowPassword(false); // Hide password field
         setShowWifiSetup(false);
 
         toast({
           title: t.configSaved,
-          description: `WiFi network "${wifiConfig.ssid}" configured successfully`,
+          description: isNewConfig
+            ? `WiFi network "${wifiConfig.ssid}" configured successfully`
+            : `WiFi configuration updated successfully`,
         });
       } catch (error) {
         console.error('Error saving configuration:', error);
@@ -813,6 +853,14 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
           variant: 'destructive',
         });
       }
+    } else {
+      toast({
+        title: 'Missing Information',
+        description: isNewConfig
+          ? 'Please enter both network name and password'
+          : 'Please enter at least the network name or password',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -883,13 +931,22 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
     // Check subscription limits
     if (userSubscription) {
-      const validation = subscriptionService.validateAction(userSubscription, 'generate_token');
+      const validation = subscriptionService.validateAction(
+        userSubscription,
+        'generate_token'
+      );
       if (!validation.allowed) {
         // Show upgrade prompt instead of just error
-        const currentPlan = subscriptionService.getPlan(userSubscription.planId);
-        const remainingTokens = subscriptionService.getRemainingTokens(userSubscription);
+        const currentPlan = subscriptionService.getPlan(
+          userSubscription.planId
+        );
+        const remainingTokens =
+          subscriptionService.getRemainingTokens(userSubscription);
 
-        if (remainingTokens === 0 && currentPlan?.features.tokensPerMonth !== -1) {
+        if (
+          remainingTokens === 0 &&
+          currentPlan?.features.tokensPerMonth !== -1
+        ) {
           toast({
             title: 'Monthly Token Limit Reached! 🚀',
             description: `You've used all ${currentPlan.features.tokensPerMonth} tokens this month. Upgrade to continue generating tokens.`,
@@ -951,7 +1008,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
           await userService.incrementTokenUsage(currentUser.id);
           // Update local subscription state
           setUserSubscription(prev =>
-            prev ? { ...prev, tokensUsedThisMonth: prev.tokensUsedThisMonth + 1 } : null
+            prev
+              ? { ...prev, tokensUsedThisMonth: prev.tokensUsedThisMonth + 1 }
+              : null
           );
         }
 
@@ -983,7 +1042,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
         const smsService = createSMSService();
 
         // Check if real SMS delivery is allowed
-        const smsValidation = subscriptionService.validateAction(userSubscription || createMockSubscription(currentUser.id, 'free'), 'send_real_sms');
+        const smsValidation = userSubscription
+          ? subscriptionService.validateAction(userSubscription, 'send_real_sms')
+          : { allowed: false, message: 'No subscription available - using simulation mode' };
         const canSendRealSMS = smsValidation.allowed;
 
         try {
@@ -1000,10 +1061,15 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
           if (smsSuccess) {
             // Show success message with token count if applicable
-            const updatedSubscription = userSubscription ?
-              { ...userSubscription, tokensUsedThisMonth: userSubscription.tokensUsedThisMonth + 1 } : null;
-            const remainingAfterGeneration = updatedSubscription ?
-              subscriptionService.getRemainingTokens(updatedSubscription) : -1;
+            const updatedSubscription = userSubscription
+              ? {
+                  ...userSubscription,
+                  tokensUsedThisMonth: userSubscription.tokensUsedThisMonth + 1,
+                }
+              : null;
+            const remainingAfterGeneration = updatedSubscription
+              ? subscriptionService.getRemainingTokens(updatedSubscription)
+              : -1;
 
             let description = `${t.smsSent} ${tokenForm.recipientPhone} via ${smsService.getProviderInfo()}${!canSendRealSMS ? ' (Simulation Mode)' : ''}`;
 
@@ -1011,13 +1077,16 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
               description += `. ${remainingAfterGeneration} tokens remaining this month.`;
 
               // Warn if getting low on tokens
-              if (remainingAfterGeneration <= 5 && remainingAfterGeneration > 0) {
+              if (
+                remainingAfterGeneration <= 5 &&
+                remainingAfterGeneration > 0
+              ) {
                 description += ' Consider upgrading for more tokens.';
               }
             }
 
-        toast({
-          title: t.tokenGenerated,
+            toast({
+              title: t.tokenGenerated,
               description,
             });
           } else {
@@ -1071,12 +1140,17 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
   };
 
   // Calculate subscription stats
-  const subscriptionStats = userSubscription ? {
-    currentPlan: subscriptionService.getPlan(userSubscription.planId),
-    tokensUsed: userSubscription.tokensUsedThisMonth,
-    tokensRemaining: subscriptionService.getRemainingTokens(userSubscription),
-    tokensLimit: subscriptionService.getPlan(userSubscription.planId)?.features.tokensPerMonth || 0,
-  } : null;
+  const subscriptionStats = userSubscription
+    ? {
+        currentPlan: subscriptionService.getPlan(userSubscription.planId),
+        tokensUsed: userSubscription.tokensUsedThisMonth,
+        tokensRemaining:
+          subscriptionService.getRemainingTokens(userSubscription),
+        tokensLimit:
+          subscriptionService.getPlan(userSubscription.planId)?.features
+            .tokensPerMonth || 0,
+      }
+    : null;
 
   const getStatusBadge = (status: string) => {
     const configs = {
@@ -1160,24 +1234,16 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                       </TabsList>
 
                       <TabsContent value="network" className="space-y-4">
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <h4 className="font-medium text-blue-800 mb-2">
-                            🛰️ Starlink Integration Guide
-                          </h4>
-                          <div className="space-y-2 text-sm text-blue-700">
-                            <p><strong>Current Status:</strong> This system generates and manages WiFi credentials but doesn't control network access automatically.</p>
-                            <p><strong>For Starlink:</strong> You'll need additional network integration for automatic user management.</p>
-                            <details className="mt-2">
-                              <summary className="cursor-pointer font-medium">Click for integration options →</summary>
-                              <div className="mt-2 space-y-2 text-xs">
-                                <p><strong>Option 1 - Captive Portal:</strong> Set up a captive portal that validates tokens before granting access</p>
-                                <p><strong>Option 2 - Router Integration:</strong> Use router APIs to create/delete user accounts automatically</p>
-                                <p><strong>Option 3 - RADIUS Server:</strong> Implement RADIUS authentication for enterprise-grade control</p>
-                                <p><strong>Current:</strong> Manual credential sharing via SMS (users manually connect)</p>
-                              </div>
-                            </details>
+                        {wifiConfig.isConfigured && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h5 className="font-medium text-blue-800 text-sm mb-1">
+                              🔄 Network Configuration Update
+                            </h5>
+                            <p className="text-xs text-blue-700">
+                              Your WiFi network is already configured. You can update the password here if you've changed it on your Starlink router.
+                            </p>
                           </div>
-                        </div>
+                        )}
 
                         <div>
                           <Label htmlFor="ssid">{t.ssid}</Label>
@@ -1200,45 +1266,91 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                           <Label htmlFor="adminPassword">
                             {t.adminPassword}
                           </Label>
-                          <Input
-                            id="adminPassword"
-                            type="password"
-                            value={wifiConfig.adminPassword}
-                            onChange={e =>
-                              setWifiConfig(prev => ({
-                                ...prev,
-                                adminPassword: e.target.value,
-                              }))
-                            }
-                            placeholder="Starlink admin password"
-                          />
+                          <div className="relative">
+                            <Input
+                              id="adminPassword"
+                              type={showPassword ? "text" : "password"}
+                              value={wifiConfig.adminPassword}
+                              onChange={e =>
+                                setWifiConfig(prev => ({
+                                  ...prev,
+                                  adminPassword: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter your current WiFi password"
+                              className="pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            Admin password for your Starlink router (for future router integration)
+                            {wifiConfig.isConfigured
+                              ? "Update this if you've changed your Starlink WiFi password"
+                              : "Enter your current Starlink WiFi password for router integration"}
                           </p>
                         </div>
-                        <div>
-                          <Label htmlFor="momoNumber">{t.momoNumber}</Label>
-                          <Input
-                            id="momoNumber"
-                            value={wifiConfig.momoNumber}
-                            onChange={e =>
-                              setWifiConfig(prev => ({
-                                ...prev,
-                                momoNumber: e.target.value,
-                              }))
-                            }
-                            placeholder={t.enterMomoNumber}
-                          />
-                        </div>
+
+                        {/* Saved Configuration Display */}
+                        {wifiConfig.isConfigured && wifiConfig.ssid && (
+                          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h5 className="font-medium text-green-800 text-sm mb-3 flex items-center gap-2">
+                              ✅ {t.savedConfiguration}
+                            </h5>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">{t.networkName}:</span>
+                                <span className="text-sm font-medium text-gray-900">{wifiConfig.ssid}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">{t.passwordSecured}:</span>
+                                <span className="text-sm font-mono text-gray-700">••••••••••••</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">{t.configurationStatus}:</span>
+                                <span className="text-sm font-medium text-green-700">{t.configured}</span>
+                              </div>
+                              {configLastUpdated && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-600">{t.lastUpdated}:</span>
+                                  <span className="text-sm text-gray-700">
+                                    {configLastUpdated.toLocaleDateString()} {configLastUpdated.toLocaleTimeString()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <h5 className="font-medium text-yellow-800 text-sm">⚡ Efficiency Tips for Starlink</h5>
+                          <h5 className="font-medium text-yellow-800 text-sm">
+                            ⚡ Efficiency Tips for Starlink
+                          </h5>
                           <ul className="text-xs text-yellow-700 mt-1 space-y-1">
-                            <li>• Position Starlink dish with clear sky view (no trees/buildings)</li>
-                            <li>• Use Ethernet backhaul for better performance</li>
+                            <li>
+                              • Position Starlink dish with clear sky view (no
+                              trees/buildings)
+                            </li>
+                            <li>
+                              • Use Ethernet backhaul for better performance
+                            </li>
                             <li>• Enable QoS to prioritize business traffic</li>
-                            <li>• Monitor data usage - Starlink has soft limits</li>
-                            <li>• Consider Starlink Business for priority support</li>
+                            <li>
+                              • Monitor data usage - Starlink has soft limits
+                            </li>
+                            <li>
+                              • Consider Starlink Business for priority support
+                            </li>
                           </ul>
                         </div>
                       </TabsContent>
@@ -1619,7 +1731,9 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
           {/* Combined User & Token Stats */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">User & Token Stats</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                User & Token Stats
+              </CardTitle>
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -1634,14 +1748,18 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wifi className="h-3 w-3 text-gray-500" />
-                    <span className="text-sm text-gray-600">{t.activeUsers}</span>
+                    <span className="text-sm text-gray-600">
+                      {t.activeUsers}
+                    </span>
                   </div>
                   <span className="font-bold text-lg">{stats.activeUsers}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-3 w-3 text-gray-500" />
-                    <span className="text-sm text-gray-600">{t.tokensToday}</span>
+                    <span className="text-sm text-gray-600">
+                      {t.tokensToday}
+                    </span>
                   </div>
                   <span className="font-bold text-lg">{stats.tokensToday}</span>
                 </div>
@@ -1651,26 +1769,34 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
 
           {/* Token Usage Card */}
           {subscriptionStats && (
-            <Card className={`${
-              subscriptionStats.tokensRemaining === 0 && subscriptionStats.tokensLimit !== -1
-                ? 'border-red-200 bg-red-50'
-                : subscriptionStats.tokensRemaining <= 5 && subscriptionStats.tokensRemaining > 0
-                ? 'border-yellow-200 bg-yellow-50'
-                : ''
-            }`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+            <Card
+              className={`${
+                subscriptionStats.tokensRemaining === 0 &&
+                subscriptionStats.tokensLimit !== -1
+                  ? 'border-red-200 bg-red-50'
+                  : subscriptionStats.tokensRemaining <= 5 &&
+                      subscriptionStats.tokensRemaining > 0
+                    ? 'border-yellow-200 bg-yellow-50'
+                    : ''
+              }`}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
                   Monthly Tokens
-              </CardTitle>
-                <CreditCard className={`h-4 w-4 ${
-                  subscriptionStats.tokensRemaining === 0 && subscriptionStats.tokensLimit !== -1
-                    ? 'text-red-600'
-                    : subscriptionStats.tokensRemaining <= 5 && subscriptionStats.tokensRemaining > 0
-                    ? 'text-yellow-600'
-                    : 'text-muted-foreground'
-                }`} />
-            </CardHeader>
-            <CardContent>
+                </CardTitle>
+                <CreditCard
+                  className={`h-4 w-4 ${
+                    subscriptionStats.tokensRemaining === 0 &&
+                    subscriptionStats.tokensLimit !== -1
+                      ? 'text-red-600'
+                      : subscriptionStats.tokensRemaining <= 5 &&
+                          subscriptionStats.tokensRemaining > 0
+                        ? 'text-yellow-600'
+                        : 'text-muted-foreground'
+                  }`}
+                />
+              </CardHeader>
+              <CardContent>
                 <div className="text-2xl font-bold">
                   {subscriptionStats.tokensLimit === -1
                     ? '∞'
@@ -1681,51 +1807,57 @@ const WiFiTokenSystem = ({ language, currentUser }: WiFiTokenSystemProps) => {
                     ? `${subscriptionStats.tokensUsed} used`
                     : `${subscriptionStats.tokensUsed}/${subscriptionStats.tokensLimit} used`}
                 </div>
-                {subscriptionStats.tokensRemaining === 0 && subscriptionStats.tokensLimit !== -1 && (
-                  <div className="text-xs text-red-600 font-medium mt-1">
-                    Limit reached
-                  </div>
-                )}
-                {subscriptionStats.tokensRemaining <= 5 && subscriptionStats.tokensRemaining > 0 && (
-                  <div className="text-xs text-yellow-600 font-medium mt-1">
-                    Running low
-                  </div>
-                )}
-            </CardContent>
-          </Card>
+                {subscriptionStats.tokensRemaining === 0 &&
+                  subscriptionStats.tokensLimit !== -1 && (
+                    <div className="text-xs text-red-600 font-medium mt-1">
+                      Limit reached
+                    </div>
+                  )}
+                {subscriptionStats.tokensRemaining <= 5 &&
+                  subscriptionStats.tokensRemaining > 0 && (
+                    <div className="text-xs text-yellow-600 font-medium mt-1">
+                      Running low
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
           )}
         </div>
 
         {/* Token Exhaustion Alert */}
-        {subscriptionStats && subscriptionStats.tokensRemaining === 0 && subscriptionStats.tokensLimit !== -1 && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <div className="flex-1">
-                  <h4 className="font-medium text-red-800">
-                    Monthly Token Limit Reached
-                  </h4>
-                  <p className="text-sm text-red-700">
-                    You've used all {subscriptionStats.tokensLimit} tokens for this month.
-                    {subscriptionStats.currentPlan && ` Upgrade from ${subscriptionStats.currentPlan.name} to continue generating tokens.`}
-                  </p>
+        {subscriptionStats &&
+          subscriptionStats.tokensRemaining === 0 &&
+          subscriptionStats.tokensLimit !== -1 && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-red-800">
+                      Monthly Token Limit Reached
+                    </h4>
+                    <p className="text-sm text-red-700">
+                      You've used all {subscriptionStats.tokensLimit} tokens for
+                      this month.
+                      {subscriptionStats.currentPlan &&
+                        ` Upgrade from ${subscriptionStats.currentPlan.name} to continue generating tokens.`}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-800 hover:bg-red-100"
+                    onClick={() => {
+                      // This would navigate to billing or show upgrade modal
+                      console.log('Navigate to upgrade');
+                    }}
+                  >
+                    <ArrowUp className="h-4 w-4 mr-2" />
+                    Upgrade Plan
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-800 hover:bg-red-100"
-                  onClick={() => {
-                    // This would navigate to billing or show upgrade modal
-                    console.log('Navigate to upgrade');
-                  }}
-                >
-                  <ArrowUp className="h-4 w-4 mr-2" />
-                  Upgrade Plan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
         {/* PDF Report Generation Section */}
         <Card>

@@ -1,51 +1,51 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import {
-  AlertTriangle,
-  Banknote,
-  Building,
-  CheckCircle,
-  Clock,
-  CreditCard,
-  History,
-  Plus,
-  Search,
-  Smartphone,
-  Wifi,
+    AlertTriangle,
+    Banknote,
+    Building,
+    CheckCircle,
+    Clock,
+    CreditCard,
+    History,
+    Plus,
+    Search,
+    Smartphone,
+    Wifi,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -166,80 +166,23 @@ const PaymentTracking = ({ language }: PaymentTrackingProps) => {
 
   // Enhanced payment stats with South Sudan specific data
   const paymentStats = {
-    totalPayments: 1874000,
-    pendingPayments: 236000,
-    failedPayments: 42000,
-    thisMonthCount: 456,
-    mobileMoneyVolume: 1275000, // 68% of total
-    averageTransaction: 185,
-    offlinePayments: 12,
-    verificationRequired: 8,
+    totalPayments: 0, // Will be calculated from actual payment data
+    pendingPayments: 0, // Will be calculated from actual payment data
+    failedPayments: 0, // Will be calculated from actual payment data
+    thisMonthCount: 0, // Will be calculated from actual payment data
+    mobileMoneyVolume: 0, // Will be calculated from actual payment data
+    averageTransaction: 0, // Will be calculated from actual payment data
+    offlinePayments: 0, // Will be calculated from actual payment data
+    verificationRequired: 0, // Will be calculated from actual payment data
   };
 
   const [payments, setPayments] = useState([
-    {
-      id: 'PAY-2024-001',
-      customer: 'Ahmed Hassan Mohamed',
-      amount: 150,
-      method: 'Orange Money',
-      reference: 'OM1578963254',
-      phoneNumber: '+211912345678',
-      date: '2024-01-25',
-      status: 'completed',
-      verifiedBy: 'System Auto',
-    },
-    {
-      id: 'PAY-2024-002',
-      customer: 'Mary John Deng',
-      amount: 100,
-      method: 'MTN Mobile Money',
-      reference: 'MTN7896541230',
-      phoneNumber: '+211923456789',
-      date: '2024-01-24',
-      status: 'completed',
-      verifiedBy: 'John Doe',
-    },
-    {
-      id: 'PAY-2024-003',
-      customer: 'Peter Garang Mabior',
-      amount: 200,
-      method: 'Bank of South Sudan',
-      reference: 'BSS20240123001',
-      phoneNumber: '+211934567890',
-      date: '2024-01-23',
-      status: 'pending',
-      verifiedBy: '',
-    },
-    {
-      id: 'PAY-2024-004',
-      customer: 'Sarah Ali Khamis',
-      amount: 120,
-      method: 'Walk-in Cash',
-      reference: 'CASH-001-2024',
-      phoneNumber: '+211945678901',
-      date: '2024-01-22',
-      status: 'completed',
-      verifiedBy: 'Jane Smith',
-    },
-    {
-      id: 'PAY-2024-005',
-      customer: 'John Maker Deng',
-      amount: 75,
-      method: 'Airtel Money',
-      reference: 'AM9876543210',
-      phoneNumber: '+211956789012',
-      date: '2024-01-21',
-      status: 'failed',
-      verifiedBy: '',
-    },
+    // Payments will be loaded from actual data sources
+    // Hard coded sample data removed for production use
   ]);
 
   const customers = [
-    'Ahmed Hassan Mohamed',
-    'Mary John Deng',
-    'Peter Garang Mabior',
-    'Sarah Ali Khamis',
-    'John Maker Deng',
+    // Customer names will be loaded dynamically from user data
   ];
 
   // Enhanced payment methods for South Sudan

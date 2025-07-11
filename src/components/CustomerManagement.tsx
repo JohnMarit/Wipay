@@ -1,48 +1,48 @@
-import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
-import {
-  Search,
-  UserPlus,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    Edit,
+    Mail,
+    MapPin,
+    Phone,
+    Search,
+    Trash2,
+    UserPlus,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface CustomerManagementProps {
   language: string;
@@ -130,36 +130,7 @@ const CustomerManagement = ({ language }: CustomerManagementProps) => {
 
   // Sample customer data
   const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: 1,
-      name: 'Ahmed Hassan Mohamed',
-      phone: '+211 912 345 678',
-      email: 'ahmed.hassan@email.com',
-      address: 'Juba, Central Equatoria',
-      plan: 'Standard Plan (10 Mbps)',
-      status: 'active',
-      joinDate: '2024-01-15',
-    },
-    {
-      id: 2,
-      name: 'Mary John Deng',
-      phone: '+211 923 456 789',
-      email: 'mary.john@email.com',
-      address: 'Wau, Western Bahr el Ghazal',
-      plan: 'Basic Plan (5 Mbps)',
-      status: 'active',
-      joinDate: '2024-02-20',
-    },
-    {
-      id: 3,
-      name: 'Peter Garang Mabior',
-      phone: '+211 934 567 890',
-      email: 'peter.garang@email.com',
-      address: 'Malakal, Upper Nile',
-      plan: 'Premium Plan (20 Mbps)',
-      status: 'suspended',
-      joinDate: '2024-01-10',
-    },
+    // Customer data will be loaded from actual database
   ]);
 
   const getPlanName = (planType: string) => {

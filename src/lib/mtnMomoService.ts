@@ -84,7 +84,9 @@ export class MTNMomoService {
       !config.userId;
 
     if (this.isDevelopmentMode) {
-      console.log('🚀 MTN MoMo Service running in DEVELOPMENT MODE - payments will be simulated');
+      console.log(
+        '🚀 MTN MoMo Service running in DEVELOPMENT MODE - payments will be simulated'
+      );
     }
   }
 
@@ -103,7 +105,7 @@ export class MTNMomoService {
       const response = await fetch(`${this.config.baseUrl}/collection/token/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${btoa(`${this.config.userId}:${this.config.apiKey}`)}`,
+          Authorization: `Basic ${btoa(`${this.config.userId}:${this.config.apiKey}`)}`,
           'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
         },
       });
@@ -114,7 +116,7 @@ export class MTNMomoService {
 
       const data = await response.json();
       this.accessToken = data.access_token;
-      this.tokenExpiry = new Date(Date.now() + (data.expires_in * 1000));
+      this.tokenExpiry = new Date(Date.now() + data.expires_in * 1000);
 
       return this.accessToken;
     } catch (error) {
@@ -124,7 +126,9 @@ export class MTNMomoService {
   }
 
   // Request payment from user's MTN MoMo account
-  async requestPayment(paymentRequest: PaymentRequest): Promise<PaymentResponse> {
+  async requestPayment(
+    paymentRequest: PaymentRequest
+  ): Promise<PaymentResponse> {
     // Mock payment in development mode
     if (this.isDevelopmentMode) {
       return this.mockPaymentRequest(paymentRequest);
@@ -134,17 +138,20 @@ export class MTNMomoService {
       const accessToken = await this.getAccessToken();
       const referenceId = this.generateReferenceId();
 
-      const response = await fetch(`${this.config.baseUrl}/collection/v1_0/requesttopay`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'X-Reference-Id': referenceId,
-          'X-Target-Environment': this.config.targetEnvironment,
-          'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentRequest),
-      });
+      const response = await fetch(
+        `${this.config.baseUrl}/collection/v1_0/requesttopay`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-Reference-Id': referenceId,
+            'X-Target-Environment': this.config.targetEnvironment,
+            'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(paymentRequest),
+        }
+      );
 
       if (response.status === 202) {
         // Payment request accepted, now check status
@@ -185,7 +192,7 @@ export class MTNMomoService {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             'X-Target-Environment': this.config.targetEnvironment,
             'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
           },
@@ -254,11 +261,15 @@ export class MTNMomoService {
 
   // Generate unique reference ID
   private generateReferenceId(): string {
-    return 'wipay_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return (
+      'wipay_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    );
   }
 
   // Test account balance (for development/testing)
-  async checkAccountBalance(momoNumber: string): Promise<{ balance: number; currency: string } | null> {
+  async checkAccountBalance(
+    momoNumber: string
+  ): Promise<{ balance: number; currency: string } | null> {
     try {
       // This would typically call MTN MoMo account balance API
       // For now, return mock data
@@ -267,7 +278,7 @@ export class MTNMomoService {
       // Simulate API call
       return {
         balance: Math.floor(Math.random() * 10000) + 1000, // Random balance between 1000-11000
-        currency: 'SSP'
+        currency: 'SSP',
       };
     } catch (error) {
       console.error('Error checking account balance:', error);
@@ -276,7 +287,9 @@ export class MTNMomoService {
   }
 
   // Mock payment request for development
-  private async mockPaymentRequest(paymentRequest: PaymentRequest): Promise<PaymentResponse> {
+  private async mockPaymentRequest(
+    paymentRequest: PaymentRequest
+  ): Promise<PaymentResponse> {
     console.log('🎭 MOCK: Processing payment request:', paymentRequest);
 
     // Simulate processing delay
@@ -361,11 +374,12 @@ export class BillingManager {
       if (!this.mtnMomoService.validateMomoNumber(momoNumber)) {
         return {
           success: false,
-          error: 'Invalid MTN Mobile Money number format'
+          error: 'Invalid MTN Mobile Money number format',
         };
       }
 
-      const normalizedNumber = this.mtnMomoService.normalizeMomoNumber(momoNumber);
+      const normalizedNumber =
+        this.mtnMomoService.normalizeMomoNumber(momoNumber);
 
       // Create payment request
       const paymentRequest: PaymentRequest = {
@@ -381,12 +395,15 @@ export class BillingManager {
       };
 
       // Request payment
-      const paymentResponse = await this.mtnMomoService.requestPayment(paymentRequest);
+      const paymentResponse =
+        await this.mtnMomoService.requestPayment(paymentRequest);
 
       if (paymentResponse.status === 'PENDING') {
         // Wait for a few seconds then check status
         await this.delay(3000);
-        const status = await this.mtnMomoService.getPaymentStatus(paymentResponse.referenceId);
+        const status = await this.mtnMomoService.getPaymentStatus(
+          paymentResponse.referenceId
+        );
 
         return {
           success: status.status === 'SUCCESSFUL',
@@ -410,7 +427,9 @@ export class BillingManager {
   }
 
   // Schedule monthly billing
-  async scheduleMonthlyBilling(billingRecord: Omit<BillingRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  async scheduleMonthlyBilling(
+    billingRecord: Omit<BillingRecord, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<string> {
     const record: BillingRecord = {
       ...billingRecord,
       id: `bill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -436,10 +455,14 @@ export class BillingManager {
       );
 
       if (paymentResult.success) {
-        console.log(`✅ Monthly billing successful for user ${billingRecord.userId}`);
+        console.log(
+          `✅ Monthly billing successful for user ${billingRecord.userId}`
+        );
         return true;
       } else {
-        console.log(`❌ Monthly billing failed for user ${billingRecord.userId}: ${paymentResult.error}`);
+        console.log(
+          `❌ Monthly billing failed for user ${billingRecord.userId}: ${paymentResult.error}`
+        );
         return false;
       }
     } catch (error) {
@@ -463,12 +486,16 @@ export class BillingManager {
 // Factory function to create MTN MoMo service
 export function createMTNMomoService(): MTNMomoService {
   const config: MtnMomoConfig = {
-    environment: (import.meta.env.VITE_MTN_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
+    environment:
+      (import.meta.env.VITE_MTN_ENVIRONMENT as 'sandbox' | 'production') ||
+      'sandbox',
     apiKey: import.meta.env.VITE_MTN_API_KEY || '',
     userId: import.meta.env.VITE_MTN_USER_ID || '',
     subscriptionKey: import.meta.env.VITE_MTN_SUBSCRIPTION_KEY || '',
     targetEnvironment: import.meta.env.VITE_MTN_TARGET_ENVIRONMENT || 'sandbox',
-    baseUrl: import.meta.env.VITE_MTN_BASE_URL || 'https://sandbox.momodeveloper.mtn.com',
+    baseUrl:
+      import.meta.env.VITE_MTN_BASE_URL ||
+      'https://sandbox.momodeveloper.mtn.com',
   };
 
   return new MTNMomoService(config);

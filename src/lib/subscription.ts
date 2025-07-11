@@ -46,7 +46,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: 'free',
     name: 'Free Trial',
     price: 0,
-    currency: 'SSP',
+    currency: 'USD',
     interval: 'month',
     features: {
       tokensPerMonth: 10,
@@ -64,8 +64,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'basic',
     name: 'Basic Plan',
-    price: 2500, // 2,500 SSP (~$10 USD equivalent)
-    currency: 'SSP',
+    price: 10, // $10 USD base price
+    currency: 'USD',
     interval: 'month',
     features: {
       tokensPerMonth: 100,
@@ -84,8 +84,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'pro',
     name: 'Pro Plan',
-    price: 6000, // 6,000 SSP (~$25 USD equivalent)
-    currency: 'SSP',
+    price: 25, // $25 USD base price
+    currency: 'USD',
     interval: 'month',
     features: {
       tokensPerMonth: 500,
@@ -103,8 +103,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'enterprise',
     name: 'Enterprise Plan',
-    price: 12000, // 12,000 SSP (~$50 USD equivalent)
-    currency: 'SSP',
+    price: 50, // $50 USD base price
+    currency: 'USD',
     interval: 'month',
     features: {
       tokensPerMonth: -1, // Unlimited
@@ -127,7 +127,8 @@ export class SubscriptionService {
   private stripeSecretKey: string;
 
   constructor() {
-    this.stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
+    this.stripePublishableKey =
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
     this.stripeSecretKey = import.meta.env.VITE_STRIPE_SECRET_KEY || '';
   }
 
@@ -147,7 +148,10 @@ export class SubscriptionService {
     if (!plan) return false;
 
     // Check if subscription is active
-    if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+    if (
+      subscription.status !== 'active' &&
+      subscription.status !== 'trialing'
+    ) {
       return false;
     }
 
@@ -186,7 +190,10 @@ export class SubscriptionService {
 
     if (plan.features.tokensPerMonth === -1) return -1; // Unlimited
 
-    return Math.max(0, plan.features.tokensPerMonth - subscription.tokensUsedThisMonth);
+    return Math.max(
+      0,
+      plan.features.tokensPerMonth - subscription.tokensUsedThisMonth
+    );
   }
 
   // Increment token usage
@@ -234,7 +241,10 @@ export class SubscriptionService {
   }
 
   // Create a customer portal session for subscription management
-  async createCustomerPortalSession(customerId: string, returnUrl: string): Promise<string> {
+  async createCustomerPortalSession(
+    customerId: string,
+    returnUrl: string
+  ): Promise<string> {
     try {
       const response = await fetch('/api/create-customer-portal-session', {
         method: 'POST',
@@ -256,7 +266,10 @@ export class SubscriptionService {
   }
 
   // Validate subscription limits before action
-  validateAction(subscription: UserSubscription, action: string): {
+  validateAction(
+    subscription: UserSubscription,
+    action: string
+  ): {
     allowed: boolean;
     message?: string;
     upgradeRequired?: boolean;
@@ -271,10 +284,14 @@ export class SubscriptionService {
     }
 
     // Check subscription status
-    if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+    if (
+      subscription.status !== 'active' &&
+      subscription.status !== 'trialing'
+    ) {
       return {
         allowed: false,
-        message: 'Subscription is not active. Please update your payment method.',
+        message:
+          'Subscription is not active. Please update your payment method.',
         upgradeRequired: true,
       };
     }
@@ -283,7 +300,8 @@ export class SubscriptionService {
     if (new Date() > subscription.currentPeriodEnd) {
       return {
         allowed: false,
-        message: 'Subscription period has expired. Please renew your subscription.',
+        message:
+          'Subscription period has expired. Please renew your subscription.',
         upgradeRequired: true,
       };
     }
@@ -306,7 +324,8 @@ export class SubscriptionService {
         if (plan.features.smsDelivery !== 'real') {
           return {
             allowed: false,
-            message: 'Real SMS delivery requires a paid plan. Currently in simulation mode.',
+            message:
+              'Real SMS delivery requires a paid plan. Currently in simulation mode.',
             upgradeRequired: true,
           };
         }
@@ -344,9 +363,16 @@ export function createSubscriptionService(): SubscriptionService {
 }
 
 // Mock subscription for development/testing
-export function createMockSubscription(userId: string, planId: string = 'free'): UserSubscription {
+export function createMockSubscription(
+  userId: string,
+  planId: string = 'free'
+): UserSubscription {
   const now = new Date();
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const nextMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    now.getDate()
+  );
 
   return {
     id: `sub_${Math.random().toString(36).substr(2, 9)}`,

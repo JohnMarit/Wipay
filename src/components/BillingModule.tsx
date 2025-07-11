@@ -1,47 +1,47 @@
-import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Calendar,
-  Receipt,
-  DollarSign,
-  Clock,
-  AlertCircle,
-  FileText,
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    AlertCircle,
+    Calendar,
+    Clock,
+    DollarSign,
+    FileText,
+    Receipt,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface BillingModuleProps {
   language: string;
@@ -124,46 +124,11 @@ const BillingModule = ({ language }: BillingModuleProps) => {
   };
 
   const [invoices, setInvoices] = useState([
-    {
-      id: 'INV-001',
-      customer: 'Ahmed Hassan Mohamed',
-      amount: 150,
-      dueDate: '2024-01-31',
-      status: 'paid',
-      generatedDate: '2024-01-01',
-    },
-    {
-      id: 'INV-002',
-      customer: 'Mary John Deng',
-      amount: 100,
-      dueDate: '2024-01-31',
-      status: 'pending',
-      generatedDate: '2024-01-01',
-    },
-    {
-      id: 'INV-003',
-      customer: 'Peter Garang Mabior',
-      amount: 200,
-      dueDate: '2024-01-15',
-      status: 'overdue',
-      generatedDate: '2023-12-15',
-    },
-    {
-      id: 'INV-004',
-      customer: 'Sarah Ali Khamis',
-      amount: 120,
-      dueDate: '2024-02-15',
-      status: 'partial',
-      generatedDate: '2024-01-15',
-    },
+    // Invoices will be loaded from actual data
   ]);
 
   const customers = [
-    'Ahmed Hassan Mohamed',
-    'Mary John Deng',
-    'Peter Garang Mabior',
-    'Sarah Ali Khamis',
-    'John Maker Deng',
+    // Customer names will be loaded dynamically
   ];
 
   const handleGenerateInvoice = () => {

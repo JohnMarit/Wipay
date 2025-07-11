@@ -147,23 +147,6 @@ export const authService = {
         email: user.email!,
         name,
         phone,
-        pricingConfig: {
-          currency: 'SSP',
-          prices: {
-            '1': 50,
-            '3': 120,
-            '6': 200,
-            '12': 350,
-            '24': 500,
-          },
-        },
-        subscription: {
-          planId: 'free',
-          status: 'active',
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          tokensUsedThisMonth: 0,
-        },
         createdAt: new Date(),
       };
 
@@ -211,23 +194,6 @@ export const authService = {
           email: user.email!,
           name: user.displayName || 'Google User',
           phone: user.phoneNumber || '', // Google doesn't always provide phone number
-          pricingConfig: {
-            currency: 'SSP',
-            prices: {
-              '1': 50,
-              '3': 120,
-              '6': 200,
-              '12': 350,
-              '24': 500,
-            },
-          },
-          subscription: {
-            planId: 'free',
-            status: 'active',
-            currentPeriodStart: new Date(),
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-            tokensUsedThisMonth: 0,
-          },
           createdAt: new Date(),
         };
 
@@ -683,7 +649,7 @@ export const userService = {
         const currentUsage = userData.subscription?.tokensUsedThisMonth || 0;
 
         await updateDoc(userDocRef, {
-          'subscription.tokensUsedThisMonth': currentUsage + 1
+          'subscription.tokensUsedThisMonth': currentUsage + 1,
         });
       }
     } catch (error: unknown) {
@@ -697,7 +663,7 @@ export const userService = {
     try {
       const userDocRef = doc(db, 'users', userId);
       await updateDoc(userDocRef, {
-        'subscription.tokensUsedThisMonth': 0
+        'subscription.tokensUsedThisMonth': 0,
       });
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -737,7 +703,11 @@ export const userService = {
   ): Promise<void> {
     try {
       const now = new Date();
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      const nextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        now.getDate()
+      );
 
       const paymentProfile = {
         momoNumber: profileData.momoNumber,
@@ -780,8 +750,10 @@ export const userService = {
       }
 
       const now = new Date();
-      let updates: any = {
-        'paymentProfile.lastSuccessfulPayment': paymentSuccess ? now : userProfile.paymentProfile.lastSuccessfulPayment,
+      const updates: Record<string, unknown> = {
+        'paymentProfile.lastSuccessfulPayment': paymentSuccess
+          ? now
+          : userProfile.paymentProfile.lastSuccessfulPayment,
         'paymentProfile.totalFailedAttempts': paymentSuccess
           ? 0
           : userProfile.paymentProfile.totalFailedAttempts + 1,
@@ -794,7 +766,11 @@ export const userService = {
         updates['subscription.status'] = 'active';
 
         // Set next billing date
-        const nextBilling = new Date(now.getFullYear(), now.getMonth() + 1, userProfile.paymentProfile.billingDay);
+        const nextBilling = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          userProfile.paymentProfile.billingDay
+        );
         updates['paymentProfile.nextBillingDate'] = nextBilling;
       } else {
         // Suspend after 3 failed attempts
@@ -824,7 +800,13 @@ export const userService = {
   },
 
   // Get users due for billing (for monthly billing job)
-  async getUsersDueForBilling(): Promise<Array<{ userId: string; paymentProfile: any; subscription: any }>> {
+  async getUsersDueForBilling(): Promise<
+    Array<{
+      userId: string;
+      paymentProfile: UserProfile['paymentProfile'];
+      subscription: UserProfile['subscription'];
+    }>
+  > {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
